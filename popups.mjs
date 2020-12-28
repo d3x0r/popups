@@ -15,6 +15,9 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
+const MF_STRING = 1;
+const MF_POPUP = 2;
+const MF_SEPARATOR = 4;
 
 
 const popups = {
@@ -32,7 +35,7 @@ const popups = {
 	setClass: setClass,
 	toggleClass: toggleClass,
 	clearClass:clearClass,
-	createMenu : createPopup,
+	createMenu : createPopupMenu,
 }
 
 var popupTracker;
@@ -776,7 +779,7 @@ mouseCatcher.addEventListener( "click", (evt)=>{
 		topMenu.hide( true );
 } );
 
-function createPopup() {
+function createPopupMenu() {
 	var menu = {
 		items: [],
 		parent : null,
@@ -796,14 +799,14 @@ function createPopup() {
 				var flags = _flags;
 				newItem.value = value;
 				newItem.textContent = text;
-				newItem.className = "popup";
+				newItem.className = "popupItem";
 				if( flags & MF_POPUP ) {
 					value.parent = this;
 					newItem.addEventListener( "mouseover", (evt)=>{
 						var r = newItem.getBoundingClientRect();
 						console.log( "Item is clicked show that.", evt.target.value, evt.clientX, evt.clientY );
 
-						newItem.value.show( this.board, evt.clientX, r.top - 10, this.cb );
+						newItem.value.show( this.board, evt.clientX, r.top - 10, menu.cb );
 					} );
 					newItem.addEventListener( "mouseout", (evt)=>{
 						var r = newItem.getBoundingClientRect();
@@ -813,7 +816,7 @@ function createPopup() {
 					} );
 				} else
 					newItem.addEventListener( "click", (evt)=>{
-						this.cb( evt.target.value );
+						menu.cb( evt.target.value );
 						console.log( "Item is clicked.", evt.target.value );
 						this.hide( true );
 					} );
@@ -830,7 +833,7 @@ function createPopup() {
 		},
 		show( board, x, y, cb ) {
 			this.board = board;
-			this.cb = cb;
+			menu.cb = cb;
 			mouseCatcher.style.visibility = "visible"
 			this.container.style.visibility = "inherit";
 			this.container.style.left = x;
@@ -844,10 +847,14 @@ function createPopup() {
 	mouseCatcher.appendChild( menu.container );
 	menu.container.className = "popup";
 	menu.container.style.zIndex = 50;
-
+	document.body.appendChild( menu.container );
 	return menu;
 }
 
+createPopupMenu.flags = { MF_STRING : MF_STRING,
+	MF_POPUP: MF_POPUP,
+	MF_SEPARATOR:MF_SEPARATOR,
+};
 
 
 export {popups};
