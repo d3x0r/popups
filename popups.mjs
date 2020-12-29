@@ -62,8 +62,8 @@ function addCaptionHandler( c, popup_ ) {
 		
 		var added = false;
 		function mm(evt){
-			evt.preventDefault();
 			if( state.dragging ) {
+				evt.preventDefault();
 				var pRect = state.frame.getBoundingClientRect();
 				//var x = evt.clientX - pRect.left;
 				//var y = evt.clientY - pRect.top;
@@ -78,7 +78,7 @@ function addCaptionHandler( c, popup_ ) {
 			}
 		}
 		function md(evt){
-			evt.preventDefault();
+			//evt.preventDefault();
 			var pRect = state.frame.getBoundingClientRect();
 			popupTracker.raise( popup );
 			//state.x = evt.clientX-pRect.left;
