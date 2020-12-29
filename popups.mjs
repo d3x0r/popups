@@ -15,6 +15,8 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
+
+import {JSOX} from "jsox";
 const MF_STRING = 1;
 const MF_POPUP = 2;
 const MF_SEPARATOR = 4;
@@ -562,10 +564,12 @@ function createList( parentList, toString ) {
 			item.item.addEventListener( "drop", (evt)=>{
 				evt.preventDefault();
 				var objType = evt.dataTransfer.getData( "text/plain" );
+
 				JSOX.begin( (event)=>{
 					if( type === event.type ){
 						//console.log( "drop of:", evt.dataTransfer.getData( "text/plain" ) );
-						cbDrop( accruals.all.get( event.val1 ) );
+						//cbDrop( accruals.all.get( event.val1 ) );
+						cbDrop( event );
 					}
 				} ).write( objType );
 			})
