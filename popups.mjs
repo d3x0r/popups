@@ -209,12 +209,12 @@ class Popup {
 		this.divContent.className = "frameContent";
 		this.divClose.className = "captionButton";
         	popupTracker.addPopup( this );
-                this.caption = caption_;
+           this.caption = caption_;
                 parent = (parent&&parent.divContent) || document.body;
-		parent.appendChild( this.divFrame );
+			parent.appendChild( this.divFrame );
 
-		addCaptionHandler( this.divCaption, this );
-        }
+			addCaptionHandler( this.divCaption, this );
+      }
 		set caption(val) {
 			this.divCaption.innerText = val;
 		}
@@ -257,6 +257,9 @@ class Popup {
 		}
 	appendChild(e) {
 		return this.divContent.appendChild(e)
+	}
+	remove() {
+		this.divFrame.remove();
 	}
 }
 
@@ -769,14 +772,12 @@ function makeNameInput( form, input, text ){
 
 //--------------------------- Quick Popup Menu System ------------------------------
 
-var mouseCatcher = document.getElementById( "mouseCatcher" ) || document.createElement( "div" );
-if( !mouseCatcher ) {
-	if( mouseCatcher.name !== "mouseCatcher" ) {
-		document.body.appendChild( mouseCatcher )
-	}
-	
-}
-var topMenu;
+const mouseCatcher = document.createElement( "div" );
+document.body.appendChild( mouseCatcher )
+mouseCatcher.addEventListener( "contextmenu", (evt)=>{ evt.preventDefault(); evt.stopPropagation();return false; } );
+mouseCatcher.className = "mouseCatcher";
+let topMenu;
+
 mouseCatcher.addEventListener( "click", (evt)=>{
 	mouseCatcher.style.visibility = "hidden";
 	if( topMenu )
@@ -844,14 +845,16 @@ function createPopupMenu() {
 			this.container.style.top = y;
 		},
 		reset() {
-			console.log( "hide everything?" );	
+			this.hide(true);
+			//console.log( "hide everything?" );	
 		}
 	};
 
 	mouseCatcher.appendChild( menu.container );
 	menu.container.className = "popup";
 	menu.container.style.zIndex = 50;
-	document.body.appendChild( menu.container );
+	menu.hide(); 
+	//document.body.appendChild( menu.container );
 	return menu;
 }
 
