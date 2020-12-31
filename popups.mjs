@@ -16,7 +16,8 @@ popup.divContent  // insert frame content here
 
 */
 
-import {JSOX} from "jsox";
+//import {JSOX} from "jsox";
+//import {JSOX} from "../../jsox/lib/jsox.mjs";
 
 
 const popups = {
@@ -66,6 +67,7 @@ function addCaptionHandler( c, popup_ ) {
 		var added = false;
 		function mm(evt){
 			const state = globalMouseState.activeFrame;
+			if( state ) {
    	  		if( state.dragging ) {
 				evt.preventDefault();
 				var pRect = state.frame.getBoundingClientRect();
@@ -79,6 +81,7 @@ function addCaptionHandler( c, popup_ ) {
 					localStorage.setItem( state.frame.id + "/x", popup.divFrame.style.left );
 					localStorage.setItem( state.frame.id + "/y", popup.divFrame.style.top );
 				}
+			}
 			}
 		}
 		function md(evt){
@@ -490,6 +493,7 @@ class SimpleNotice extends Popup {
 	this.hide();
 	return this;
 }
+}
 
 
 
@@ -608,12 +612,14 @@ class List {
 			item.item.addEventListener( "drop", (evt)=>{
 				evt.preventDefault();
 				var objType = evt.dataTransfer.getData( "text/plain" );
+				if( "undefined" !== typeof JSOX ) {
 				JSOX.begin( (event)=>{
 					if( type === event.type ){
 						//console.log( "drop of:", evt.dataTransfer.getData( "text/plain" ) );
 						cbDrop( accruals.all.get( event.val1 ) );
 					}
 				} ).write( objType );
+				}
 			})
 		}
 		update(group) {
@@ -1106,54 +1112,92 @@ mouseCatcher.addEventListener( "click", (evt)=>{
 } );
 
 function createPopupMenu() {
-	var menu = {
+
+	let keepShow = false;
+
+	function menuCloser() {
+		if( menu.lastShow ) {
+			if( keepShow ) {
+				menu.lastShow = 0;
+				keepShow = false;
+				return;
+			}
+			const now = Date.now();
+			if( ( now - menu.lastShow ) > 500 )  {
+				menu.lastShow = 0; // reset this, otherwise hide will just schedule this timer
+				if( menu.subOpen ) menu.subOpen.hide();
+				menu.hide();
+			}
+			if( menu.lastShow )
+				setTimeout( menuCloser, 500 - ( now - menu.lastShow ) );
+		}
+	}
+
+	const menu = {
 		items: [],
+		lastShow : 0,
 		parent : null,
+		subOpen : null,
 		container : document.createElement( "div" ),
 		board : null,
 		separate( ) {
 			var newItem = document.createElement( "HR" );
-			this.container.appendChild( newItem );
+			menu.container.appendChild( newItem );
                 },
 
 		addItem( text, cb ) {
 				var newItem = document.createElement( "A" );
 				var newItemBR = document.createElement( "BR" );
-				this.container.appendChild( newItem );
-				this.container.appendChild( newItemBR );
+				newItem.textContent = text;
+				menu.container.appendChild( newItem );
+				menu.container.appendChild( newItemBR );
 				newItem.className = "popupItem";
 				newItem.addEventListener( "click", (evt)=>{
 				       cb();
 				       //console.log( "Item is clicked.", evt.target.value );
 				       this.hide( true );
 				} );
-                },
+				newItem.addEventListener( "mouseover", (evt)=>{
+					if( menu.subOpen ) {
+						menu.subOpen.hide();
+						menu.subOpen = null;
+					}
+					keepShow = true;
+				} );
+		},
 		addMenu( text ) {
 				var newItem = document.createElement( "A" );
 				var newItemBR = document.createElement( "BR" );
+				newItem.textContent = text;
 				this.container.appendChild( newItem );
 				this.container.appendChild( newItemBR );
-                                const value = createPopupMenu();
-                                {
+				const value = createPopupMenu();
+				{
 					value.parent = this;
 					newItem.addEventListener( "mouseover", (evt)=>{
 						var r = newItem.getBoundingClientRect();
-						console.log( "Item is clicked show that.", evt.target.value, evt.clientX, evt.clientY );
-
-						newItem.value.show( this.board, evt.clientX, r.top - 10, menu.cb );
+						keepShow = true;
+						console.log( "Item is clicked show that.", evt.clientX, evt.clientY );
+						value.show( evt.clientX, r.top - 10, menu.cb );
+						menu.subOpen = value;
 					} );
 					newItem.addEventListener( "mouseout", (evt)=>{
 						var r = newItem.getBoundingClientRect();
-						console.log( "Item is clicked show that.", evt.target.value, evt.clientX, r.top );
-						if( evt.toElement !== newItem.value.container )		
-							newItem.value.hide();
+						console.log( "Item is clicked show that.",  evt.clientX, r.top );
+						if( evt.toElement !== newItem.container )		
+							value.hide();
+					} );
+					newItem.addEventListener( "mousemove", (evt)=>{
+						if( this.subOpen ) this.subOpen.lastShow = Date.now();
 					} );
 				}
-                                return value;
+				return value;
 		},
 		hide( all ) {
+			if( menu.lastShow ) return menuCloser();			
 			this.container.style.visibility = "hidden";
 			if( this.parent ) {
+				this.parent.subOpen = null; // should be the same as Me... 
 				if( all )
 					this.parent.hide( all );
 			} else {
@@ -1161,6 +1205,7 @@ function createPopupMenu() {
 			}
 		},
 		show( board, x, y, cb ) {
+			menu.lastShow = Date.now();
 			this.board = board;
 			menu.cb = cb;
 			mouseCatcher.style.visibility = "visible"

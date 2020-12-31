@@ -51,10 +51,22 @@ some of the popups.makeButton sort of methods return just a simple html element.
 |	setClass| (element.class) | Set a class in className |
 |	toggleClass| (element,class) | if a class is in a class, remove it, else add it |
 |	clearClass| (element,class) | remove a class from className |
-
+| createMenu | () | returns a menu object which is a popup menu |
 
 ### Lists
 
 Drag and drop nested items in lists.
 
 
+### Menu
+
+```
+const menu = popups.createMenu();
+menu.addItem( "text", ()=>{
+	/* called when item is selected */
+} );
+
+menu.separate();
+
+const subMenu = menu.addMenu( "Menu Entry Text" );
+```
