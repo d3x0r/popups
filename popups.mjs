@@ -641,6 +641,7 @@ function createList( parent, parentList, toString, opens ) {
 
 function makeCheckbox( form, o, field, text ) 
 {
+	let initialValue = o[field];
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
 	var inputCountIncrement = document.createElement( "INPUT" );
@@ -648,23 +649,34 @@ function makeCheckbox( form, o, field, text )
 	inputCountIncrement.className = "checkOption rightJustify";
 	inputCountIncrement.checked = o[field];
 	//textDefault.
-
+	var onChange = [];
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit";
-	binder.addEventListener( "click", (e)=>{ if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
+	binder.addEventListener( "click", (e)=>{ 
+		if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
+	inputCountIncrement.addEventListener( "change", (e)=>{ 
+		 o[field] = inputCountIncrement.checked; })
 	form.appendChild(binder );
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
 	return {
+		on(event,cb){
+			if( event === "change" ) onChange.push(cb);
+			inputCountIncrement.addEventListener(event,cb);
+		},
 		get checked() {
 			return inputCountIncrement.checked;
 		},
 		set checked(val) {
 			inputCountIncrement.checked = val;
 		},
-		get value() { return this.checked; },
-		set value(val) { this.checked = val; }
+		get value() { return inputCountIncrement.checked; },
+		set value(val) { 
+			o[field] = val;
+			inputCountIncrement.checked = val;
+			onChange.forEach( cb=>cb());
+		 }
                 ,
                 reset(){
                     o[field] = initialValue;
@@ -679,7 +691,10 @@ function makeCheckbox( form, o, field, text )
                             + o[field];
                     }
                     return '';
-                }
+				},
+		get style() {
+			return binder.style;
+		}
 	}
 }
 
