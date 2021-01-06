@@ -70,3 +70,11 @@ menu.separate();
 
 const subMenu = menu.addMenu( "Menu Entry Text" );
 ```
+
+## Changelog
+- 1.0.103(in progress)
+- 1.0.102
+  - added remove function on more popups.
+  - Improved popup sub-menu closing, put it behind a timer, which allows enough time to move over the menu from the selection before closing.
+- 1.0.101 
+  - Revised popup menu interface, removed constants, used separate initializer methods; make popup trigger per item instead of per-show.
