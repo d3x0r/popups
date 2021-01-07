@@ -18,7 +18,10 @@ popup.divContent  // insert frame content here
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
-
+const utils = globalThis.utils || {
+	to$(s) { return "$"+s;},
+}
+const localStorage = globalThis.localStorage;
 
 const popups = {
 	defaultDrag : true,
@@ -307,8 +310,8 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 		popup.hide();
 	} );	
 
-	var text = document.createElement( "SPAN" );
-	text.textContent = question;
+	var textOutput = document.createElement( "SPAN" );
+	textOutput.textContent = question;
 	var input = document.createElement( "INPUT" );
 	input.className = "popupInputField";
 	input.setAttribute( "size", 45 );
@@ -342,7 +345,7 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 		}
 	})
 	popup.divContent.appendChild( form );
-	form.appendChild( text );
+	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( input );
 	form.appendChild( document.createElement( "br" ) );
@@ -414,53 +417,51 @@ function createSimpleNotice( title, question, ok, cancel ) {
 
 class SimpleNotice extends Popup {
 	//const popup = popups.create( title );
-	//const show_ = popup.show.bind(popup);
-    	form = document.createElement( "form" );
-	okay = makeButton( form, "Okay", ()=>{
-		popup.hide();
+	constructor( title, question, ok, cancel ) {
+		super( title, null );
+		const popup = this;
+   	const form = document.createElement( "form" );
+	this.okay = makeButton( form, "Okay", ()=>{
+		this.hide();
 		ok && ok( );
 	})
 	
-
-    	appendChild( e ) {
-            this.form.insertChild( e, this.okay );
-        }
-        constructor( title, question, ok, cancel ) {
+	{
+		const	show_ = this.show.bind(this);
 
 	this.show = function( caption, content ) {
 		if( caption && content ) {
-			popup.divCaption.textContent = caption;
-			text.textContent = content;
+			this.divCaption.textContent = caption;
+			textOutput.textContent = content;
 		}
 		else if( caption )
-			text.textContent = caption;
+			this.textContent = caption;
 		show_();
 	}
 
-	popup.on( "show", ()=>{
+	this.on( "show", ()=>{
 		this.okay.focus();
 	})
-	popup.on( "close", ()=>{
+	this.on( "close", ()=>{
 		// aborted...
 		cancel && cancel();
 	});
 
-	var form = document.createElement( "form" );
 	form.className = "frameForm";
 	form.setAttribute( "action", "none" );
 	form.addEventListener( "submit", (evt)=>{
 		evt.preventDefault();
-		popup.hide();
+		this.hide();
 		//console.log( "SUBMIT?", input.value );
 	} );	
 	form.addEventListener( "reset", (evt)=>{
 		evt.preventDefault();
-		popup.hide();
+		this.hide();
 	} );	
 
-	var text = document.createElement( "SPAN" );
-	text.className = "noticeText";
-	text.textContent = question;
+	var textOutput = document.createElement( "SPAN" );
+	textOutput.className = "noticeText";
+	textOutput.textContent = question;
 
 	
 	this.okay.className += " notice";
@@ -476,7 +477,7 @@ class SimpleNotice extends Popup {
 		}
 	})
 	this.divContent.appendChild( form );
-	form.appendChild( text );
+	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( this.okay );
@@ -491,8 +492,12 @@ class SimpleNotice extends Popup {
 	}
 	this.center();
 	this.hide();
-	return this;
-}
+	//return this;
+		}
+	}
+	appendChild( e ) {
+		this.form.insertChild( e, this.okay );
+	}
 }
 
 
@@ -615,8 +620,8 @@ class List {
 				if( "undefined" !== typeof JSOX ) {
 				JSOX.begin( (event)=>{
 					if( type === event.type ){
-						//console.log( "drop of:", evt.dataTransfer.getData( "text/plain" ) );
-						cbDrop( accruals.all.get( event.val1 ) );
+						console.log( "drop of:", evt.dataTransfer.getData( "text/plain" ) );
+						//cbDrop( accruals.all.get( event.val1 ) );
 					}
 				} ).write( objType );
 				}
@@ -844,13 +849,13 @@ function makeTextField( form, input, value, text, money, percent ){
 function makeNameInput( form, input, value, text ){
 	const initialValue = input[value];
 	var binder;
-	var textLabel = document.createElement( "SPAN" );
+	const textLabel = document.createElement( "SPAN" );
 	textLabel.textContent = text;
 
-	var text = document.createElement( "SPAN" );
-	text.textContent = input[value];
+	const textOutput = document.createElement( "SPAN" );
+	textOutput.textContent = input[value];
 
-	var buttonRename = document.createElement( "Button" );
+	const buttonRename = document.createElement( "Button" );
 	buttonRename.textContent = popups.strings.get("(rename)");
 	buttonRename.className="buttonOption rightJustify";
         buttonRename.addEventListener("click", (evt)=>{
@@ -861,7 +866,7 @@ function makeNameInput( form, input, value, text ){
                                                  , input[value]
                                                  , (v)=>{
                                                  	input[value] = v;
-							text.textContent = v;
+							textOutput.textContent = v;
                                                  }
                                                  );
                 newName.show();
@@ -876,10 +881,10 @@ function makeNameInput( form, input, value, text ){
 	//binder.appendChild( document.createElement( "br" ) );
 	return {
 		get value() {
-			return text.textContent;
+			return textOutput.textContent;
 		}		,
 		set value(val) {
-			text.textContent = val;
+			textOutput.textContent = val;
 		},
                 reset(){
                     input[value] = initialValue;
