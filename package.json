@@ -1,7 +1,7 @@
 {
   "name": "@d3x0r/popups",
   "version": "1.0.102",
-  "description": "",
+  "description": "Simple popup windows using HTML controls.",
   "main": "popups.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
