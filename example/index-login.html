@@ -9,6 +9,8 @@
 <script type="module">
 import {popups} from "../popups.mjs"
 
+popups.makeWindowManager();
+
 const login = popups.makeLoginForm( (user,pass)=>{
 	alert( ["Login Form sent event:", user, pass].join( " " ) );
 });

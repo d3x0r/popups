@@ -99,7 +99,7 @@ body {
 	width:max-content;
 	height:max-content;
 	background-color:rgba(150, 150, 150, 0.75);
-	color:rgb(133, 240, 229);
+	color:rgb(33, 0, 29);
 	border-radius:10px;
 	/*padding:25px;*/
 }
@@ -362,4 +362,18 @@ div.mouseCatcher{
     position:absolute;
     z-index : 45; /* under popup zindex; over all else */
     visibility: hidden;
+}
+
+.taskManagerFloater {
+	position:absolute;
+    z-index : 101; /* over all else */
+     width:2em;
+     height:2em;
+     border-radius:0.5em;
+     background-image:url('images/taskManagerButton.png');
+
+    border-style: ridge;
+    border-color: mediumspringgreen;
+    background-color: #15ff0024;
+    background-size: cover;
 }

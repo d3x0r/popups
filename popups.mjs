@@ -44,6 +44,7 @@ const popups = {
 	clearClass:clearClass,
 	createMenu : createPopupMenu,
         makeLoginForm: makeLoginForm,
+        makeWindowManager : makeWindowManager,
 }
 
 const globalMouseState = {
@@ -62,7 +63,7 @@ function addCaptionHandler( c, popup_ ) {
 		x:0,y:0,
 		dragging:false
 	};
-	if( popups.autoRaise )
+	if( popups.autoRaise && popup_ )
 	popup_.divFrame.addEventListener( "mousedown", (evt)=>{
 		popupTracker.raise( popup );
 	} );
@@ -175,8 +176,8 @@ function addCaptionHandler( c, popup_ ) {
 
 	if( popups.defaultDrag ) {
 		mouseHandler(c, mouseState );
-
-		mouseHandler(popup_.divFrame, mouseState );
+		if( popup_ )
+			mouseHandler(popup_.divFrame, mouseState );
 	}
 
 }
@@ -229,33 +230,54 @@ class Popup {
         divClose = document.createElement( "div" );
 	popup = this;
 
-	constructor(caption_,parent) {
+	constructor(caption_,parent,forContent) {
+                if( forContent ) {
+                    this.divFrame = forContent;
+                    this.divContent = null;
+                    this.divCaption = null;
+                    this.divClose = null;
+                    this.divTitle = null;
+                }else  {
+        		this.divFrame.className = parent?"formContainer":"frameContainer";
+                }
+
 		this.divFrame.style.left= 0;
 		this.divFrame.style.top= 0;
-		this.divFrame.className = parent?"formContainer":"frameContainer";
-		if( caption_ != "" )
-			this.divFrame.appendChild( this.divCaption );
-		this.divFrame.appendChild( this.divContent );
-		this.divCaption.appendChild( this.divTitle );
-		this.divCaption.appendChild( this.divClose );
+                if( this.divCaption ) {
+			if( caption_ != "" )
+				this.divFrame.appendChild( this.divCaption );
+			this.divCaption.appendChild( this.divTitle );
+                        if( this.divClose )
+				this.divCaption.appendChild( this.divClose );
 
-		this.divCaption.className = "frameCaption";
-		this.divContent.className = "frameContent";
-		this.divClose.className = "captionButton closeButton";
+			this.divCaption.className = "frameCaption";
+			this.divContent.className = "frameContent";
+                }
+		if( this.divContent )
+			this.divFrame.appendChild( this.divContent );
+
+                if( this.divClose ) {
+			this.divClose.className = "captionButton closeButton";
+			this.divClose.addEventListener( "click", (evt)=>{
+				this.hide();
+			} );
+		}
+
         	popupTracker.addPopup( this );
 
-		this.divClose.addEventListener( "click", (evt)=>{
-			this.hide();
-		} );
 
 		this.caption = caption_;
-			parent = (parent&&parent.divContent) || parent || document.body;
-		parent.appendChild( this.divFrame );
+		parent = (parent&&parent.divContent) || parent || document.body;
 
-		addCaptionHandler( this.divCaption, this );
+		parent.appendChild( this.divFrame );
+                if( this.divCaption )
+			addCaptionHandler( this.divCaption, this );
+
 	}
+
 		set caption(val) {
-			this.divTitle.textContent = val;
+                    	if( this.divTitle )
+				this.divTitle.textContent = val;
 		}
 		center() {
 			var myRect = this.divFrame.getBoundingClientRect();
@@ -302,8 +324,8 @@ class Popup {
 	}
 }
 
-function createPopup( caption ) {
-	return new Popup(caption);
+function createPopup( caption, forContent ) {
+	return new Popup(caption, null, forContent );
 }
 
 function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
@@ -1855,7 +1877,9 @@ function makeLoginForm( doLogin  ) {
 				alertForm.caption = "Please use a longer display name...";
 				alertForm.show();
 			} else {
-				doLogin( userField.innerText, "password" );
+	                      	if( doLogin ) {
+					doLogin( "random accountName", userField.innerText, "password" );
+				}
                                 /*
 				localStorage.setItem( "devkey", idGen.generator() );
 				var a, b, c, d;
@@ -1884,8 +1908,9 @@ function makeLoginForm( doLogin  ) {
 			}
 		}
 		else {
-                      	if( doLogin )
-				doLogin( userField.innerText, passField.innerHTML );
+                      	if( doLogin ) {
+				doLogin( userField.innerText, null, passField.innerHTML );
+                        }
 			/*
 			protocol.login( userField.innerText, passField.innerHTML,(passFail,userId,userName,ws)=>{
 				console.log( "Login passfail.a:",passFail,"B:",userId, "C:",userName);
@@ -1928,7 +1953,7 @@ function makeLoginForm( doLogin  ) {
 	
 	var centerLink = document.createElement( "center" );
 	var accountLink = document.createElement( "a");
-	accountLink.href = "https://" + location.host + "/#login";
+	accountLink.href = "https://" + location.host + "/#createAccount";
 	accountLink.innerText = "Create An Account";
 	centerLink.appendChild( accountLink );
 	connection.divFrame.appendChild( centerLink );
@@ -1939,6 +1964,29 @@ function makeLoginForm( doLogin  ) {
 }
 
 
+function makeWindowManager() {
+	const taskButton = document.createElement( "div" );
+        taskButton.className = "taskManagerFloater";
+        document.body.appendChild( taskButton );
+	const taskPanel document.createElement( "div" );
+	const taskWindow = new Popup( null, null, taskPanel );
+        taskWindow.className = "taskManagerPanel";
+
+
+	addCaptionHandler( taskButton, null );
+        taskButton.addEventListener( "click", (evt)=>{
+    		evt.preventDefault();
+                // if was not dragging?
+                //alert( "CLICK!" );
+	} );
+	//addDragEvent( taskButton ); // add support for click-drag like caption handler....
+
+        return {
+            close() {
+                console.log( "this should remove this whole construct from the page" );
+            }
+        }
+}
 
 
 export {popups};
