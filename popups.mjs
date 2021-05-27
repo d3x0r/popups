@@ -33,6 +33,7 @@ const popups = {
         makeCheckbox : makeCheckbox,
         makeNameInput : makeNameInput,  // form, object, field, text; popup to rename
         makeTextInput : makeTextInput,  // form, object, field, text
+        makeSlider : makeSlider,  // form, object, field, text
         makeTextField : makeTextField,
         makeButton : makeButton,
         makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
@@ -42,6 +43,7 @@ const popups = {
 	toggleClass: toggleClass,
 	clearClass:clearClass,
 	createMenu : createPopupMenu,
+        makeLoginForm: makeLoginForm,
 }
 
 const globalMouseState = {
@@ -68,56 +70,72 @@ function addCaptionHandler( c, popup_ ) {
 	function mouseHandler(c,state) {
 		
 		var added = false;
-		function mm(evt){
+		function mouseMove(evt){
 			const state = globalMouseState.activeFrame;
 			if( state ) {
-   	  		if( state.dragging ) {
-				evt.preventDefault();
-				var pRect = state.frame.getBoundingClientRect();
-				//var x = evt.clientX - pRect.left;
-				//var y = evt.clientY - pRect.top;
-				var x = evt.x - pRect.left;
-				var y = evt.y - pRect.top;
-				state.frame.style.left =parseInt(state.frame.style.left) + (x-state.x);
-				state.frame.style.top= parseInt(state.frame.style.top) +(y-state.y);
-				if( state.frame.id ) {
-					localStorage.setItem( state.frame.id + "/x", popup.divFrame.style.left );
-					localStorage.setItem( state.frame.id + "/y", popup.divFrame.style.top );
+   	   	  		if( state.dragging ) {
+					evt.preventDefault();
+					var pRect = state.frame.getBoundingClientRect();
+					//var x = evt.clientX - pRect.left;
+					//var y = evt.clientY - pRect.top;
+					var x = evt.x - pRect.left;
+					var y = evt.y - pRect.top;
+					state.frame.style.left =parseInt(state.frame.style.left) + (x-state.x);
+					state.frame.style.top= parseInt(state.frame.style.top) +(y-state.y);
+					if( state.frame.id ) {
+						localStorage.setItem( state.frame.id + "/x", popup.divFrame.style.left );
+						localStorage.setItem( state.frame.id + "/y", popup.divFrame.style.top );
+					}
+				}
+   	   	  		if( state.sizing ) {
+					evt.preventDefault();
+					var pRect = state.frame.getBoundingClientRect();
+					//var x = evt.clientX - pRect.left;
+					//var y = evt.clientY - pRect.top;
+					var x = evt.x - pRect.left;
+					var y = evt.y - pRect.top;
+					state.frame.style.left =parseInt(state.frame.style.left) + (x-state.x);
+					state.frame.style.top= parseInt(state.frame.style.top) +(y-state.y);
+					if( state.frame.id ) {
+						localStorage.setItem( state.frame.id + "/x", popup.divFrame.style.left );
+						localStorage.setItem( state.frame.id + "/y", popup.divFrame.style.top );
+					}
 				}
 			}
-			}
 		}
-		function md(evt){
+		function mouseDown(evt){
 			//evt.preventDefault();
-                        if( globalMouseState.activeFrame ) {
-                            return;
-                        }
+			if( globalMouseState.activeFrame ) {
+				return;
+			}
 			var pRect = state.frame.getBoundingClientRect();
 			popupTracker.raise( popup );
 			//state.x = evt.clientX-pRect.left;
 			//state.y = evt.clientY-pRect.top;
 			state.x = evt.x-pRect.left;
 			state.y = evt.y-pRect.top;
-                        globalMouseState.activeFrame = state;
+			globalMouseState.activeFrame = state;
 			state.dragging = true;
 			if( !added ) {	
 				added = true;
-				document.body.addEventListener( "mousemove", mm );
-				document.body.addEventListener( "mouseup", mu );
+				document.body.addEventListener( "mousemove", mouseMove );
+				document.body.addEventListener( "mouseup", mouseUp );
 			}
 		}
-		function mu(evt){
+		function mouseUp(evt){
 			evt.preventDefault();
                         globalMouseState.activeFrame = null;
 			state.dragging = false;
-			added = false;
-			document.body.removeEventListener( "mousemove", mm );
-			document.body.removeEventListener( "mouseup", mu );
+			if( added ) {
+				added = false;
+				document.body.removeEventListener( "mousemove", mouseMove );
+				document.body.removeEventListener( "mouseup", mouseUp );
+			}
 		}
 
-		c.addEventListener( "mousedown", md );
-		c.addEventListener( "mouseup", mu );
-		c.addEventListener( "mousemove", mm );
+		c.addEventListener( "mousedown", mouseDown );
+		//c.addEventListener( "mouseup", mouseUp );
+		//c.addEventListener( "mousemove", mouseMove );
 
 		c.addEventListener( "touchstart", (evt)=>{
 			evt.preventDefault();
@@ -206,6 +224,7 @@ class Popup {
 	};
 	divFrame = document.createElement( "div" );
 	divCaption = document.createElement( "div" );
+	divTitle = document.createElement( "span" );
         divContent = document.createElement( "div" );
         divClose = document.createElement( "div" );
 	popup = this;
@@ -217,20 +236,26 @@ class Popup {
 		if( caption_ != "" )
 			this.divFrame.appendChild( this.divCaption );
 		this.divFrame.appendChild( this.divContent );
+		this.divCaption.appendChild( this.divTitle );
 		this.divCaption.appendChild( this.divClose );
 
 		this.divCaption.className = "frameCaption";
 		this.divContent.className = "frameContent";
-		this.divClose.className = "captionButton";
+		this.divClose.className = "captionButton closeButton";
         	popupTracker.addPopup( this );
-           this.caption = caption_;
-                parent = (parent&&parent.divContent) || document.body;
-			parent.appendChild( this.divFrame );
 
-			addCaptionHandler( this.divCaption, this );
-      }
+		this.divClose.addEventListener( "click", (evt)=>{
+			this.hide();
+		} );
+
+		this.caption = caption_;
+			parent = (parent&&parent.divContent) || parent || document.body;
+		parent.appendChild( this.divFrame );
+
+		addCaptionHandler( this.divCaption, this );
+	}
 		set caption(val) {
-			this.divCaption.innerText = val;
+			this.divTitle.textContent = val;
 		}
 		center() {
 			var myRect = this.divFrame.getBoundingClientRect();
@@ -366,7 +391,7 @@ function makeButton( form, caption, onClick ) {
 	var buttonInner = document.createElement( "div" );
 	buttonInner.className = "buttonInner";
 	buttonInner.style.width = "max-content";
-	buttonInner.innerText = caption;
+	buttonInner.textContent = caption;
 
         button.appendChild(buttonInner);
 
@@ -665,6 +690,79 @@ function makeCheckbox( form, o, field, text )
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
+
+        binder.addEventListener( "mousedown", (evt)=>{
+                evt.stopPropagation();
+        })
+
+	return {
+		on(event,cb){
+			if( event === "change" ) onChange.push(cb);
+			inputCountIncrement.addEventListener(event,cb);
+		},
+		get checked() {
+			return inputCountIncrement.checked;
+		},
+		set checked(val) {
+			inputCountIncrement.checked = val;
+		},
+		get value() { return inputCountIncrement.checked; },
+		set value(val) { 
+			o[field] = val;
+			inputCountIncrement.checked = val;
+			onChange.forEach( cb=>cb());
+		 }
+                ,
+                reset(){
+                    o[field] = initialValue;
+                    inputCountIncrement.checked = initialValue;
+                },
+                changes() {
+                    if( o[field] !== initialValue ) {
+                        return text
+                            + popups.strings.get( " changed from " )
+                            + initialValue
+                            + popups.strings.get( " to " )
+                            + o[field];
+                    }
+                    return '';
+				},
+		get style() {
+			return binder.style;
+		}
+	}
+}
+
+function makeSlider( form, o, field, text ) 
+{
+	let initialValue = o[field];
+	var textCountIncrement = document.createElement( "SPAN" );
+	textCountIncrement.textContent = text;
+	var inputCountIncrement = document.createElement( "INPUT" );
+	inputCountIncrement.setAttribute( "type", "range");
+	inputCountIncrement.setAttribute( "min", 1);
+	inputCountIncrement.setAttribute( "max", 1000);
+	inputCountIncrement.className = "valueSlider rightJustify";
+	inputCountIncrement.value = o[field];
+	//textDefault.
+	var onChange = [];
+	var binder = document.createElement( "div" );
+	binder.className = "fieldUnit";
+	//binder.addEventListener( "click", (e)=>{ 
+	//	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
+	inputCountIncrement.addEventListener( "input", (e)=>{ 
+		 o[field] = inputCountIncrement.value; 
+	})
+
+	form.appendChild(binder );
+	binder.appendChild( textCountIncrement );
+	binder.appendChild( inputCountIncrement );
+
+        binder.addEventListener( "mousedown", (evt)=>{
+                evt.stopPropagation();
+        })
+
+	//form.appendChild( document.createElement( "br" ) );
 	return {
 		on(event,cb){
 			if( event === "change" ) onChange.push(cb);
@@ -740,8 +838,14 @@ function makeTextInput( form, input, value, text, money, percent ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+        binder.addEventListener( "mousedown", (evt)=>{
+                evt.stopPropagation();
+        })
+
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+		blur() { inputControl.blur() },
 		get value () {
 			if( money )
 				return utils.toD(inputControl.value);
@@ -1194,11 +1298,13 @@ function createPopupMenu() {
 				const value = createPopupMenu();
 				{
 					value.parent = this;
+                                       	this.items.push( value );
 					newItem.addEventListener( "mouseover", (evt)=>{
 						var r = newItem.getBoundingClientRect();
 						keepShow = true;
-						console.log( "Item is clicked show that.", evt.clientX, evt.clientY );
-						value.show( evt.clientX, r.top - 10, menu.cb );
+						console.log( "Item hover show that.", evt.clientX, evt.clientY );
+
+						value.show( evt.clientX + 25, r.top - 10, menu.cb );
 						menu.subOpen = value;
 					} );
 					newItem.addEventListener( "mouseout", (evt)=>{
@@ -1208,7 +1314,8 @@ function createPopupMenu() {
 							value.hide();
 					} );
 					newItem.addEventListener( "mousemove", (evt)=>{
-						if( this.subOpen ) this.subOpen.lastShow = Date.now();
+						if( this.subOpen )
+                                                	this.subOpen.lastShow = Date.now();
 					} );
 				}
 				return value;
@@ -1216,17 +1323,26 @@ function createPopupMenu() {
 		hide( all ) {
 			if( menu.lastShow ) return menuCloser();			
 			this.container.style.visibility = "hidden";
-			if( this.parent ) {
-				this.parent.subOpen = null; // should be the same as Me... 
-				if( all )
+                        const sub = this.subOpen;
+                        if( sub ) {
+                                this.subOpen = null;
+                        	sub.hide( all );
+                        }
+
+			if( this.parent && this.parent.subOpen ) {
+				if( all ) {
+                                	// close from here up
 					this.parent.hide( all );
+                                }
 			} else {
 				mouseCatcher.style.visibility = "hide"
 			}
 		},
-		show( board, x, y, cb ) {
+		show( x, y, cb ) {
+                    	if( this.parent )
+	                    	this.parent.subOpen = this;
 			menu.lastShow = Date.now();
-			this.board = board;
+			//this.board = board;
 			menu.cb = cb;
 			mouseCatcher.style.visibility = "visible"
 			this.container.style.visibility = "inherit";
@@ -1235,6 +1351,10 @@ function createPopupMenu() {
 		},
 		reset() {
 			this.hide(true);
+			let  n;
+			while( n = menu.container.childNodes[0] ){
+				n.remove();
+			}
 			//console.log( "hide everything?" );	
 		}
 	};
@@ -1246,6 +1366,579 @@ function createPopupMenu() {
 	//document.body.appendChild( menu.container );
 	return menu;
 }
+
+
+export class GraphicFrame extends Popup {
+
+    constructor () {
+    	//const defaultFont1 = "20px Arial";
+        super(null,null);
+
+        const appCanvas = this.divContent;
+
+var rect = appCanvas.getBoundingClientRect();
+appCanvas.width = rect.right-rect.left;//window.innerWidth;
+appCanvas.height = rect.bottom-rect.top;//window.innerHeight;
+var appSizing;
+var usingSection;
+var appDragging;
+
+
+appCanvas.addEventListener( "mousemove", mouseMove );
+appCanvas.addEventListener( "mouseup", mouseUp );
+appCanvas.addEventListener( "mousedown", mouseDown );
+
+var frames = [];
+
+var prior_buttons;
+const _MK_LBUTTON = 1;
+const _MK_RBUTTON = 2;
+const _MK_MBUTTON = 4;
+
+	var zz = 0;
+function drawScreen() {
+	appCtx.clearRect(0,0,appCanvas.width,appCanvas.height);
+	frames.forEach( frame=>{
+		appCtx.drawImage( frame.canvas, frame.x, frame.y );//, frame.width, frame.height, frame.w, frame.h, frame.width, frame.height );
+	} );
+}
+
+function mouse( x,y,b ) {
+	const rect = appCanvas.getBoundingClientRect();
+	const w = rect.right-rect.left;//window.innerWidth;
+	const h = rect.bottom-rect.top;//window.innerHeight;
+	const cx = (((x-rect.left)));
+	const cy = (((y-rect.top)));
+	const px = (((x-rect.left)-(w/2.0))) * 2;
+	const py = (((rect.bottom-y)-(h/2.0))) * 2;
+      
+
+	//console.log( "mouse:",cx, cy, b );
+	var wasMouse;
+	var onFrame;
+	if( appDragging ) {
+		var m = appDragging.getMouse( cx, cy );
+		appDragging.x += m.x - appDragging.startX;
+		appDragging.y += m.y - appDragging.startY;
+	}
+
+	if( ( onFrame = appSizing && ( ( wasMouse = appSizing.getMouse( cx, cy ) ), wasMouse.section = usingSection, appSizing ) ) 
+	  || ( onFrame = frames.find( frame=>wasMouse=frame.isMouse( cx, cy ) ) ) ) {
+		//console.log( "frameMouse:", wasMouse, x,y, b, prior_buttons );
+		
+		switch( wasMouse.section ) {
+		default: 
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appDragging = onFrame;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			}
+	                else if( !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				appDragging = null;
+			}
+			//console.log( "Section not found:", wasMouse.section );
+			break;
+		case 1:
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				// last left.
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+					onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
+					onFrame.x += wasMouse.x - onFrame.startX;
+			}
+			break;
+		case 2: // right side, center
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
+				onFrame.startX = wasMouse.x;
+			}
+			break;
+		case 4:
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				// last left.
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY) );
+				onFrame.y += wasMouse.y - onFrame.startY;
+			}
+			break;
+		case 8:
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				// last left.
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				onFrame.setHeight( onFrame.h + (wasMouse.y - onFrame.startY) );
+				onFrame.startY = wasMouse.y;
+			}
+			break;
+		case 1+4: // top left
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				// last left.
+				onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
+				onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY ) );
+				onFrame.x += wasMouse.x - onFrame.startX;
+				onFrame.y += wasMouse.y - onFrame.startY;
+			}
+			break;
+		case 2 + 4: // right side, upper corner
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
+				onFrame.startX = wasMouse.x;
+
+				onFrame.setHeight( onFrame.h - ( wasMouse.y - onFrame.startY ) );
+				onFrame.y += wasMouse.y - onFrame.startY;
+			}
+			break;
+
+		case 1+8: // top left
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				// last left.
+				onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
+				onFrame.setHeight( onFrame.h + wasMouse.y - onFrame.startY );
+				onFrame.x += wasMouse.x - onFrame.startX;
+				onFrame.startY = wasMouse.y;
+			}
+			break;
+		case 2 + 8: // right side, upper corner
+	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = onFrame;
+				usingSection = wasMouse.section;
+				onFrame.startX = wasMouse.x;
+				onFrame.startY = wasMouse.y;
+			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				appSizing = null;
+	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
+				onFrame.startX = wasMouse.x;
+				onFrame.setHeight( onFrame.h + (wasMouse.y - onFrame.startY) );
+				onFrame.startY = wasMouse.y;
+			}
+			break;
+		}
+		drawScreen();
+	}
+
+	if( !wasMouse.section && onFrame ) {
+		//onFrame.mouse(
+	}
+
+	{ // LEFT BTUTTON
+                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			// start left.
+		}
+                else if( ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			// drag left.
+		}
+                else if( !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			// last left.
+		}
+
+	}
+
+	prior_buttons = b;
+}
+
+var _buttons = 0;
+function mouseMove( evt ) {
+	evt.preventDefault();
+	mouse( evt.clientX, evt.clientY, _buttons );
+}
+function mouseUp( evt ) {
+	evt.preventDefault();
+	_buttons = evt.buttons;
+	mouse( evt.clientX, evt.clientY, _buttons );
+}
+function mouseDown( evt ) {
+	evt.preventDefault();
+	_buttons = evt.buttons;
+	mouse( evt.clientX, evt.clientY, _buttons );
+}
+
+
+
+//-----------------------------------------------------------------------
+
+function makeFrame( w, h, _mouse, _draw ) {
+	var frameFrame;
+	var leftWidth = 54;		
+	var topWidth = 54;
+	var rightWidth = 58;
+	var bottomWidth = 55;
+	var mouseSection = 0;
+	var draw = _draw;
+	var mouse = _mouse;
+	var frame = { canvas : document.createElement( "canvas" )
+		, ctx : null
+		, w: w
+		, h : h
+		, x: 0
+		, y : 0
+		, sx : leftWidth
+		, sy : topWidth
+		, sw : w - ( leftWidth+rightWidth )
+		, sh : h - ( topWidth+bottomWidth )
+		, sizing : false
+		, dragging : false
+		, startX : 0
+		, startY : 0
+		, write() {
+			appContext.drawImage( this.canvas, this.x, this.y );	
+		}
+		, setFrame( image ) {
+			var img = document.createElement( "IMG" );
+			img.src=image;
+			img.onload = function() {
+				frameFrame = img;
+				console.log( "have image loaded?" );
+				drawFrame();
+			}
+		}
+		, setWidth( w ) {
+			this.w = w;
+			this.sw = this.w - (leftWidth+rightWidth);
+			this.canvas.width = this.w;
+			drawFrame();
+		}
+		, setHeight( h ) {
+			this.h = h;
+			this.sh = this.h - (topWidth+bottomWidth);
+			this.canvas.height = this.h;
+			drawFrame();
+		}
+		, setDraw( cb ) { draw = cb }
+		, getMouse( x, y ) {
+			var sx, sy, tx, ty, farx = false, fary = false;
+
+			ty=y-this.y;
+			if( (tx=x-this.x) > leftWidth && (ty) > topWidth ) {
+				sx=tx-leftWidth;
+				sy=ty-topWidth;
+				if( (true,tx) < ( this.w - (leftWidth+rightWidth) )  && (true,ty) < ( this.h - (topWidth+bottomWidth) ) ) {
+					return { frame:false, x:tx, y:ty };
+				}
+			}
+			var section = 0;
+			if( tx < leftWidth )
+				section += 1;
+			else if( tx > this.w - leftWidth )
+				section += 2;
+
+			if( ty < topWidth )
+				section += 4;
+			else if( ty > this.h - topWidth )
+				section += 8;
+
+			return { frame:true, section:section, x:tx, y:ty };
+		}
+		, isMouse( x, y ) {
+			var sx, sy, tx, ty, farx = false, fary = false;
+			
+
+			if( x > this.x && y > this.y && x < (this.x+this.w) && y < (this.y+this.h) ) {
+				ty=y-this.y;
+				if( (tx=x-this.x) > leftWidth && (ty) > topWidth ) {
+					sx=tx-leftWidth;
+					sy=ty-topWidth;
+					if( (true,tx) < ( this.w - (leftWidth+rightWidth) )  && (true,ty) < ( this.h - (topWidth+bottomWidth) ) ) {
+						return { frame:false, x:tx, y:ty };
+					}
+				}
+				var section = 0;
+				if( tx < leftWidth )
+					section += 1;
+				else if( tx > this.w - leftWidth )
+					section += 2;
+
+				if( ty < topWidth )
+					section += 4;
+				else if( ty > this.h - topWidth )
+					section += 8;
+
+				return { frame:true, section:section, x:tx, y:ty };
+			}
+			return null;
+		}
+	};
+	frames.push( frame );
+	frame.canvas.width = w;
+	frame.canvas.height = h;
+	
+	frame.ctx = frame.canvas.getContext( "2d" );
+	frame.ctx.font = defaultFont1;
+	//frame.ctx.fillRect( 0,0,100,100 );
+	//appCtx.fillRect( 0,0,100,100 );
+
+	function drawFrame() {
+		if( !frameFrame )  return;
+		var src = frameFrame;
+		var ctx = frame.ctx;
+		var outCtx = appCtx;//frame.ctx;
+		//------------ corners ------------------
+
+		ctx.drawImage(frameFrame, 0, 0, leftWidth, topWidth, 0, 0, leftWidth, topWidth );
+		
+		ctx.drawImage(frameFrame, frameFrame.width-rightWidth, 0, leftWidth, topWidth, frame.canvas.width-rightWidth, 0, leftWidth, topWidth );
+
+		ctx.drawImage(frameFrame, 0, src.height-bottomWidth, leftWidth, topWidth, 0, frame.canvas.height - bottomWidth, leftWidth, bottomWidth );
+
+		ctx.drawImage(frameFrame, frameFrame.width-rightWidth, src.height-bottomWidth, rightWidth, bottomWidth
+			, frame.canvas.width-rightWidth, frame.canvas.height - bottomWidth, rightWidth, bottomWidth );
+
+		// top-bottom
+		ctx.drawImage(frameFrame, leftWidth, 0
+			, src.width-(leftWidth+rightWidth), topWidth
+			, leftWidth, 0, frame.canvas.width-(leftWidth+rightWidth), topWidth );
+
+		ctx.drawImage(frameFrame, leftWidth, src.height-bottomWidth
+			, src.width-(leftWidth+rightWidth), bottomWidth
+			, leftWidth, frame.canvas.height-bottomWidth
+			, frame.canvas.width-(leftWidth+rightWidth), bottomWidth );
+
+		// left-right
+		ctx.drawImage(frameFrame, 0, topWidth
+			, leftWidth, src.height-(topWidth+bottomWidth)
+			, 0, topWidth
+			, leftWidth, frame.canvas.height-(topWidth+bottomWidth) );
+
+		ctx.drawImage(frameFrame, src.width - rightWidth, topWidth
+			, rightWidth, src.height-(topWidth+bottomWidth)
+			, frame.canvas.width - rightWidth, topWidth
+			, rightWidth, frame.canvas.height-(topWidth+bottomWidth) );
+
+		ctx.drawImage(frameFrame
+			, leftWidth, topWidth, src.width-(leftWidth+rightWidth), src.height-(topWidth+bottomWidth)
+			, leftWidth, topWidth, frame.canvas.width-(leftWidth+rightWidth), frame.canvas.height-(topWidth+bottomWidth) );
+
+
+		renderLabel(ctx, "LABEL", 50, 75 );
+		
+		outCtx.drawImage( frame.canvas, frame.x, frame.y );//, frame.width, frame.height, frame.w, frame.h, frame.width, frame.height );
+	
+		if( draw )
+			draw();
+//		appCtx.drawImage( frameFrame, 0, 0 );
+	}
+}
+
+
+	}
+}
+
+
+
+/*
+ //-------------------------------------------------------------
+
+function makeApp() {
+	var widgets = makeFrame( 200, 500 );
+	var tools = makeFrame( 800, 600 );
+	tools.x = widgets.w;
+	widgets.setFrame( "WindowFrame-LightWoodFilled.png" );
+
+	tools.setFrame( "WindowFrame-LightWoodFilled.png" );
+
+	makeNameTray();
+}
+
+*/
+
+
+//-----------------------------------------------------------------
+
+
+function makeLoginForm( doLogin  ) {
+	var connection = createPopup( "Connecting", null );
+	var center = document.createElement( "CENTER" );
+
+	var pRect = connection.divFrame.getBoundingClientRect();
+	connection.divFrame.style.left = document.body.clientWidth/2 - pRect.width/2;
+	connection.divFrame.style.top = document.body.clientHeight/2 - pRect.height/2;
+	connection.caption = "Login..."
+
+	var topPadding = document.createElement( "div" );
+	topPadding.style.height = "10px";
+
+	var userPrompt = document.createElement( "div" );
+	userPrompt.innerText = "Account Name";
+
+	var userField = document.createElement( "div" );
+	userField.className = "loginUsername";
+	userField.setAttribute( "contenteditable", true );
+	userField.innerText = "";
+
+	var userPassword = document.createElement( "div" );
+	userPassword.innerText = "Password";
+
+	var passField = document.createElement( "div" );
+	passField.className = "loginPassword";
+	passField.setAttribute( "contenteditable", true );
+	passField.setAttribute("type", "password");
+	//passField.style.password = true;
+	passField.innerText = "";
+
+	var btnPadding = document.createElement( "div" );
+	btnPadding.style.height = "10px";
+
+
+	var userLogin = document.createElement( "div" );
+	userLogin.className = "button";
+	userLogin.style.width = "max-content";
+	var userLoginInner = document.createElement( "div" );
+	userLoginInner.className = "buttonInner";
+	userLoginInner.style.width = "max-content";
+	userLoginInner.innerText = "Login";
+
+	var userStatus = document.createElement( "div" );
+	userStatus.textContent = "";
+
+	connection.setStatus = (status)=>{
+		userStatus.textContent = status;
+	}
+
+	var guestLogin = document.createElement( "div" );
+	guestLogin.className = "button";
+	guestLogin.style.width = "max-content";
+	var guestLoginInner = document.createElement( "div" );
+	guestLoginInner.className = "buttonInner";
+	guestLoginInner.style.width = "max-content";
+	guestLoginInner.innerText = "Use Guest Login";
+	
+	var isGuestLogin = false;
+	var GuestName = localStorage.getItem( "guestName" );
+
+	userLogin.addEventListener( "click", ()=>{
+		if( isGuestLogin ) {
+			if( userField.innerText.length < 3 ) {
+				alertForm.caption = "Please use a longer display name...";
+				alertForm.show();
+			} else {
+				doLogin( userField.innerText, "password" );
+                                /*
+				localStorage.setItem( "devkey", idGen.generator() );
+				var a, b, c, d;
+				localStorage.setItem( "a", a = idGen.generator() );
+				localStorage.setItem( "b", b = userField.innerText );
+				localStorage.setItem( "c", c = idGen.generator() );
+				localStorage.setItem( "d", d = idGen.generator().substr(0,8)+"@d3x0r.org" );
+
+				protocol.createUser( a, b, d, c, (msg, err, username)=>{
+					//console.log( "create user callback Got:", msg, err)
+					if( msg ) {
+						guestLogin.style.display = "none";
+						isGuestLogin = username;
+						protocol.request( "chainReaction", null,null,handleService );
+					} else {
+						if( err === "Account Error" ) {
+							connection.setStatus( "Name is in use." );
+						} else
+							connection.setStatus( "Login Error" );
+						console.log( "error?", err );
+					}
+				} );
+
+				localStorage.setItem( "guestName", userField.innerText );
+                                */
+			}
+		}
+		else {
+                      	if( doLogin )
+				doLogin( userField.innerText, passField.innerHTML );
+			/*
+			protocol.login( userField.innerText, passField.innerHTML,(passFail,userId,userName,ws)=>{
+				console.log( "Login passfail.a:",passFail,"B:",userId, "C:",userName);
+				if( passFail ) {
+					console.log( "Requesting game service...");
+					protocol.request( "chainReaction", null,null,handleService );
+				} else {
+					connection.setStatus( "Login Failed." );
+					passField.textContent = "";
+				}
+			} );
+                        */
+		}
+	})
+
+	userLogin.appendChild( userLoginInner );
+
+	guestLogin.addEventListener( "click", ()=>{
+		userPrompt.innerText = "Display Name";
+		userPassword.style.display = "none";
+		passField.style.display = "none";
+		guestLogin.style.display = "none";
+		localStorage.setItem( "devkey", idGen.generator() );
+		isGuestLogin = true;
+	})
+      	guestLogin.appendChild( guestLoginInner );
+
+
+
+	connection.divContent.appendChild( topPadding );
+	center.appendChild( userPrompt );
+	center.appendChild( userField );
+	center.appendChild( userPassword );
+	center.appendChild( passField );
+	center.appendChild( btnPadding );
+	center.appendChild( userLogin );
+	center.appendChild( guestLogin );
+	connection.divContent.appendChild( center );
+	connection.divContent.appendChild( userStatus );
+	
+	var centerLink = document.createElement( "center" );
+	var accountLink = document.createElement( "a");
+	accountLink.href = "https://" + location.host + "/#login";
+	accountLink.innerText = "Create An Account";
+	centerLink.appendChild( accountLink );
+	connection.divFrame.appendChild( centerLink );
+	
+	connection.center();
+
+	return connection;
+}
+
+
 
 
 export {popups};

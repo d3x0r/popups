@@ -1,0 +1,16 @@
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<title>Login Form Test</title>
+</head>
+
+<body>
+</body>
+<script type="module">
+import {popups} from "../popups.mjs"
+
+const login = popups.makeLoginForm( (user,pass)=>{
+	alert( ["Login Form sent event:", user, pass].join( " " ) );
+});
+</script>
+</html>
