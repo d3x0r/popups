@@ -1968,7 +1968,7 @@ function makeWindowManager() {
 	const taskButton = document.createElement( "div" );
         taskButton.className = "taskManagerFloater";
         document.body.appendChild( taskButton );
-	const taskPanel document.createElement( "div" );
+	const taskPanel = document.createElement( "div" );
 	const taskWindow = new Popup( null, null, taskPanel );
         taskWindow.className = "taskManagerPanel";
 
