@@ -2045,12 +2045,12 @@ function makeLoginForm( doLogin  ) {
 
 function makeWindowManager() {
 	const taskButton = document.createElement( "div" );
-        taskButton.className = "taskManagerFloater";
-        document.body.appendChild( taskButton );
+	taskButton.className = "taskManagerFloater";
+	document.body.appendChild( taskButton );
 	const taskPanel = document.createElement( "div" );
 	const taskWindow = new Popup( null, null, { from:taskPanel} );
-        taskWindow.className = "taskManagerPanel";
-        taskWindow.hide();
+	taskWindow.className = "taskManagerPanel";
+	taskWindow.hide();
 
 
 	addCaptionHandler( taskButton, null );
