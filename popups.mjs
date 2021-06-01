@@ -15,12 +15,94 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
+import {connection as wsClient} from "./example/webSocketClient.js";
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
 const utils = globalThis.utils || {
-	to$(s) { return "$"+s;},
+    ROUND_DOWN:1,
+    ROUND_UP :2,
+    ROUND_NATURAL:3,
+    // --------- These need to go into utils or something
+    to$(val,rounder) {
+        function pad(val, n) {
+            if( val.length < n) {
+                val = '00000'.substr(0,n-val.length)+val;
+            }
+            return val;
+        }
+        var digits = Math.log10(val) - 2;
+        var n;
+        var r = '';
+        var c = (val/100)|0;
+        var cnts;
+        if( cnts = val % 100 ) {
+            if( rounder === 1 ) {
+                if( val < 0 )
+                    val -= 1;
+                else   
+                    val += 1;
+            }else if( rounder === 2 ){
+                if( val < 0 )
+                    val += 1;
+                    else
+                    val -=1 ;
+            }else if( rounder === 3 ) {
+                if( val < 0 )
+                    if( cnts >= 50 )
+                        val -= 1;
+                    else
+                        val += 1;
+                else
+                    if( cnts >= 50 )
+                        val += 1;
+                    else
+                        val -= 1;
+            }
+            else
+                r = '.' + pad((val%100).toString(),2);
+        }
+        if( digits >= 3 ) {
+            for( n = 0; n <= digits-3; n += 3) {
+                r = "," + pad(((c%1000)|0).toString(),3) + r;
+                c = (c / 1000)|0;
+            }
+        }
+        r = '$' + (c%1000) + r;
+        return r;
+    },
+
+    toD($) {
+        if( "string" !== typeof $ )
+            $ = $.toString();
+        if( $[0] === '$' )
+            $ = $.substr(1);
+        //   throw new Error( "NOT A DOLLAR AMOUNT" );
+        var i = $.indexOf('.' );
+        if( i >= 0 && $.length-i > 2 ) {
+            var trunc = $.split(',' ).join('').split('.');
+            trunc[trunc.length-1] = trunc[trunc.length-1].substr(0,2);
+            return Number( trunc.join('') );
+
+        } else if( i >= 0 && $.length-i == 3 )
+            return Number( $.split(',' ).join('').split('.').join('') );
+        else if( i >= 0 && $.length-i == 2 )
+            return Number( $.split(',' ).join('').split('.').join('') ) * 10;
+            return (Number( $.split(',' ).join('') ) * 100)|0;
+    },
+
+    toP(p) {
+        if( "string" !== typeof p )
+            p = p.toString();
+        return p + "%";
+    },
+    fromP(p){
+        p = p.split('%').join('');
+        return Number(p);        
+    }
 }
+
+
 const localStorage = globalThis.localStorage;
 
 const popups = {
@@ -56,7 +138,7 @@ var popupTracker;
 function addCaptionHandler( c, popup_ ) {
 	var popup = popup_;
 	if( !popup )
-	 	popup = createPopup( null, c );
+	 	popup = createPopup( null, {from:c} );
 
 
 	var mouseState = {
@@ -231,7 +313,10 @@ class Popup {
         divClose = document.createElement( "div" );
 	popup = this;
 
-	constructor(caption_,parent,forContent) {
+	constructor(caption_,parent,opts) {
+            	const suffix = opts?.suffix ||'';
+		// make popup from control.
+		const forContent = opts?.from;
                 if( forContent ) {
                     this.divFrame = forContent;
                     this.divContent = null;
@@ -308,6 +393,7 @@ class Popup {
 			this.divFrame.style.display = "none";
 		}
 		show() {
+                    	this.raise();
 			this.divFrame.style.display = "";
 			//popupTracker.raise( this );
 
@@ -1003,7 +1089,7 @@ function makeNameInput( form, input, value, text ){
 	binder.className = "fieldUnit";
 	form.appendChild(binder );
 	binder.appendChild( textLabel );
-	binder.appendChild( text );
+	binder.appendChild( textOutput );
 	binder.appendChild( buttonRename );
 	//binder.appendChild( document.createElement( "br" ) );
 	return {
@@ -1811,155 +1897,147 @@ function makeApp() {
 
 //-----------------------------------------------------------------
 
+function initAlertForm() {
+	var popup = {
+		divFrame : document.getElementById( "alert" ),
+		divCaption : document.getElementById( "alertContent" ),
+		show() {
+			this.divFrame.style.display = "unset";
+		},
+		hide() {
+			this.divFrame.style.display = "none";
+		},
+		set caption( val ) {
+			this.divCaption.textContent = val;
+		}
+	};
+	popup.divFrame.addEventListener( "click", ()=>{
+		popup.divFrame.style.display = "none";
+	})
+	return popup;
+}
+
+var alertForm = null;//initAlertForm();
+//alertForm.hide();
+
+
 
 function makeLoginForm( doLogin  ) {
 	var connection = createPopup( "Connecting", null );
-	var center = document.createElement( "CENTER" );
 
-	var pRect = connection.divFrame.getBoundingClientRect();
-	connection.divFrame.style.left = document.body.clientWidth/2 - pRect.width/2;
-	connection.divFrame.style.top = document.body.clientHeight/2 - pRect.height/2;
-	connection.caption = "Login..."
+       	connection.connect = function() {
+            	connection.caption = "Login Ready...";
+        }
 
-	var topPadding = document.createElement( "div" );
-	topPadding.style.height = "10px";
+       	connection.disconnect = function() {
+            	connection.caption = "Connecting...";
+        }
 
-	var userPrompt = document.createElement( "div" );
-	userPrompt.innerText = "Account Name";
+        connection.hide();
 
-	var userField = document.createElement( "div" );
-	userField.className = "loginUsername";
-	userField.setAttribute( "contenteditable", true );
-	userField.innerText = "";
+	let createMode =false;
+        let isGuestLogin = false;
 
-	var userPassword = document.createElement( "div" );
-	userPassword.innerText = "Password";
+        fillFromURL( connection, "loginForm.html" ).then( ()=>{
+    		wsClient.loginForm = connection;
+                if( wsClient.connected ) {
+                    // already connected; connect event would not have fired
+                    connection.caption = "Login Ready";
+                    // sometimes it is already connected...
+                }
 
-	var passField = document.createElement( "div" );
-	passField.className = "loginPassword";
-	passField.setAttribute( "contenteditable", true );
-	passField.setAttribute("type", "password");
-	//passField.style.password = true;
-	passField.innerText = "";
+    		const f = connection.divFrame;
 
-	var btnPadding = document.createElement( "div" );
-	btnPadding.style.height = "10px";
+    		const form1 = f.querySelector( "#loginForm" );
 
+    		const form2 = f.querySelector( "#createForm" );
+    		const form3 = f.querySelector( "#guestForm" );
 
-	var userLogin = document.createElement( "div" );
-	userLogin.className = "button";
-	userLogin.style.width = "max-content";
-	var userLoginInner = document.createElement( "div" );
-	userLoginInner.className = "buttonInner";
-	userLoginInner.style.width = "max-content";
-	userLoginInner.innerText = "Login";
+                form3.style.display = "none";
+                form2.style.display = "none";
+                //form3.style.display = "none";
 
-	var userStatus = document.createElement( "div" );
-	userStatus.textContent = "";
+		const userField =form1.querySelector( "#user" );
+		const passField =form1.querySelector( "#password" );
+		const nameField2 =form2.querySelector( "#name" );
+		const userField2 =form2.querySelector( "#username" );
+		const emailField2 =form2.querySelector( "#email" );
+                const passField2 =form1.querySelector( "#password" );
+                const passField22 =form1.querySelector( "#password2" );
 
-	connection.setStatus = (status)=>{
-		userStatus.textContent = status;
-	}
+		const userField3 =form2.querySelector( "#user" );
 
-	var guestLogin = document.createElement( "div" );
-	guestLogin.className = "button";
-	guestLogin.style.width = "max-content";
-	var guestLoginInner = document.createElement( "div" );
-	guestLoginInner.className = "buttonInner";
-	guestLoginInner.style.width = "max-content";
-	guestLoginInner.innerText = "Use Guest Login";
-	
-	var isGuestLogin = false;
-	var GuestName = localStorage.getItem( "guestName" );
+		const userLogin = f.querySelector( "#doLogin" );
+		const createAccount = f.querySelector( "#createAccount" );
+		const createAccountInner = f.querySelector( "#createAccountInner" );
+		const guestLogin = f.querySelector( "#guestLogin" );
 
-	userLogin.addEventListener( "click", ()=>{
-		if( isGuestLogin ) {
-			if( userField.innerText.length < 3 ) {
-				alertForm.caption = "Please use a longer display name...";
-				alertForm.show();
-			} else {
-	                      	if( doLogin ) {
-					doLogin( "random accountName", userField.innerText, "password" );
-				}
-                                /*
-				localStorage.setItem( "devkey", idGen.generator() );
-				var a, b, c, d;
-				localStorage.setItem( "a", a = idGen.generator() );
-				localStorage.setItem( "b", b = userField.innerText );
-				localStorage.setItem( "c", c = idGen.generator() );
-				localStorage.setItem( "d", d = idGen.generator().substr(0,8)+"@d3x0r.org" );
-
-				protocol.createUser( a, b, d, c, (msg, err, username)=>{
-					//console.log( "create user callback Got:", msg, err)
-					if( msg ) {
-						guestLogin.style.display = "none";
-						isGuestLogin = username;
-						protocol.request( "chainReaction", null,null,handleService );
-					} else {
-						if( err === "Account Error" ) {
-							connection.setStatus( "Name is in use." );
-						} else
-							connection.setStatus( "Login Error" );
-						console.log( "error?", err );
-					}
-				} );
-
-				localStorage.setItem( "guestName", userField.innerText );
-                                */
-			}
-		}
-		else {
-                      	if( doLogin ) {
-				doLogin( userField.innerText, null, passField.innerHTML );
+		guestLogin.addEventListener( "click", ()=>{
+			if( isGuestLogin) {
+	               		form3.style.display = "none";
+                                if( createMode ) {
+	        	       		form2.style.display = "";
+	               			form1.style.display = "none";
+				}else{
+	        	       		form2.style.display = "none";
+	               			form1.style.display = "";
+                                }
+                        	isGuestLogin = true;
+                        }  else {
+	               		form3.style.display = "";
+        	       		form2.style.display = "none";
+               			form1.style.display = "none";
+                        	isGuestLogin = true;
                         }
-			/*
-			protocol.login( userField.innerText, passField.innerHTML,(passFail,userId,userName,ws)=>{
-				console.log( "Login passfail.a:",passFail,"B:",userId, "C:",userName);
-				if( passFail ) {
-					console.log( "Requesting game service...");
-					protocol.request( "chainReaction", null,null,handleService );
+			connection.center();
+               	} );
+		createAccount.addEventListener( "click", ()=>{
+                      	if( createMode ) {
+	               		form3.style.display = "none";
+        	       		form2.style.display = "none";
+	               		form1.style.display = "";
+
+        	                createAccountInner.innerText = "Create Account";
+				connection.center();
+                       }else {
+	               		form3.style.display = "none";
+        	       		form2.style.display = "";
+	               		form1.style.display = "none";
+
+        	                createAccountInner.innerText = "Use Account";
+				connection.center();
+                       }
+                        isGuestLogin = false;
+                        createMode = !createMode;
+               	} );
+
+
+		userLogin.addEventListener( "click", ()=>{
+			if( isGuestLogin ) {
+				if( userField.innerText.length < 3 ) {
+                                    	if( !alertForm ) alertForm = initAlertForm();
+					alertForm.caption = "Please use a longer display name...";
+					alertForm.show();
 				} else {
-					connection.setStatus( "Login Failed." );
-					passField.textContent = "";
+					wsClient.ws.doGuest( userField3.innerText );
 				}
-			} );
-                        */
-		}
-	})
+			}
+			else {
+                            	if(createMode ) {
+					wsClient.ws.doCreate( nameField2.value, userField2.value, passField.innerHTML );
+                                    } else {
+					wsClient.ws.doLogin( userField.innerText, passField.innerHTML );
+	                        }
+			}
+                } );
 
-	userLogin.appendChild( userLoginInner );
-
-	guestLogin.addEventListener( "click", ()=>{
-		userPrompt.innerText = "Display Name";
-		userPassword.style.display = "none";
-		passField.style.display = "none";
-		guestLogin.style.display = "none";
-		localStorage.setItem( "devkey", idGen.generator() );
-		isGuestLogin = true;
-	})
-      	guestLogin.appendChild( guestLoginInner );
+	        connection.show();
+		connection.center();
+	} );
 
 
 
-	connection.divContent.appendChild( topPadding );
-	center.appendChild( userPrompt );
-	center.appendChild( userField );
-	center.appendChild( userPassword );
-	center.appendChild( passField );
-	center.appendChild( btnPadding );
-	center.appendChild( userLogin );
-	center.appendChild( guestLogin );
-	connection.divContent.appendChild( center );
-	connection.divContent.appendChild( userStatus );
 	
-	var centerLink = document.createElement( "center" );
-	var accountLink = document.createElement( "a");
-	accountLink.href = "https://" + location.host + "/#createAccount";
-	accountLink.innerText = "Create An Account";
-	centerLink.appendChild( accountLink );
-	connection.divFrame.appendChild( centerLink );
-	
-	connection.center();
 
 	return connection;
 }
@@ -1969,9 +2047,10 @@ function makeWindowManager() {
 	const taskButton = document.createElement( "div" );
         taskButton.className = "taskManagerFloater";
         document.body.appendChild( taskButton );
-	const taskPanel document.createElement( "div" );
-	const taskWindow = new Popup( null, null, taskPanel );
+	const taskPanel = document.createElement( "div" );
+	const taskWindow = new Popup( null, null, { from:taskPanel} );
         taskWindow.className = "taskManagerPanel";
+        taskWindow.hide();
 
 
 	addCaptionHandler( taskButton, null );
@@ -1991,14 +2070,18 @@ function makeWindowManager() {
 
 function fillFromURL(popup, url) {
 
-    fetch(url).then(response => {
-	response.text().then( (text)=>{
+    return fetch(url).then(response => {
+	return response.text().then( (text)=>{
                 popup.divContent.innerHTML = text;
 		nodeScriptReplace(popup.divContent);
+		return popup;
+                return new Promise( (res,rej)=>{
+
+		       // popup;
+                } );
 	} );
        })
 
-	return popup;
 
 	function nodeScriptReplace(node) {
                 if ( nodeScriptIs(node) === true ) {
