@@ -167,12 +167,16 @@ function processMessage( msg ) {
 		if( msg.success ) {
 			if( l.loginForm && l.loginForm.login )
 				l.loginForm.login();
-			else
-				Alert(" Login Success" );			
+			Alert(" Login Success" );			
 		} else if( msg.ban )  {
 			Alert( "Bannable Offense" );
-		} else
-			Alert( "Login Failed..." );		
+		} else if( msg.account ) {
+			Alert( "Account name in use..." );
+		} else if( msg.email ) {
+			Alert( "Email already in use... <br> Try account recovery?" );
+		} else {
+			Alert( "Creation Failed..." );
+		}
 		
 	}
 	else if( msg.op === "set" ) {

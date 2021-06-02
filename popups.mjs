@@ -1911,15 +1911,15 @@ export class AlertForm extends Popup {
 
 	show() {
 		this.raise();
-		this.center();
 		super.show();
+		this.center();
 	}
 	hide() {           
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
 		console.log( "This should be caption set:", val );
-		this.divContent.textContent = val;
+		this.divContent.innerHTML = val;
 	}
 
 }

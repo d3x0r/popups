@@ -380,9 +380,9 @@ div.mouseCatcher{
 
 .alert-content{
  	font-size:300%;
-	background-color:#400;
-	width:75vw;
-	height:5em;
-	line-height:5em;
-	color:#FFF;
+ 	background-color:#400;
+ 	width:75vw;
+ 	height:5em;
+ 	color:#FFF;
+ 	/* line-height: 2.5em; */
 }
