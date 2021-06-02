@@ -330,14 +330,17 @@ class Popup {
 		this.divFrame.style.left= 0;
 		this.divFrame.style.top= 0;
                 if( this.divCaption ) {
-			if( caption_ != "" )
+			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
-			this.divCaption.appendChild( this.divTitle );
-                        if( this.divClose )
-				this.divCaption.appendChild( this.divClose );
+				this.divCaption.appendChild( this.divTitle );
+        	                if( this.divClose )
+					this.divCaption.appendChild( this.divClose );
+			}
 
 			this.divCaption.className = "frameCaption";
 			this.divContent.className = "frameContent";
+	                if( this.divCaption )
+				addCaptionHandler( this.divCaption, this );
                 }
 		if( this.divContent )
 			this.divFrame.appendChild( this.divContent );
@@ -356,8 +359,6 @@ class Popup {
 		parent = (parent&&parent.divContent) || parent || document.body;
 
 		parent.appendChild( this.divFrame );
-                if( this.divCaption )
-			addCaptionHandler( this.divCaption, this );
 
 	}
 
@@ -1897,24 +1898,30 @@ function makeApp() {
 
 //-----------------------------------------------------------------
 
-function initAlertForm() {
-	var popup = {
-		divFrame : document.getElementById( "alert" ),
-		divCaption : document.getElementById( "alertContent" ),
-		show() {
-			this.divFrame.style.display = "unset";
-		},
-		hide() {
-			this.divFrame.style.display = "none";
-		},
-		set caption( val ) {
-			this.divCaption.textContent = val;
-		}
-	};
-	popup.divFrame.addEventListener( "click", ()=>{
-		popup.divFrame.style.display = "none";
-	})
-	return popup;
+export class AlertForm extends Popup {
+
+	constructor() {
+		super( null, null );
+		const this_ = this;
+		this.divContent.className += " alert-content";
+		this.divFrame.addEventListener( "click", ()=>{
+			this_.hide();
+		})
+	}
+
+	show() {
+		this.raise();
+		this.center();
+		super.show();
+	}
+	hide() {           
+		this.divFrame.style.display = "none";
+	}
+	set caption( val ) {
+		console.log( "This should be caption set:", val );
+		this.divContent.textContent = val;
+	}
+
 }
 
 var alertForm = null;//initAlertForm();
@@ -1945,96 +1952,9 @@ function makeLoginForm( doLogin  ) {
                     connection.caption = "Login Ready";
                     // sometimes it is already connected...
                 }
-
-    		const f = connection.divFrame;
-
-    		const form1 = f.querySelector( "#loginForm" );
-
-    		const form2 = f.querySelector( "#createForm" );
-    		const form3 = f.querySelector( "#guestForm" );
-
-                form3.style.display = "none";
-                form2.style.display = "none";
-                //form3.style.display = "none";
-
-		const userField =form1.querySelector( "#user" );
-		const passField =form1.querySelector( "#password" );
-		const nameField2 =form2.querySelector( "#name" );
-		const userField2 =form2.querySelector( "#username" );
-		const emailField2 =form2.querySelector( "#email" );
-                const passField2 =form1.querySelector( "#password" );
-                const passField22 =form1.querySelector( "#password2" );
-
-		const userField3 =form2.querySelector( "#user" );
-
-		const userLogin = f.querySelector( "#doLogin" );
-		const createAccount = f.querySelector( "#createAccount" );
-		const createAccountInner = f.querySelector( "#createAccountInner" );
-		const guestLogin = f.querySelector( "#guestLogin" );
-
-		guestLogin.addEventListener( "click", ()=>{
-			if( isGuestLogin) {
-	               		form3.style.display = "none";
-                                if( createMode ) {
-	        	       		form2.style.display = "";
-	               			form1.style.display = "none";
-				}else{
-	        	       		form2.style.display = "none";
-	               			form1.style.display = "";
-                                }
-                        	isGuestLogin = true;
-                        }  else {
-	               		form3.style.display = "";
-        	       		form2.style.display = "none";
-               			form1.style.display = "none";
-                        	isGuestLogin = true;
-                        }
-			connection.center();
-               	} );
-		createAccount.addEventListener( "click", ()=>{
-                      	if( createMode ) {
-	               		form3.style.display = "none";
-        	       		form2.style.display = "none";
-	               		form1.style.display = "";
-
-        	                createAccountInner.innerText = "Create Account";
-				connection.center();
-                       }else {
-	               		form3.style.display = "none";
-        	       		form2.style.display = "";
-	               		form1.style.display = "none";
-
-        	                createAccountInner.innerText = "Use Account";
-				connection.center();
-                       }
-                        isGuestLogin = false;
-                        createMode = !createMode;
-               	} );
-
-
-		userLogin.addEventListener( "click", ()=>{
-			if( isGuestLogin ) {
-				if( userField.innerText.length < 3 ) {
-                                    	if( !alertForm ) alertForm = initAlertForm();
-					alertForm.caption = "Please use a longer display name...";
-					alertForm.show();
-				} else {
-					wsClient.ws.doGuest( userField3.innerText );
-				}
-			}
-			else {
-                            	if(createMode ) {
-					wsClient.ws.doCreate( nameField2.value, userField2.value, passField.innerHTML );
-                                    } else {
-					wsClient.ws.doLogin( userField.innerText, passField.innerHTML );
-	                        }
-			}
-                } );
-
-	        connection.show();
+		wsClient.bindControls( connection );
 		connection.center();
 	} );
-
 
 
 	

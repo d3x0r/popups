@@ -4,33 +4,33 @@
 	<input id="user" class="loginUsername" autocomplete="username">
         
 	<div>Password</div>
-	<input id="password" class="loginPassword" type="password">
+	<input id="password" class="loginPassword" autocomplete="off"  type="password">
 </form>
 
 <form id="createForm" name="loginForm">
 	<div>Display Name (shown)</div>
 	<input id="name" class="loginUsername" autocomplete="name"/>
 	<div>Account Name (login, private)</div>
-	<input id="username" class="loginUsername" autocomplete="username" />
+	<input id="user" class="loginUsername" autocomplete="username" />
 
 	<div>Email(account recovery)</div>
 	<input id="email" class="loginUsername" autocomplete="email"/>
 
 	<div>Password</div>
-		<input id="password" class="loginPassword" type="password"/>
+		<input id="password" class="loginPassword" autocomplete="off" type="password"/>
 	<div>Password (again)</div>
 		<input id="password2" class="loginPassword" autocomplete="off" type="password"/>
 </form>
 
 
 <form id="guestForm" name="loginForm">
-	<div>Display Name</div> <input id="user" autocomplete="name" class="loginUsername" class="name"/>
+	<div>Display Name</div> <input id="name" autocomplete="name" class="loginUsername" class="name"/>
 </form>
 
 <div style="height: 10px;"></div>
 
-<div class="button" style="width: max-content;">
-	<div id="doLogin" class="buttonInner" style="width: max-content;">Login</div>
+<div id="doLogin" class="button" style="width: max-content;">
+	<div id="doLoginInner" class="buttonInner" style="width: max-content;">Login</div>
 </div>
 
 <div class="button" style="width: max-content;">

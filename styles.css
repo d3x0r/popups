@@ -377,3 +377,12 @@ div.mouseCatcher{
     background-color: #15ff0024;
     background-size: cover;
 }
+
+.alert-content{
+ 	font-size:300%;
+	background-color:#400;
+	width:75vw;
+	height:5em;
+	line-height:5em;
+	color:#FFF;
+}
