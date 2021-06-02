@@ -1,5 +1,4 @@
 
-import {SaltyRNG} from "/node_modules/@d3x0r/srg/salty_random_generator.js"
 import {AlertForm} from "../popups.mjs"
 
 let isGuestLogin = false;
@@ -146,7 +145,7 @@ function processMessage( msg ) {
 			Alert( "Bannable Offense" );
 		} else if( msg.device ) {
 			//temporary failure, this device was unidentified, or someone elses
-			const newId = SaltyRNG.Id();
+			const newId = ws.SaltyRNG.Id();
 			localStorage.setItem( "deviceId", newId );
 			l.ws.send( JSON.stringify( {op:"device", deviceId:newId } ) );
 		} else
