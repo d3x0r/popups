@@ -1939,6 +1939,9 @@ function makeLoginForm( doLogin  ) {
        	connection.disconnect = function() {
             	connection.caption = "Connecting...";
         }
+	connection.login = function() {     	
+		if( doLogin ) doLogin();
+	};
 
         connection.hide();
 

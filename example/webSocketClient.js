@@ -4,6 +4,15 @@ import {AlertForm} from "../popups.mjs"
 let isGuestLogin = false;
 let createMode = false;
 
+// loginForm = {
+//     connect() {
+//     },
+//     disconnect() {
+//     },
+//     login() {
+//     }
+
+
 const l = {
     ws : null,
 
@@ -141,11 +150,13 @@ function processMessage( msg ) {
 	else if( msg.op === "login" ) {
 		if( msg.success ) {
 			Alert(" Login Success" );
+			if( l.loginForm && l.loginForm.login )
+				l.loginForm.login();
 		} else if( msg.ban ) {
 			Alert( "Bannable Offense" );
 		} else if( msg.device ) {
 			//temporary failure, this device was unidentified, or someone elses
-			const newId = ws.SaltyRNG.Id();
+			const newId = l.ws.SaltyRNG.Id();
 			localStorage.setItem( "deviceId", newId );
 			l.ws.send( JSON.stringify( {op:"device", deviceId:newId } ) );
 		} else
@@ -154,7 +165,10 @@ function processMessage( msg ) {
 	}
 	else if( msg.op === "create" ) {
 		if( msg.success ) {
-			Alert(" Login Success" );
+			if( l.loginForm && l.loginForm.login )
+				l.loginForm.login();
+			else
+				Alert(" Login Success" );			
 		} else if( msg.ban )  {
 			Alert( "Bannable Offense" );
 		} else
@@ -166,10 +180,12 @@ function processMessage( msg ) {
 	}
 }
 
-function openSocket(  ) {
+function openSocket( addr ) {
+	addr = addr || location.host
 
 	const  proto = location.protocol==="http:"?"ws:":"wss:";
-  var ws = new WebSocket(proto+"//"+location.host+"/", "login");
+
+  var ws = new WebSocket(proto+"//"+addr+"/", "login");
 			console.log( "websocket:", ws, proto+"//"+location.host+"/" );
   ws.onopen = function() {
     // Web Socket is connected. You can send data by send() method.

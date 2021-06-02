@@ -15,15 +15,10 @@ const l = {
 
 import {connection,openSocket} from "./webSocketClient.js";
 
-const login = popups.makeLoginForm( (user,pass)=>{
-	//alert( ["Login Form sent event:", user, pass].join( " " ) );
-        connection.ws.send( `{op:"login",user:${JSON.stringify(user)},password:${JSON.stringify(user)}
-        		,clientId:${JSON.stringify(localStorage.getItem("clientId"))}
-                        ,deviceId:${JSON.stringify(localStorage.getItem("deviceId"))} }` );
-        
+const login = popups.makeLoginForm( ()=>{
+	alert( "Login was successful." );
 });
 
-console.log( "ASDF:",  window.top.location.hash );
 if( window.top.location.hash === "#ws" ) {
 	openSocket();
 }
