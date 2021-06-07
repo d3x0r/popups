@@ -15,7 +15,7 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
-import {connection as wsClient} from "./example/webSocketClient.js";
+//import {connection as wsClient} from "./example/webSocketClient.js";
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
@@ -189,6 +189,8 @@ function addCaptionHandler( c, popup_ ) {
 		}
 		function mouseDown(evt){
 			//evt.preventDefault();
+                    if( !popup_.useMouse ) return;
+
 			if( globalMouseState.activeFrame ) {
 				return;
 			}
@@ -222,6 +224,7 @@ function addCaptionHandler( c, popup_ ) {
 		//c.addEventListener( "mousemove", mouseMove );
 
 		c.addEventListener( "touchstart", (evt)=>{
+                    if( !popup_.useMouse ) return;
 			evt.preventDefault();
 			var pRect = state.frame.getBoundingClientRect();
 			popupTracker.raise( popup );
@@ -233,6 +236,7 @@ function addCaptionHandler( c, popup_ ) {
 			
 		})
 		c.addEventListener( "touchmove", (evt)=>{
+                    if( !popup_.useMouse ) return;
 			evt.preventDefault();
 			if( state.dragging ) {
 				const points = evt.touches;
@@ -249,6 +253,7 @@ function addCaptionHandler( c, popup_ ) {
 			
 		})
 		c.addEventListener( "touchend", (evt)=>{
+                    if( !popup_.useMouse ) return;
 			evt.preventDefault();
 			popupTracker.raise( popup );
 			state.dragging = false;
@@ -312,6 +317,9 @@ class Popup {
         divContent = document.createElement( "div" );
         divClose = document.createElement( "div" );
 	popup = this;
+        // per frame mouse disable...
+        useMouse = true;
+        suffix = '';
 
 	constructor(caption_,parent,opts) {
             	const suffix = opts?.suffix ||'';
@@ -324,7 +332,7 @@ class Popup {
                     this.divClose = null;
                     this.divTitle = null;
                 }else  {
-        		this.divFrame.className = parent?"formContainer":"frameContainer";
+        		this.divFrame.className = (parent?"formContainer":"frameContainer")+suffix;
                 }
 
 		this.divFrame.style.left= 0;
@@ -337,16 +345,17 @@ class Popup {
 					this.divCaption.appendChild( this.divClose );
 			}
 
-			this.divCaption.className = "frameCaption";
-			this.divContent.className = "frameContent";
+			this.divCaption.className = "frameCaption"+suffix;
 	                if( this.divCaption )
 				addCaptionHandler( this.divCaption, this );
                 }
-		if( this.divContent )
+		if( this.divContent ){
+			this.divContent.className = "frameContent"+suffix;
 			this.divFrame.appendChild( this.divContent );
+                }
 
                 if( this.divClose ) {
-			this.divClose.className = "captionButton closeButton";
+			this.divClose.className = "captionButton"+suffix +" closeButton"+suffix;
 			this.divClose.addEventListener( "click", (evt)=>{
 				this.hide();
 			} );
@@ -405,7 +414,7 @@ class Popup {
 			this.divFrame.style.top = y+"%";
 		}
 	appendChild(e) {
-		return this.divContent.appendChild(e)
+		return (this.divContent||this.divFrame).appendChild(e)
 	}
 	remove() {
 		this.divFrame.remove();
@@ -478,8 +487,13 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 			popup.hide();
 			cancelCb && cancelCb( );
 		}
+		if(e.keyCode==13){
+			e.preventDefault();
+			popup.hide();
+			ok && ok( input.value );
+		}
 	})
-	popup.divContent.appendChild( form );
+	(popup.divContent||popup.divFrame).appendChild( form );
 	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( input );
@@ -496,10 +510,12 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 function makeButton( form, caption, onClick ) {
 
 	var button = document.createElement( "div" );
-	button.className = "button";
+        const suffix = ( form instanceof Popup )?'':form.suffix;
+
+	button.className = "button"+suffix;
 	button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
-	buttonInner.className = "buttonInner";
+	buttonInner.className = "buttonInner"+suffix;
 	buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 
@@ -514,7 +530,7 @@ function makeButton( form, caption, onClick ) {
                 }
 	} );
 	//var okay = document.createElement( "BUTTON" );
-	//okay.className = "popupOkay";
+	//okay.className = "popupOkay"+suffix;
 	//okay.textContent = caption;
 	button.addEventListener( "click", (evt)=>{
 		evt.preventDefault();
@@ -553,7 +569,7 @@ function createSimpleNotice( title, question, ok, cancel ) {
 class SimpleNotice extends Popup {
 	//const popup = popups.create( title );
 	constructor( title, question, ok, cancel ) {
-		super( title, null );
+		super( title, null, {suffix:"-notice"} );
 		const popup = this;
    	const form = document.createElement( "form" );
 	this.okay = makeButton( form, "Okay", ()=>{
@@ -610,8 +626,13 @@ class SimpleNotice extends Popup {
 			this.hide();
 			ok && ok( );
 		}
+		if(e.keyCode==13){
+			e.preventDefault();
+			this.hide();
+			ok && ok( );
+		}
 	})
-	this.divContent.appendChild( form );
+	(this.divContent||this.divFrame).divContent.appendChild( form );
 	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( document.createElement( "br" ) );
@@ -643,6 +664,7 @@ class List {
 		 itemOpens = false;
     constructor( parentDiv, parentList, toString )
         {
+            console.log( "List constructor could use the popup to get suffix..." );
 		this.toString = toString
 		this.divTable = parentDiv;
                 this.parentList = parentList;
@@ -782,16 +804,17 @@ function createList( parent, parentList, toString, opens ) {
 function makeCheckbox( form, o, field, text ) 
 {
 	let initialValue = o[field];
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
 	var inputCountIncrement = document.createElement( "INPUT" );
 	inputCountIncrement.setAttribute( "type", "checkbox");
-	inputCountIncrement.className = "checkOption rightJustify";
+	inputCountIncrement.className = "checkOption"+suffix + " rightJustify";
 	inputCountIncrement.checked = o[field];
 	//textDefault.
 	var onChange = [];
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	binder.addEventListener( "click", (e)=>{ 
 		if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
@@ -845,6 +868,7 @@ function makeCheckbox( form, o, field, text )
 
 function makeSlider( form, o, field, text ) 
 {
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	let initialValue = o[field];
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
@@ -852,12 +876,12 @@ function makeSlider( form, o, field, text )
 	inputCountIncrement.setAttribute( "type", "range");
 	inputCountIncrement.setAttribute( "min", 1);
 	inputCountIncrement.setAttribute( "max", 1000);
-	inputCountIncrement.className = "valueSlider rightJustify";
+	inputCountIncrement.className = "valueSlider"+suffix + " rightJustify";
 	inputCountIncrement.value = o[field];
 	//textDefault.
 	var onChange = [];
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	//binder.addEventListener( "click", (e)=>{ 
 	//	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
 	inputCountIncrement.addEventListener( "input", (e)=>{ 
@@ -913,11 +937,12 @@ function makeSlider( form, o, field, text )
 
 function makeTextInput( form, input, value, text, money, percent ){
 	const initialValue = input[value];
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
-	inputControl.className = "textInputOption rightJustify";
+	inputControl.className = "textInputOption"+suffix +" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
         function setValue() {
@@ -944,7 +969,7 @@ function makeTextInput( form, input, value, text, money, percent ){
         setValue();
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -992,10 +1017,11 @@ function makeTextInput( form, input, value, text, money, percent ){
 function makeTextField( form, input, value, text, money, percent ){
 	const initialValue = input[value];
 
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
-	inputControl.className = "textInputOption rightJustify";
+	inputControl.className = "textInputOption"+suffix+" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
         function setValue() {
@@ -1022,7 +1048,7 @@ function makeTextField( form, input, value, text, money, percent ){
         setValue();
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -1062,6 +1088,7 @@ function makeTextField( form, input, value, text, money, percent ){
 
 function makeNameInput( form, input, value, text ){
 	const initialValue = input[value];
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
 	textLabel.textContent = text;
@@ -1071,7 +1098,7 @@ function makeNameInput( form, input, value, text ){
 
 	const buttonRename = document.createElement( "Button" );
 	buttonRename.textContent = popups.strings.get("(rename)");
-	buttonRename.className="buttonOption rightJustify";
+	buttonRename.className="buttonOption"+suffix+" rightJustify";
         buttonRename.addEventListener("click", (evt)=>{
 		evt.preventDefault();
                 //title, question, defaultValue, ok, cancelCb
@@ -1087,7 +1114,7 @@ function makeNameInput( form, input, value, text ){
 	} );
 
 	binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textLabel );
 	binder.appendChild( textOutput );
@@ -1138,11 +1165,12 @@ function makeNameInput( form, input, value, text ){
 	}
 
 function makeDateInput( form, input, value, text ){
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
-	inputControl.className = "textInputOption rightJustify";
+	inputControl.className = "textInputOption"+suffix+" rightJustify";
         inputControl.type = "date"; // returns date at midnight UTC not local.
         inputControl.addEventListener( "mousedown", (evt)=>{
 		evt.stopPropagation() // halt on this control
@@ -1161,7 +1189,7 @@ function makeDateInput( form, input, value, text ){
 	} );
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -1199,11 +1227,12 @@ function makeDateInput( form, input, value, text ){
 
 function makeZipInput( form, input, value ){
 
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
-	inputControl.className = "textInputOption rightJustify";
+	inputControl.className = "textInputOption"+suffix+" rightJustify";
         inputControl.type = "date";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 
@@ -1214,7 +1243,7 @@ function makeZipInput( form, input, value ){
 	} );
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -1230,11 +1259,12 @@ function makeZipInput( form, input, value ){
 
 function makeSSNInput( form, input, value ){
 
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
-	inputControl.className = "textInputOption rightJustify";
+	inputControl.className = "textInputOption"+suffix+" rightJustify";
         inputControl.type = "date";
 
 	//textDefault.
@@ -1244,7 +1274,7 @@ function makeSSNInput( form, input, value ){
 	} );
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -1274,12 +1304,13 @@ function makeSSNInput( form, input, value ){
 
 // --------------- Dropdown choice list ---------------------------
 function makeChoiceInput( form, input, value, choices, text ){
+        const suffix = ( form instanceof Popup )?'':form.suffix;
 	const initialValue = input[value];
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SELECT" );
-	inputControl.className = "selectInput rightJustify";
+	inputControl.className = "selectInput"+suffix+" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 
         for( let choice of choices ) {
@@ -1301,7 +1332,7 @@ function makeChoiceInput( form, input, value, choices, text ){
 	} );
 
 	var binder = document.createElement( "div" );
-	binder.className = "fieldUnit";
+	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
@@ -1345,8 +1376,8 @@ mouseCatcher.addEventListener( "click", (evt)=>{
 		topMenu.hide( true );
 } );
 
-function createPopupMenu() {
-
+function createPopupMenu( opts ) {
+	const suffix = opts?.suffix||'';
 	let keepShow = false;
 
 	function menuCloser() {
@@ -1374,6 +1405,7 @@ function createPopupMenu() {
 		subOpen : null,
 		container : document.createElement( "div" ),
 		board : null,
+                suffix : '',
 		separate( ) {
 			var newItem = document.createElement( "HR" );
 			menu.container.appendChild( newItem );
@@ -1385,7 +1417,7 @@ function createPopupMenu() {
 				newItem.textContent = text;
 				menu.container.appendChild( newItem );
 				menu.container.appendChild( newItemBR );
-				newItem.className = "popupItem";
+				newItem.className = "popupItem"+menu.suffix;
 				newItem.addEventListener( "click", (evt)=>{
 				       cb();
 				       //console.log( "Item is clicked.", evt.target.value );
@@ -1470,7 +1502,7 @@ function createPopupMenu() {
 	};
 
 	mouseCatcher.appendChild( menu.container );
-	menu.container.className = "popup";
+	menu.container.className = "popup"+suffix;
 	menu.container.style.zIndex = 50;
 	menu.hide(); 
 	//document.body.appendChild( menu.container );
@@ -1484,7 +1516,7 @@ export class GraphicFrame extends Popup {
     	//const defaultFont1 = "20px Arial";
         super(null,null);
 
-        const appCanvas = this.divContent;
+        const appCanvas = this.divContent || this.divFrame;
 
 var rect = appCanvas.getBoundingClientRect();
 appCanvas.width = rect.right-rect.left;//window.innerWidth;
@@ -1901,9 +1933,8 @@ function makeApp() {
 export class AlertForm extends Popup {
 
 	constructor() {
-		super( null, null );
+		super( null, null, {suffix:"-alert"} );
 		const this_ = this;
-		this.divContent.className += " alert-content";
 		this.divFrame.addEventListener( "click", ()=>{
 			this_.hide();
 		})
@@ -1995,13 +2026,9 @@ function fillFromURL(popup, url) {
 
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
-                popup.divContent.innerHTML = text;
-		nodeScriptReplace(popup.divContent);
+                (popup.divContent||popup.divFrame).innerHTML = text;
+		nodeScriptReplace(popup.divContent||popup.divFrame);
 		return popup;
-                return new Promise( (res,rej)=>{
-
-		       // popup;
-                } );
 	} );
        })
 
