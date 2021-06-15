@@ -2,7 +2,7 @@
 
 //import {popups,AlertForm} from "/node_modules/@d3x0r/popups/popups.mjs"
 //import {JSOX} from "/node_modules/jsox/lib/jsox.mjs"
-import {popups,AlertForm} from ",,/popups.mjs"
+import {popups,AlertForm} from "../popups.mjs"
 const JSOX = JSON;
 
 let isGuestLogin = false;
