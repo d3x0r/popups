@@ -15,7 +15,7 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
-import {connection as wsClient} from "./example/webSocketClient.js";
+import {connection as wsClient_} from "./example/webSocketClient.js";
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
@@ -118,6 +118,7 @@ const popups = {
         makeSlider : makeSlider,  // form, object, field, text
         makeTextField : makeTextField,
         makeButton : makeButton,
+	handleButtonEvents : handleButtonEvents, // expose just the button handler of makeButton
         makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
         makeDateInput : makeDateInput,  // form, object, field, text
 	strings : { get(s) { return s } },
@@ -130,6 +131,7 @@ const popups = {
         fillFromURL : fillFromURL,
 }
 
+let unique = Date.now();
 const globalMouseState = {
         activeFrame : null
     }
@@ -315,6 +317,7 @@ class Popup {
 
 	constructor(caption_,parent,opts) {
             	const suffix = opts?.suffix ||'';
+		const closeButton = opts?.enableClose || false;
 		// make popup from control.
 		const forContent = opts?.from;
                 if( forContent ) {
@@ -330,14 +333,17 @@ class Popup {
 		this.divFrame.style.left= 0;
 		this.divFrame.style.top= 0;
                 if( this.divCaption ) {
-			if( caption_ != "" )
+			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
-			this.divCaption.appendChild( this.divTitle );
-                        if( this.divClose )
-				this.divCaption.appendChild( this.divClose );
+				this.divCaption.appendChild( this.divTitle );
+        	                if( closeButton && this.divClose )
+					this.divCaption.appendChild( this.divClose );
+			}
 
 			this.divCaption.className = "frameCaption";
 			this.divContent.className = "frameContent";
+	                if( this.divCaption )
+				addCaptionHandler( this.divCaption, this );
                 }
 		if( this.divContent )
 			this.divFrame.appendChild( this.divContent );
@@ -356,8 +362,6 @@ class Popup {
 		parent = (parent&&parent.divContent) || parent || document.body;
 
 		parent.appendChild( this.divFrame );
-                if( this.divCaption )
-			addCaptionHandler( this.divCaption, this );
 
 	}
 
@@ -492,18 +496,7 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 	return popup;
 }
 
-function makeButton( form, caption, onClick ) {
-
-	var button = document.createElement( "div" );
-	button.className = "button";
-	button.style.width = "max-content";
-	var buttonInner = document.createElement( "div" );
-	buttonInner.className = "buttonInner";
-	buttonInner.style.width = "max-content";
-	buttonInner.textContent = caption;
-
-        button.appendChild(buttonInner);
-
+function handleButtonEvents( button, onClick ) {
 
         button.addEventListener( "keydown", (evt)=>{
 		if( evt.key === "Enter" || evt.key === " " ) {
@@ -540,6 +533,20 @@ function makeButton( form, caption, onClick ) {
 		clearClass( button, "pressed" );
 		
 	})
+}
+
+function makeButton( form, caption, onClick ) {
+
+	var button = document.createElement( "div" );
+	button.className = "button";
+	button.style.width = "max-content";
+	var buttonInner = document.createElement( "div" );
+	buttonInner.className = "buttonInner";
+	buttonInner.style.width = "max-content";
+	buttonInner.textContent = caption;
+
+        button.appendChild(buttonInner);
+	handleButtonEvents( button, onClick );
 	form.appendChild( button );
         return button;
 
@@ -1897,24 +1904,32 @@ function makeApp() {
 
 //-----------------------------------------------------------------
 
-function initAlertForm() {
-	var popup = {
-		divFrame : document.getElementById( "alert" ),
-		divCaption : document.getElementById( "alertContent" ),
-		show() {
-			this.divFrame.style.display = "unset";
-		},
-		hide() {
-			this.divFrame.style.display = "none";
-		},
-		set caption( val ) {
-			this.divCaption.textContent = val;
-		}
-	};
-	popup.divFrame.addEventListener( "click", ()=>{
-		popup.divFrame.style.display = "none";
-	})
-	return popup;
+export class AlertForm extends Popup {
+
+	constructor() {
+		super( null, null );
+		const this_ = this;
+		this.divContent.setAttribute( "tabIndex", 0 )
+		this.divContent.className += " alert-content";
+		this.divFrame.addEventListener( "click", ()=>{
+			this_.hide();
+		})
+	}
+
+	show() {
+		this.raise();
+		super.show();
+		this.divFrame.focus();
+		this.center();
+	}
+	hide() {           
+		this.divFrame.style.display = "none";
+	}
+	set caption( val ) {
+		console.log( "This should be caption set:", val );
+		this.divContent.innerHTML = val;
+	}
+
 }
 
 var alertForm = null;//initAlertForm();
@@ -1922,8 +1937,12 @@ var alertForm = null;//initAlertForm();
 
 
 
-function makeLoginForm( doLogin  ) {
+function makeLoginForm( doLogin, opts  ) {
 	var connection = createPopup( "Connecting", null );
+	let createMode =false;
+	let isGuestLogin = false;
+	const form = opts?.useForm || "loginForm.html";
+	const wsClient = opts?.wsLoginClient || wsClient_;
 
        	connection.connect = function() {
             	connection.caption = "Login Ready...";
@@ -1932,109 +1951,22 @@ function makeLoginForm( doLogin  ) {
        	connection.disconnect = function() {
             	connection.caption = "Connecting...";
         }
+		connection.login = function() {     	
+			if( doLogin ) doLogin( wsClient );
+		};
 
         connection.hide();
 
-	let createMode =false;
-        let isGuestLogin = false;
-
-        fillFromURL( connection, "loginForm.html" ).then( ()=>{
-    		wsClient.loginForm = connection;
-                if( wsClient.connected ) {
-                    // already connected; connect event would not have fired
-                    connection.caption = "Login Ready";
-                    // sometimes it is already connected...
-                }
-
-    		const f = connection.divFrame;
-
-    		const form1 = f.querySelector( "#loginForm" );
-
-    		const form2 = f.querySelector( "#createForm" );
-    		const form3 = f.querySelector( "#guestForm" );
-
-                form3.style.display = "none";
-                form2.style.display = "none";
-                //form3.style.display = "none";
-
-		const userField =form1.querySelector( "#user" );
-		const passField =form1.querySelector( "#password" );
-		const nameField2 =form2.querySelector( "#name" );
-		const userField2 =form2.querySelector( "#username" );
-		const emailField2 =form2.querySelector( "#email" );
-                const passField2 =form1.querySelector( "#password" );
-                const passField22 =form1.querySelector( "#password2" );
-
-		const userField3 =form2.querySelector( "#user" );
-
-		const userLogin = f.querySelector( "#doLogin" );
-		const createAccount = f.querySelector( "#createAccount" );
-		const createAccountInner = f.querySelector( "#createAccountInner" );
-		const guestLogin = f.querySelector( "#guestLogin" );
-
-		guestLogin.addEventListener( "click", ()=>{
-			if( isGuestLogin) {
-	               		form3.style.display = "none";
-                                if( createMode ) {
-	        	       		form2.style.display = "";
-	               			form1.style.display = "none";
-				}else{
-	        	       		form2.style.display = "none";
-	               			form1.style.display = "";
-                                }
-                        	isGuestLogin = true;
-                        }  else {
-	               		form3.style.display = "";
-        	       		form2.style.display = "none";
-               			form1.style.display = "none";
-                        	isGuestLogin = true;
-                        }
-			connection.center();
-               	} );
-		createAccount.addEventListener( "click", ()=>{
-                      	if( createMode ) {
-	               		form3.style.display = "none";
-        	       		form2.style.display = "none";
-	               		form1.style.display = "";
-
-        	                createAccountInner.innerText = "Create Account";
-				connection.center();
-                       }else {
-	               		form3.style.display = "none";
-        	       		form2.style.display = "";
-	               		form1.style.display = "none";
-
-        	                createAccountInner.innerText = "Use Account";
-				connection.center();
-                       }
-                        isGuestLogin = false;
-                        createMode = !createMode;
-               	} );
-
-
-		userLogin.addEventListener( "click", ()=>{
-			if( isGuestLogin ) {
-				if( userField.innerText.length < 3 ) {
-                                    	if( !alertForm ) alertForm = initAlertForm();
-					alertForm.caption = "Please use a longer display name...";
-					alertForm.show();
-				} else {
-					wsClient.ws.doGuest( userField3.innerText );
+		fillFromURL( connection, form ).then( ()=>{
+			wsClient.loginForm = connection;
+				if( wsClient.connected ) {
+					// already connected; connect event would not have fired
+					connection.caption = "Login Ready";
+					// sometimes it is already connected...
 				}
-			}
-			else {
-                            	if(createMode ) {
-					wsClient.ws.doCreate( nameField2.value, userField2.value, passField.innerHTML );
-                                    } else {
-					wsClient.ws.doLogin( userField.innerText, passField.innerHTML );
-	                        }
-			}
-                } );
-
-	        connection.show();
+		wsClient.bindControls( connection );
 		connection.center();
 	} );
-
 
 
 	
@@ -2069,7 +2001,8 @@ function makeWindowManager() {
 }
 
 function fillFromURL(popup, url) {
-
+	//const urlPath =  url.split( "/");
+	
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
                 popup.divContent.innerHTML = text;
@@ -2097,14 +2030,24 @@ function fillFromURL(popup, url) {
         	return node;
 	}
 	function nodeScriptClone(node){
-                var script  = document.createElement("script");
-                script.text = node.innerHTML;
+		var script  = document.createElement("script");
+		script.text = node.innerHTML;
 
-                var i = -1, attrs = node.attributes, attr;
-                while ( ++i < attrs.length ) {
-                      script.setAttribute( (attr = attrs[i]).name, attr.value );
-                }
-        	return script;
+		var i = -1, attrs = node.attributes, attr;
+		while ( ++i < attrs.length ) {
+				script.setAttribute( (attr = attrs[i]).name, attr.value );
+		}
+		/*
+		if( script.src ) {
+			const protoPath=script.src.split( "://" );
+			const path = protoPath[1].split('/' );
+		}
+		*/
+		script.id = "Unique"+(unique++);
+		if( script.textContent ) {
+			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
+		}
+		return script;
 	}
 
 	function nodeScriptIs(node) {

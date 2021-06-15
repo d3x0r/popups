@@ -113,7 +113,7 @@ body {
 	width:max-content;
 	height:max-content;
 	background-color:rgba(150, 150, 150, 0.75);
-	color:rgb(133, 240, 229);
+	color:rgb(33, 40, 29);
 	border-radius:10px;
 	/*padding:25px;*/
 }
@@ -302,6 +302,10 @@ span {
 			padding-bottom:0px;
 		}
 
+	.button:hover {
+			border-color:#0dd;
+	}
+
     	.buttonInner{
 			border-radius:10px;
 				background:lightgray;
@@ -376,4 +380,13 @@ div.mouseCatcher{
     border-color: mediumspringgreen;
     background-color: #15ff0024;
     background-size: cover;
+}
+
+.alert-content{
+ 	font-size:300%;
+ 	background-color:#400;
+ 	width:75vw;
+ 	height:5em;
+ 	color:#FFF;
+ 	/* line-height: 2.5em; */
 }
