@@ -336,7 +336,7 @@ class Popup {
 			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
 				this.divCaption.appendChild( this.divTitle );
-        	                if( closeButton && this.divClose )
+				if( closeButton && this.divClose )
 					this.divCaption.appendChild( this.divClose );
 			}
 
@@ -1926,7 +1926,7 @@ export class AlertForm extends Popup {
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
-		console.log( "This should be caption set:", val );
+		//console.log( "This should be caption set:", val );
 		this.divContent.innerHTML = val;
 	}
 
@@ -2044,7 +2044,7 @@ function fillFromURL(popup, url) {
 		}
 		*/
 		script.id = "Unique"+(unique++);
-		if( script.textContent ) {
+		if( script.textContent && script.textContent.length ) {
 			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
 		}
 		return script;
