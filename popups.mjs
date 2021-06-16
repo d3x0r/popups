@@ -324,7 +324,7 @@ class Popup {
         suffix = '';
 
 	constructor(caption_,parent,opts) {
-            	const suffix = opts?.suffix ||'';
+            	this.suffix = opts?.suffix ||'';
 		const closeButton = opts?.enableClose || false;
 		// make popup from control.
 		const forContent = opts?.from;
@@ -335,7 +335,7 @@ class Popup {
                     this.divClose = null;
                     this.divTitle = null;
                 }else  {
-        		this.divFrame.className = (parent?"formContainer":"frameContainer")+suffix;
+        		this.divFrame.className = (parent?"formContainer":"frameContainer")+this.suffix;
                 }
 
 		this.divFrame.style.left= 0;
@@ -348,17 +348,17 @@ class Popup {
 					this.divCaption.appendChild( this.divClose );
 			}
 
-			this.divCaption.className = "frameCaption"+suffix;
+			this.divCaption.className = "frameCaption"+this.suffix;
 	                if( this.divCaption )
 				addCaptionHandler( this.divCaption, this );
                 }
 		if( this.divContent ){
-			this.divContent.className = "frameContent"+suffix;
+			this.divContent.className = "frameContent"+this.suffix;
 			this.divFrame.appendChild( this.divContent );
                 }
 
                 if( this.divClose ) {
-			this.divClose.className = "captionButton"+suffix +" closeButton"+suffix;
+			this.divClose.className = "captionButton"+this.suffix +" closeButton"+this.suffix;
 			this.divClose.addEventListener( "click", (evt)=>{
 				this.hide();
 			} );
@@ -490,13 +490,8 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 			popup.hide();
 			cancelCb && cancelCb( );
 		}
-		if(e.keyCode==13){
-			e.preventDefault();
-			popup.hide();
-			ok && ok( input.value );
-		}
 	})
-	(popup.divContent||popup.divFrame).appendChild( form );
+	popup.divContent.appendChild( form );
 	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( input );
@@ -551,7 +546,7 @@ function handleButtonEvents( button, onClick ) {
 
 function makeButton( form, caption, onClick ) {
 
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	var button = document.createElement( "div" );
 	button.className = "button"+suffix;
 	button.style.width = "max-content";
@@ -631,13 +626,8 @@ class SimpleNotice extends Popup {
 			this.hide();
 			ok && ok( );
 		}
-		if(e.keyCode==13){
-			e.preventDefault();
-			this.hide();
-			ok && ok( );
-		}
 	})
-	(this.divContent||this.divFrame).divContent.appendChild( form );
+	this.divContent.appendChild( form );
 	form.appendChild( textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( document.createElement( "br" ) );
@@ -809,7 +799,7 @@ function createList( parent, parentList, toString, opens ) {
 function makeCheckbox( form, o, field, text ) 
 {
 	let initialValue = o[field];
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
 	var inputCountIncrement = document.createElement( "INPUT" );
@@ -873,7 +863,7 @@ function makeCheckbox( form, o, field, text )
 
 function makeSlider( form, o, field, text ) 
 {
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	let initialValue = o[field];
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
@@ -942,7 +932,7 @@ function makeSlider( form, o, field, text )
 
 function makeTextInput( form, input, value, text, money, percent ){
 	const initialValue = input[value];
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1022,7 +1012,7 @@ function makeTextInput( form, input, value, text, money, percent ){
 function makeTextField( form, input, value, text, money, percent ){
 	const initialValue = input[value];
 
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
@@ -1093,7 +1083,7 @@ function makeTextField( form, input, value, text, money, percent ){
 
 function makeNameInput( form, input, value, text ){
 	const initialValue = input[value];
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
 	textLabel.textContent = text;
@@ -1170,7 +1160,7 @@ function makeNameInput( form, input, value, text ){
 	}
 
 function makeDateInput( form, input, value, text ){
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1232,7 +1222,7 @@ function makeDateInput( form, input, value, text ){
 
 function makeZipInput( form, input, value ){
 
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1264,7 +1254,7 @@ function makeZipInput( form, input, value ){
 
 function makeSSNInput( form, input, value ){
 
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1309,7 +1299,7 @@ function makeSSNInput( form, input, value ){
 
 // --------------- Dropdown choice list ---------------------------
 function makeChoiceInput( form, input, value, choices, text ){
-        const suffix = ( form instanceof Popup )?'':form.suffix;
+        const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 
 	var textMinmum = document.createElement( "SPAN" );
@@ -1521,7 +1511,7 @@ export class GraphicFrame extends Popup {
     	//const defaultFont1 = "20px Arial";
         super(null,null);
 
-        const appCanvas = this.divContent || this.divFrame;
+        const appCanvas = this.divContent;
 
 var rect = appCanvas.getBoundingClientRect();
 appCanvas.width = rect.right-rect.left;//window.innerWidth;
