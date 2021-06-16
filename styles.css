@@ -113,7 +113,7 @@ body {
 	width:max-content;
 	height:max-content;
 	background-color:rgba(150, 150, 150, 0.75);
-	color:rgb(133, 240, 229);
+	color:rgb(33, 40, 29);
 	border-radius:10px;
 	/*padding:25px;*/
 }
@@ -301,6 +301,10 @@ span {
 			padding-right:0px;
 			padding-bottom:0px;
 		}
+
+	.button:hover {
+			border-color:#0dd;
+	}
 
     	.buttonInner{
 			border-radius:10px;

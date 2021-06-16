@@ -118,6 +118,7 @@ const popups = {
         makeSlider : makeSlider,  // form, object, field, text
         makeTextField : makeTextField,
         makeButton : makeButton,
+	handleButtonEvents : handleButtonEvents, // expose just the button handler of makeButton
         makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
         makeDateInput : makeDateInput,  // form, object, field, text
 	strings : { get(s) { return s } },
@@ -130,6 +131,7 @@ const popups = {
         fillFromURL : fillFromURL,
 }
 
+let unique = Date.now();
 const globalMouseState = {
         activeFrame : null
     }
@@ -323,6 +325,7 @@ class Popup {
 
 	constructor(caption_,parent,opts) {
             	const suffix = opts?.suffix ||'';
+		const closeButton = opts?.enableClose || false;
 		// make popup from control.
 		const forContent = opts?.from;
                 if( forContent ) {
@@ -341,7 +344,7 @@ class Popup {
 			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
 				this.divCaption.appendChild( this.divTitle );
-        	                if( this.divClose )
+				if( closeButton && this.divClose )
 					this.divCaption.appendChild( this.divClose );
 			}
 
@@ -507,25 +510,12 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 	return popup;
 }
 
-function makeButton( form, caption, onClick ) {
-
-	var button = document.createElement( "div" );
-        const suffix = ( form instanceof Popup )?'':form.suffix;
-
-	button.className = "button"+suffix;
-	button.style.width = "max-content";
-	var buttonInner = document.createElement( "div" );
-	buttonInner.className = "buttonInner"+suffix;
-	buttonInner.style.width = "max-content";
-	buttonInner.textContent = caption;
-
-        button.appendChild(buttonInner);
-
+function handleButtonEvents( button, onClick ) {
 
         button.addEventListener( "keydown", (evt)=>{
 		if( evt.key === "Enter" || evt.key === " " ) {
 			evt.preventDefault();
-        	        evt.stopPropagation();
+			evt.stopPropagation();
 	                onClick();
                 }
 	} );
@@ -557,6 +547,21 @@ function makeButton( form, caption, onClick ) {
 		clearClass( button, "pressed" );
 		
 	})
+}
+
+function makeButton( form, caption, onClick ) {
+
+        const suffix = ( form instanceof Popup )?'':form.suffix;
+	var button = document.createElement( "div" );
+	button.className = "button"+suffix;
+	button.style.width = "max-content";
+	var buttonInner = document.createElement( "div" );
+	buttonInner.className = "buttonInner"+suffix;
+	buttonInner.style.width = "max-content"+suffix;
+	buttonInner.textContent = caption;
+
+        button.appendChild(buttonInner);
+	handleButtonEvents( button, onClick );
 	form.appendChild( button );
         return button;
 
@@ -571,7 +576,7 @@ class SimpleNotice extends Popup {
 	constructor( title, question, ok, cancel ) {
 		super( title, null, {suffix:"-notice"} );
 		const popup = this;
-   	const form = document.createElement( "form" );
+	const form = document.createElement( "form" );
 	this.okay = makeButton( form, "Okay", ()=>{
 		this.hide();
 		ok && ok( );
@@ -1935,6 +1940,8 @@ export class AlertForm extends Popup {
 	constructor() {
 		super( null, null, {suffix:"-alert"} );
 		const this_ = this;
+		this.divContent.setAttribute( "tabIndex", 0 )
+		this.divContent.className += " alert-content";
 		this.divFrame.addEventListener( "click", ()=>{
 			this_.hide();
 		})
@@ -1943,13 +1950,14 @@ export class AlertForm extends Popup {
 	show() {
 		this.raise();
 		super.show();
+		this.divFrame.focus();
 		this.center();
 	}
 	hide() {           
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
-		console.log( "This should be caption set:", val );
+		//console.log( "This should be caption set:", val );
 		this.divContent.innerHTML = val;
 	}
 
@@ -1960,8 +1968,12 @@ var alertForm = null;//initAlertForm();
 
 
 
-function makeLoginForm( doLogin  ) {
+function makeLoginForm( doLogin, opts  ) {
 	var connection = createPopup( "Connecting", null );
+	let createMode =false;
+	let isGuestLogin = false;
+	const form = opts?.useForm || "loginForm.html";
+	const wsClient = opts?.wsLoginClient || wsClient_;
 
        	connection.connect = function() {
             	connection.caption = "Login Ready...";
@@ -1970,22 +1982,19 @@ function makeLoginForm( doLogin  ) {
        	connection.disconnect = function() {
             	connection.caption = "Connecting...";
         }
-	connection.login = function() {     	
-		if( doLogin ) doLogin();
-	};
+		connection.login = function() {     	
+			if( doLogin ) doLogin( wsClient );
+		};
 
         connection.hide();
 
-	let createMode =false;
-        let isGuestLogin = false;
-
-        fillFromURL( connection, "loginForm.html" ).then( ()=>{
-    		wsClient.loginForm = connection;
-                if( wsClient.connected ) {
-                    // already connected; connect event would not have fired
-                    connection.caption = "Login Ready";
-                    // sometimes it is already connected...
-                }
+		fillFromURL( connection, form ).then( ()=>{
+			wsClient.loginForm = connection;
+				if( wsClient.connected ) {
+					// already connected; connect event would not have fired
+					connection.caption = "Login Ready";
+					// sometimes it is already connected...
+				}
 		wsClient.bindControls( connection );
 		connection.center();
 	} );
@@ -2023,7 +2032,8 @@ function makeWindowManager() {
 }
 
 function fillFromURL(popup, url) {
-
+	//const urlPath =  url.split( "/");
+	
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
                 (popup.divContent||popup.divFrame).innerHTML = text;
@@ -2047,14 +2057,24 @@ function fillFromURL(popup, url) {
         	return node;
 	}
 	function nodeScriptClone(node){
-                var script  = document.createElement("script");
-                script.text = node.innerHTML;
+		var script  = document.createElement("script");
+		script.text = node.innerHTML;
 
-                var i = -1, attrs = node.attributes, attr;
-                while ( ++i < attrs.length ) {
-                      script.setAttribute( (attr = attrs[i]).name, attr.value );
-                }
-        	return script;
+		var i = -1, attrs = node.attributes, attr;
+		while ( ++i < attrs.length ) {
+				script.setAttribute( (attr = attrs[i]).name, attr.value );
+		}
+		/*
+		if( script.src ) {
+			const protoPath=script.src.split( "://" );
+			const path = protoPath[1].split('/' );
+		}
+		*/
+		script.id = "Unique"+(unique++);
+		if( script.textContent && script.textContent.length ) {
+			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
+		}
+		return script;
 	}
 
 	function nodeScriptIs(node) {
