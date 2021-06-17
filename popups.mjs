@@ -2068,7 +2068,7 @@ class SashPicker extends Popup{
 			if( this.promise ) this.promise.rej( "Choice selection form failed to load." );
 			
 		} );
-		this.on( "ok" ()=>{
+		this.on( "ok", ()=>{
 			if( this.sashModule ) {
 				const choice = this.sashModule.getChoice();
 				if( this.promise ) this.promise.res( choice );
@@ -2076,7 +2076,7 @@ class SashPicker extends Popup{
 				if( this.promise ) this.promise.res( choices[0] );				
 			this.hide();
 		} );
-		this.on( "cancel" ()=>{
+		this.on( "cancel", ()=>{
 			if( this.promise ) this.promise.rej( "Choice canceled by user." );
 			this.hide();
 		} );
@@ -2104,7 +2104,7 @@ function makeLoginForm( doLogin, opts  ) {
 	let isGuestLogin = false;
 	const form = opts?.useForm || "loginForm.html";
 	
-	const wsClient = opts?.wsLoginClient || wsClient_;
+	let wsClient = opts?.wsLoginClient;
 
        	loginForm.connect = function() {
             	loginForm.caption = "Login Ready...";
@@ -2135,20 +2135,26 @@ function makeLoginForm( doLogin, opts  ) {
 		return p.p;
 	};
 
+        loginForm.setClient = function(wsClient_) {
+		wsClient = wsClient_;
+	};
         loginForm.hide();
 
 	fillFromURL( loginForm, form ).then( ()=>{
-		wsClient.loginForm = loginForm;
-		if( wsClient.connected ) {
-			// already connected; connect event would not have fired
-			loginForm.caption = "Login Ready";
-			// sometimes it is already connected...
+		if( wsClient ) {
+			wsClient.loginForm = loginForm;
+			if( wsClient.connected ) {
+				// already connected; connect event would not have fired
+				loginForm.caption = "Login Ready";
+				// sometimes it is already connected...
+			}
+			wsClient.bindControls( loginForm );
+			loginForm.center();
 		}
-		wsClient.bindControls( loginForm );
-		loginForm.center();
 	} );
 
-
+	if( !wsClient )
+		loginForm.show();
 	
 
 	return loginForm;
