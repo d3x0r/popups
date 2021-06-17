@@ -17,7 +17,7 @@ import {connection,openSocket} from "./webSocketClient.js";
 
 const login = popups.makeLoginForm( ()=>{
 	alert( "Login was successful." );
-});
+}, {wsLoginClient:connection} );
 
 if( window.top.location.hash === "#ws" ) {
 	openSocket();

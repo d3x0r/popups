@@ -4,8 +4,7 @@
 	<input id="user" class="loginUsername" autocomplete="username">
         
 	<div>Password</div>
-	<input id="password" class="loginPassword" type="password">
-	<button type="submit" style="display:none"> </button>
+	<input id="password" class="loginPassword" autocomplete="off"  type="password">
 </form>
 
 <form id="createForm" name="loginForm">
@@ -18,32 +17,30 @@
 	<input id="email" class="loginUsername" autocomplete="email"/>
 
 	<div>Password</div>
-		<input id="password" class="loginPassword" type="password"/>
+		<input id="password" class="loginPassword" autocomplete="off" type="password"/>
 	<div>Password (again)</div>
 		<input id="password2" class="loginPassword" autocomplete="off" type="password"/>
-	<button type="submit" style="display:none"> </button>
 </form>
 
 
 <form id="guestForm" name="loginForm">
-	<div>Display Name</div> <input id="user" autocomplete="name" class="loginUsername" class="name"/>
-	<button type="submit" style="display:none"> </button>
+	<div>Display Name</div> <input id="name" autocomplete="name" class="loginUsername" class="name"/>
 </form>
 
 <div style="height: 10px;"></div>
 
-<div id="doLogin" class="button" tabindex="0" style="width: max-content;">
-	<div class="buttonInner" style="width: max-content;">Login</div>
+<div id="doLogin" class="button" style="width: max-content;">
+	<div id="doLoginInner" class="buttonInner" style="width: max-content;">Login</div>
 </div>
 
-<div id="guestLogin" class="button" tabindex="0" style="width: max-content;">
-	<div id="guestLoginInner" class="buttonInner" style="width: max-content;">Use Guest Login</div>
+<div class="button" style="width: max-content;">
+	<div id="guestLogin" class="buttonInner" style="width: max-content;">Use Guest Login</div>
 </div>
 
-<div id="createAccount" class="button" tabindex="0" style="width: max-content;">
+<div id="createAccount" class="button" style="width: max-content;">
 	<div id="createAccountInner" class="buttonInner" style="width: max-content;">Create Account</div>
 </div>
 </center>
 
-<script type="module" src="../login/webSocketClient.js" />
+<script type="module" src="webSocketClient.js" />
 
