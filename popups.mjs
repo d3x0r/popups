@@ -113,6 +113,8 @@ const popups = {
 	simpleNotice : createSimpleNotice,
         makeList : createList,
         makeCheckbox : makeCheckbox,
+        makeRadioChoice : makeRadioChoice,
+        makeLeftRadioChoice : makeLeftRadioChoice,
         makeNameInput : makeNameInput,  // form, object, field, text; popup to rename
         makeTextInput : makeTextInput,  // form, object, field, text
         makeSlider : makeSlider,  // form, object, field, text
@@ -404,6 +406,9 @@ class Popup {
 		}
 		hide() {
 			this.divFrame.style.display = "none";
+		}
+		reset() {
+			this.on( "reset", true );
 		}
 		show() {
                     	this.raise();
@@ -844,6 +849,89 @@ function makeCheckbox( form, o, field, text )
                 reset(){
                     o[field] = initialValue;
                     inputCountIncrement.checked = initialValue;
+                },
+                changes() {
+                    if( o[field] !== initialValue ) {
+                        return text
+                            + popups.strings.get( " changed from " )
+                            + initialValue
+                            + popups.strings.get( " to " )
+                            + o[field];
+                    }
+                    return '';
+				},
+		get style() {
+			return binder.style;
+		}
+	}
+}
+
+function makeLeftRadioChoice( form, o, field, text, groupName ) 
+{
+	return makeRadioChoice( form,o,field,text,groupName, true );
+}
+
+function makeRadioChoice( form, o, field, text, groupName, left ) 
+{
+	let initialValue = o[field];
+        const suffix = ( form instanceof Popup )?form.suffix:'';
+	var textOption = document.createElement( "SPAN" );
+	if( left ) 
+		textOption.className = "radio-text"+suffix + " rightJustify";
+	else
+		textOption.className = "radio-text"+suffix;
+	textOption.textContent = text;
+	var option = document.createElement( "INPUT" );
+	option.setAttribute( "type", "radio");
+	option.setAttribute( "name", groupName );		
+	if( left )
+		option.className = "radioOption"+suffix;
+	else
+		option.className = "radioOption"+suffix + " rightJustify";
+	option.checked = o[field];
+	//textDefault.
+	var onChange = [];
+	var binder = document.createElement( "div" );
+	binder.className = "fieldUnit"+suffix;
+	binder.addEventListener( "click", (e)=>{ 
+		if( e.target===option) return; e.preventDefault(); option.checked = !option.checked; })
+	option.addEventListener( "change", (e)=>{ 
+		 o[field] = option.checked; })
+	form.appendChild(binder );
+	if( left ) {
+		binder.appendChild( option );
+		binder.appendChild( textOption );
+	}else {
+		binder.appendChild( textOption );
+		binder.appendChild( option );
+	}
+	//form.appendChild( document.createElement( "br" ) );
+
+        binder.addEventListener( "mousedown", (evt)=>{
+                evt.stopPropagation();
+        })
+
+	return {
+		on(event,cb){
+			if( event === "change" ) onChange.push(cb);
+			option.addEventListener(event,cb);
+		},
+		get checked() {
+			return option.checked;
+		},
+		set checked(val) {
+			option.checked = val;
+		},
+		get value() { return option.checked; },
+		set value(val) { 
+			o[field] = val;
+			option.checked = val;
+			onChange.forEach( cb=>cb());
+		 }
+                ,
+                reset(){
+                    o[field] = initialValue;
+                    option.checked = initialValue;
                 },
                 changes() {
                     if( o[field] !== initialValue ) {
@@ -1957,42 +2045,113 @@ var alertForm = null;//initAlertForm();
 //alertForm.hide();
 
 
+class SashPicker extends Popup{
+	choices = [];
+	sashModule = null;
+	promise = null;
+	constructor( opts ) {
+		super( "Please select login role", null, {enableClose: false } );
+		const form = opts?.useSashForm || "pickSashForm.html";
+		import( opts?.sashScript || "pickSashForm.js" ).then( (sashModule)=>{
+			this.sashModule = sashModule;
+			sashModule.setForm( pickSashForm );
+		} ).catch( (err)=>{
+			console.log( "Sash form resulted with an error?" );
+		} );
 
+	        this.hide();
+
+		fillFromURL( this, form ).then( ()=>{
+			this.center();
+			this.on( "load", this );
+		} ).catch( (err)=>{
+			if( this.promise ) this.promise.rej( "Choice selection form failed to load." );
+			
+		} );
+		this.on( "ok" ()=>{
+			if( this.sashModule ) {
+				const choice = this.sashModule.getChoice();
+				if( this.promise ) this.promise.res( choice );
+			}else
+				if( this.promise ) this.promise.res( choices[0] );				
+			this.hide();
+		} );
+		this.on( "cancel" ()=>{
+			if( this.promise ) this.promise.rej( "Choice canceled by user." );
+			this.hide();
+		} );
+
+	}
+	
+	show( choices ) {
+		this.reset();
+		this.choices = choices;
+		if( this.sashModule )
+			for( let choice of choices ) {
+				this.sashModule.addChoice( choice );
+			}
+		super.show();
+	}
+}
+
+
+// login form as a class would be a better implementation.
 function makeLoginForm( doLogin, opts  ) {
-	var connection = createPopup( "Connecting", null );
+	var loginForm = createPopup( "Connecting", null, {enableClose:false} );
+	var pickSashForm = null;
+
 	let createMode =false;
 	let isGuestLogin = false;
 	const form = opts?.useForm || "loginForm.html";
+	
 	const wsClient = opts?.wsLoginClient || wsClient_;
 
-       	connection.connect = function() {
-            	connection.caption = "Login Ready...";
+       	loginForm.connect = function() {
+            	loginForm.caption = "Login Ready...";
         }
 
-       	connection.disconnect = function() {
-            	connection.caption = "Connecting...";
+       	loginForm.disconnect = function() {
+            	loginForm.caption = "Connecting...";
         }
-		connection.login = function() {     	
-			if( doLogin ) doLogin( wsClient );
-		};
+	loginForm.login = function() {     	
+		if( doLogin ) doLogin( wsClient );
+	};
 
-        connection.hide();
+	loginForm.pickSash = function(choices) {
+		const p = { p:null, res:null, rej:null };
+		p.p = new Promise( (res,rej)=>{p.res =res;p.rej=rej} );
+		if( !pickSashform ) {
+			pickSashForm = new SashPicker( opts );
+			pickSashForm.on( "load", (form)=>{
+				fillChoices();
+			} );
+		} else {
+			fillChoices();
+		}
 
-		fillFromURL( connection, form ).then( ()=>{
-			wsClient.loginForm = connection;
-				if( wsClient.connected ) {
-					// already connected; connect event would not have fired
-					connection.caption = "Login Ready";
-					// sometimes it is already connected...
-				}
-		wsClient.bindControls( connection );
-		connection.center();
+		function fillChoices() {		
+			pickSashForm.show( choices, p )
+		}
+		return p.p;
+	};
+
+        loginForm.hide();
+
+	fillFromURL( loginForm, form ).then( ()=>{
+		wsClient.loginForm = loginForm;
+		if( wsClient.connected ) {
+			// already connected; connect event would not have fired
+			loginForm.caption = "Login Ready";
+			// sometimes it is already connected...
+		}
+		wsClient.bindControls( loginForm );
+		loginForm.center();
 	} );
 
 
 	
 
-	return connection;
+	return loginForm;
 }
 
 
