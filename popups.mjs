@@ -15,7 +15,6 @@ popup.caption = "New Caption";
 popup.divContent  // insert frame content here
 
 */
-//import {connection as wsClient} from "./example/webSocketClient.js";
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
@@ -376,51 +375,57 @@ class Popup {
 
 	}
 
-		set caption(val) {
-                    	if( this.divTitle )
-				this.divTitle.textContent = val;
-		}
-		center() {
-			var myRect = this.divFrame.getBoundingClientRect();
-			var pageRect = this.divFrame.parentElement.getBoundingClientRect();
-			this.divFrame.style.left = (pageRect.width-myRect.width)/2;
-			this.divFrame.style.top = (pageRect.height-myRect.height)/2;
-		}
-		over( e ){
-			var target = e.getBoundingClientRect();
-			this.divFrame.style.left = target.left;
-			this.divFrame.style.top = target.top;
-		}
-		on(event,cb) {
-			if( cb && "function" === typeof cb )
-				if( this.popupEvents[event] )
-					this.popupEvents[event].push(cb);
-				else
-					this.popupEvents[event] = [cb];
-			else {
-				var cbList;
-				if( cbList = this.popupEvents[event]  ) {
-					cbList.forEach( cbEvent=>cbEvent( cb ));
-				}
+	set caption(val) {
+		if( this.divTitle )
+			this.divTitle.textContent = val;
+	}
+	center() {
+		var myRect = this.divFrame.getBoundingClientRect();
+		var pageRect = this.divFrame.parentElement.getBoundingClientRect();
+		this.divFrame.style.left = (pageRect.width-myRect.width)/2;
+		this.divFrame.style.top = (pageRect.height-myRect.height)/2;
+	}
+	over( e ){
+		var target = e.getBoundingClientRect();
+		this.divFrame.style.left = target.left;
+		this.divFrame.style.top = target.top;
+	}
+	on(event,cb) {
+		if( cb && "function" === typeof cb )
+			if( this.popupEvents[event] )
+				this.popupEvents[event].push(cb);
+			else
+				this.popupEvents[event] = [cb];
+		else {
+			var cbList;
+			if( cbList = this.popupEvents[event]  ) {
+				cbList.forEach( cbEvent=>cbEvent( cb ));
 			}
 		}
-		hide() {
-			this.divFrame.style.display = "none";
-		}
-		reset() {
-			this.on( "reset", true );
-		}
-		show() {
-                    	this.raise();
-			this.divFrame.style.display = "";
-			//popupTracker.raise( this );
+	}
+	reset() {
+		this.on( "reset", true );
+	}
+	reject() {
+		this.on( "reject", true );
+	}
+	accept() {
+		this.on( "accept", true );
+	}
+	hide() {
+		this.divFrame.style.display = "none";
+	}
+	show() {
+		this.raise();
+		this.divFrame.style.display = "";
+		//popupTracker.raise( this );
 
-			this.on( "show", true );
-		}
-		move(x,y) {
-			this.divFrame.style.left = x+"%";
-			this.divFrame.style.top = y+"%";
-		}
+		this.on( "show", true );
+	}
+	move(x,y) {
+		this.divFrame.style.left = x+"%";
+		this.divFrame.style.top = y+"%";
+	}
 	appendChild(e) {
 		return (this.divContent||this.divFrame).appendChild(e)
 	}
@@ -823,7 +828,14 @@ function makeCheckbox( form, o, field, text )
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
-
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputCountIncrement.checked;
+		} );
+		form.on( "reject", ()=>{
+			inputCountIncrement.checked = initialValue;
+		} );
+	}
         binder.addEventListener( "mousedown", (evt)=>{
                 evt.stopPropagation();
         })
@@ -979,17 +991,20 @@ function makeSlider( form, o, field, text )
                 evt.stopPropagation();
         })
 
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputCountIncrement.value;
+		} );
+		form.on( "reject", ()=>{
+			inputCountIncrement.value = initialValue;
+		} );
+	}
+
 	//form.appendChild( document.createElement( "br" ) );
 	return {
 		on(event,cb){
 			if( event === "change" ) onChange.push(cb);
 			inputCountIncrement.addEventListener(event,cb);
-		},
-		get checked() {
-			return inputCountIncrement.checked;
-		},
-		set checked(val) {
-			inputCountIncrement.checked = val;
 		},
 		get value() { return inputCountIncrement.checked; },
 		set value(val) { 
@@ -1028,28 +1043,38 @@ function makeTextInput( form, input, value, text, money, percent ){
 	inputControl.className = "textInputOption"+suffix +" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
-        function setValue() {
-	if( money ) {
-		inputControl.value = utils.to$(input[value]);
-		inputControl.addEventListener( "change", (e)=>{
-			var val = utils.toD(inputControl.value);
-			input[value] = inputControl.value = utils.to$(val);
-		})
-	} else if( percent ) {
-		inputControl.value = utils.toP(input[value]);
-		inputControl.addEventListener( "change", (e)=>{
-			var val = utils.fromP(inputControl.value);
-			input[value] = inputControl.value = utils.toP(val);
-		})
-	}else {
-		inputControl.value = input[value];
-		inputControl.addEventListener( "input", (e)=>{
-			var val = inputControl.value;
-                        input[value] = val;
-		})
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputCountIncrement.value;
+		} );
+		form.on( "reject", ()=>{
+			inputCountIncrement.value = initialValue;
+		} );
 	}
-        }
-        setValue();
+
+	function setValue() {
+		if( money ) {
+			inputControl.value = utils.to$(input[value]);
+			inputControl.addEventListener( "change", (e)=>{
+				var val = utils.toD(inputControl.value);
+				input[value] = inputControl.value = utils.to$(val);
+			})
+		} else if( percent ) {
+			inputControl.value = utils.toP(input[value]);
+			inputControl.addEventListener( "change", (e)=>{
+				var val = utils.fromP(inputControl.value);
+				input[value] = inputControl.value = utils.toP(val);
+			})
+		}else {
+			inputControl.value = input[value];
+			inputControl.addEventListener( "input", (e)=>{
+				var val = inputControl.value;
+                           input[value] = val;
+			})
+		}
+	}
+	setValue();
 
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
@@ -1060,6 +1085,15 @@ function makeTextInput( form, input, value, text, money, percent ){
         binder.addEventListener( "mousedown", (evt)=>{
                 evt.stopPropagation();
         })
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
 
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
@@ -1135,6 +1169,16 @@ function makeTextField( form, input, value, text, money, percent ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
+
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		get value () {
@@ -1202,6 +1246,16 @@ function makeNameInput( form, input, value, text ){
 	binder.appendChild( textLabel );
 	binder.appendChild( textOutput );
 	binder.appendChild( buttonRename );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = textOutput.textContent;
+		} );
+		form.on( "reject", ()=>{
+			textOutput.textContent = initialValue;
+		} );
+	}
+
 	//binder.appendChild( document.createElement( "br" ) );
 	return {
 		get value() {
@@ -1276,6 +1330,16 @@ function makeDateInput( form, input, value, text ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
+
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		get value () {
@@ -1330,6 +1394,16 @@ function makeZipInput( form, input, value ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
+
 	return {
 		get value () {
 			return inputControl.value;
@@ -1361,6 +1435,16 @@ function makeSSNInput( form, input, value ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
+
 	return {
 		get value () {
 			return inputControl.value;
@@ -1419,6 +1503,17 @@ function makeChoiceInput( form, input, value, choices, text ){
 	form.appendChild(binder );
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
+
+	if( form instanceof Popup ) {
+		form.on( "accept", ()=>{
+			initialValue = inputControl.value;
+		} );
+		form.on( "reject", ()=>{
+			inputControl.value = initialValue;
+		} );
+	}
+
+
 	return {
 		get value () {
 			return inputControl.value;
