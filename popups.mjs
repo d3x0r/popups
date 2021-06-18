@@ -2112,6 +2112,7 @@ function makeLoginForm( doLogin, opts  ) {
 
        	loginForm.disconnect = function() {
             	loginForm.caption = "Connecting...";
+		loginForm.show();
         }
 	loginForm.login = function() {     	
 		if( doLogin ) doLogin( wsClient );
