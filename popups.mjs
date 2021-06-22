@@ -150,9 +150,9 @@ function addCaptionHandler( c, popup_ ) {
 		dragging:false
 	};
 	if( popups.autoRaise && popup_ )
-	popup_.divFrame.addEventListener( "mousedown", (evt)=>{
-		popupTracker.raise( popup );
-	} );
+		popup_.divFrame.addEventListener( "mousedown", (evt)=>{
+			popupTracker.raise( popup );
+		} );
 
 	function mouseHandler(c,state) {
 		
@@ -191,6 +191,7 @@ function addCaptionHandler( c, popup_ ) {
 			}
 		}
 		function mouseDown(evt){
+			if( evt.target !== c ) return;
 			//evt.preventDefault();
                     if( !popup_.useMouse ) return;
 
