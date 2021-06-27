@@ -150,9 +150,9 @@ function addCaptionHandler( c, popup_ ) {
 		dragging:false
 	};
 	if( popups.autoRaise && popup_ )
-	popup_.divFrame.addEventListener( "mousedown", (evt)=>{
-		popupTracker.raise( popup );
-	} );
+		popup_.divFrame.addEventListener( "mousedown", (evt)=>{
+			popupTracker.raise( popup );
+		} );
 
 	function mouseHandler(c,state) {
 		
@@ -191,6 +191,7 @@ function addCaptionHandler( c, popup_ ) {
 			}
 		}
 		function mouseDown(evt){
+			if( evt.target !== c ) return;
 			//evt.preventDefault();
                     if( !popup_.useMouse ) return;
 
@@ -1132,7 +1133,7 @@ function makeTextInput( form, input, value, text, money, percent ){
 
 
 function makeTextField( form, input, value, text, money, percent ){
-	const initialValue = input[value];
+	let initialValue = input[value];
 
         const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textMinmum = document.createElement( "SPAN" );
@@ -1146,16 +1147,16 @@ function makeTextField( form, input, value, text, money, percent ){
 		inputControl.value = utils.to$(input[value]);
 		inputControl.addEventListener( "change", (e)=>{
 			var val = utils.toD(inputControl.value);
-			input[value] = inputControl.value = utils.to$(val);
+			input[value] = inputControl.textContent = utils.to$(val);
 		})
 	} else if( percent ) {
 		inputControl.value = utils.toP(input[value]);
 		inputControl.addEventListener( "change", (e)=>{
 			var val = utils.fromP(inputControl.value);
-			input[value] = inputControl.value = utils.toP(val);
+			input[value] = inputControl.textContent = utils.toP(val);
 		})
 	}else {
-		inputControl.value = input[value];
+		inputControl.textContent = input[value];
 		inputControl.addEventListener( "input", (e)=>{
 			var val = inputControl.value;
                         input[value] = val;
@@ -1181,6 +1182,10 @@ function makeTextField( form, input, value, text, money, percent ){
 
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+		refresh() {
+			inputControl.textContent = initialValue = input[value];
+			
+		},
 		get value () {
 			if( money )
 				return utils.toD(inputControl.value);
@@ -1200,6 +1205,7 @@ function makeTextField( form, input, value, text, money, percent ){
                     input[value] = initialValue;
                     setValue();
                 },
+		divFrame : binder,
                 changes() {
                     if( input[value] !== initialValue ) {
                         return text
