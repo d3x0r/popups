@@ -219,7 +219,8 @@ function addCaptionHandler(c, popup_) {
     }
 
     function mouseDown(evt) {
-      //evt.preventDefault();
+      if (evt.target !== c) return; //evt.preventDefault();
+
       if (!popup_.useMouse) return;
 
       if (globalMouseState.activeFrame) {
@@ -1260,16 +1261,16 @@ function makeTextField(form, input, value, text, money, percent) {
       inputControl.value = utils.to$(input[value]);
       inputControl.addEventListener("change", function (e) {
         var val = utils.toD(inputControl.value);
-        input[value] = inputControl.value = utils.to$(val);
+        input[value] = inputControl.textContent = utils.to$(val);
       });
     } else if (percent) {
       inputControl.value = utils.toP(input[value]);
       inputControl.addEventListener("change", function (e) {
         var val = utils.fromP(inputControl.value);
-        input[value] = inputControl.value = utils.toP(val);
+        input[value] = inputControl.textContent = utils.toP(val);
       });
     } else {
-      inputControl.value = input[value];
+      inputControl.textContent = input[value];
       inputControl.addEventListener("input", function (e) {
         var val = inputControl.value;
         input[value] = val;
@@ -1286,7 +1287,7 @@ function makeTextField(form, input, value, text, money, percent) {
 
   if (form instanceof Popup) {
     form.on("accept", function () {
-      inputControl.value, _readOnlyError("initialValue");
+      initialValue = inputControl.value;
     });
     form.on("reject", function () {
       inputControl.value = initialValue;
@@ -1296,6 +1297,9 @@ function makeTextField(form, input, value, text, money, percent) {
   return {
     addEventListener: function addEventListener(a, b) {
       return inputControl.addEventListener(a, b);
+    },
+    refresh: function refresh() {
+      inputControl.textContent = initialValue = input[value];
     },
 
     get value() {
@@ -1312,6 +1316,7 @@ function makeTextField(form, input, value, text, money, percent) {
       input[value] = initialValue;
       setValue();
     },
+    divFrame: binder,
     changes: function changes() {
       if (input[value] !== initialValue) {
         return text + popups.strings.get(" changed from ") + initialValue + popups.strings.get(" to ") + input[value];
