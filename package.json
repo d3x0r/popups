@@ -11,5 +11,10 @@
   "license": "ISC",
   "dependencies": {
     "jsox": "latest"
+  },
+  "devDependencies": {
+    "@babel/cli": "latest",
+    "@babel/core": "latest",
+    "@babel/preset-env": "latest"
   }
 }
