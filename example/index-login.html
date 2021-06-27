@@ -19,6 +19,7 @@ const login = popups.makeLoginForm( ()=>{
 	alert( "Login was successful." );
 }, {wsLoginClient:connection} );
 
+login.show();
 if( window.top.location.hash === "#ws" ) {
 	openSocket();
 }
