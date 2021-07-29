@@ -229,20 +229,22 @@ function addCaptionHandler( c, popup_ ) {
 
 		c.addEventListener( "touchstart", (evt)=>{
                     if( !popup_.useMouse ) return;
-			evt.preventDefault();
 			var pRect = state.frame.getBoundingClientRect();
 			popupTracker.raise( popup );
 			//state.x = evt.clientX-pRect.left;
 			//state.y = evt.clientY-pRect.top;
-			state.x = evt.touches[0].clientX-pRect.left;
-			state.y = evt.touches[0].clientY-pRect.top;
-			state.dragging = true;
+			if( evt.target === c ) {
+				evt.preventDefault();
+				state.x = evt.touches[0].clientX-pRect.left;
+				state.y = evt.touches[0].clientY-pRect.top;
+				state.dragging = true;
+			}
 			
 		})
 		c.addEventListener( "touchmove", (evt)=>{
                     if( !popup_.useMouse ) return;
-			evt.preventDefault();
 			if( state.dragging ) {
+				evt.preventDefault();
 				const points = evt.touches;
 				var pRect = state.frame.getBoundingClientRect();
 				var x = points[0].clientX - pRect.left;
@@ -258,9 +260,11 @@ function addCaptionHandler( c, popup_ ) {
 		})
 		c.addEventListener( "touchend", (evt)=>{
                     if( !popup_.useMouse ) return;
-			evt.preventDefault();
-			popupTracker.raise( popup );
-			state.dragging = false;
+			//popupTracker.raise( popup );
+			if( evt.target === c )  {
+				evt.preventDefault();
+				state.dragging = false;
+			}
 			
 		})
 
