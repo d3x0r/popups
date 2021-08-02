@@ -130,6 +130,7 @@ const popups = {
         makeLoginForm: makeLoginForm,
         makeWindowManager : makeWindowManager,
         fillFromURL : fillFromURL,
+	utils : utils, // expose formatting utility functions.
 }
 
 let unique = Date.now();
@@ -629,6 +630,9 @@ class SimpleNotice extends Popup {
 	textOutput.className = "noticeText";
 	textOutput.textContent = question;
 
+	this.setMessage = (msg)=>{
+		textOutput.textContent = msg;
+	}
 	
 	this.okay.className += " notice";
 	this.okay.children[0].className += " notice";
