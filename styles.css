@@ -411,3 +411,34 @@ div.mouseCatcher{
 	border-radius:10px;
 	/*padding:25px;*/
 }
+
+
+.frameContent-notice{
+	/* default frameContent */
+	margin:5px;
+	padding:0.5em;
+
+ 	font-size:150%;
+ 	background-color:#400;
+ 	width:75vw;
+/*     height:5em;*/
+ 	color:#FFF;
+ 	/* line-height: 2.5em; */
+}
+
+.frameContainer-notice {
+
+	visibility:visible;
+	padding:0px;border-color:black;border-width:2px;
+	border-style:solid;z-index:100;position:absolute;
+	/*left:1024;
+	top:25%; */
+	width:max-content;
+	height:max-content;
+	background-color:rgba(150, 150, 150, 0.75);
+	color:rgb(33, 0, 29);
+	border-radius:10px;
+	/*padding:25px;*/
+}
+
+
