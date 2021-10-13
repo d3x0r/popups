@@ -72,7 +72,10 @@ const subMenu = menu.addMenu( "Menu Entry Text" );
 ```
 
 ## Changelog
-- 1.0.103(in progress)
+- 1.0.104(in progress)
+- 1.0.103
+  - fixed tracking mouse events to specific controls (avoid being so leaky with events)
+  - Added just popup alert form.
 - 1.0.102
   - added remove function on more popups.
   - Improved popup sub-menu closing, put it behind a timer, which allows enough time to move over the menu from the selection before closing.
