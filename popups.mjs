@@ -440,8 +440,8 @@ class Popup {
 	}
 }
 
-function createPopup( caption, forContent ) {
-	return new Popup(caption, null, forContent );
+function createPopup( caption, parent, opts ) {
+	return new Popup(caption, parent, opts );
 }
 
 function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
@@ -2206,7 +2206,7 @@ class SashPicker extends Popup{
 
 // login form as a class would be a better implementation.
 function makeLoginForm( doLogin, opts  ) {
-	var loginForm = createPopup( "Connecting", null, {enableClose:false} );
+	var loginForm = createPopup( "Connecting", opts?.parent, {enableClose:false} );
 	var pickSashForm = null;
 
 	let createMode =false;
