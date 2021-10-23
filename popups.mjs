@@ -24,6 +24,7 @@ const utils = globalThis.utils || {
     ROUND_NATURAL:3,
     // --------- These need to go into utils or something
     to$(val,rounder) {
+	if( "string" === typeof val ) val = utils.toD(val);
         function pad(val, n) {
             if( val.length < n) {
                 val = '00000'.substr(0,n-val.length)+val;
@@ -241,7 +242,7 @@ function addCaptionHandler( c, popup_ ) {
 				state.dragging = true;
 			}
 			
-		})
+		}, { passive:true } )
 		c.addEventListener( "touchmove", (evt)=>{
                     if( !popup_.useMouse ) return;
 			if( state.dragging ) {
@@ -258,7 +259,7 @@ function addCaptionHandler( c, popup_ ) {
 				}
 			}
 			
-		})
+		}, { passive:true })
 		c.addEventListener( "touchend", (evt)=>{
                     if( !popup_.useMouse ) return;
 			//popupTracker.raise( popup );
@@ -267,7 +268,7 @@ function addCaptionHandler( c, popup_ ) {
 				state.dragging = false;
 			}
 			
-		})
+		}, { passive:true })
 
 	}
 
@@ -541,13 +542,13 @@ function handleButtonEvents( button, onClick ) {
 		evt.preventDefault();
 		setClass( button, "pressed" );
 		
-	})
+	}, { passive:true })
 	button.addEventListener( "touchend", (evt)=>{
 		evt.preventDefault();
 		clearClass( button, "pressed" );
                 onClick();
 		
-	})
+	}, { passive:true })
 	button.addEventListener( "mousedown", (evt)=>{
 		evt.preventDefault();
 		setClass( button, "pressed" );
@@ -1042,15 +1043,16 @@ function makeSlider( form, o, field, text )
 	}
 }
 
-function makeTextInput( form, input, value, text, money, percent ){
+function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
 	const initialValue = input[value];
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+        const suffix = ( form instanceof Popup )?form.suffix:(suffix_||'');
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix +" rightJustify";
-        inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+        //inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+        inputControl.addEventListener( "click", (evt)=>inputControl.select() );
 	//textDefault.
 
 	if( form instanceof Popup ) {
@@ -1067,19 +1069,34 @@ function makeTextInput( form, input, value, text, money, percent ){
 			inputControl.value = utils.to$(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.toD(inputControl.value);
-				input[value] = inputControl.value = utils.to$(val);
+				input[value] = val;
+				inputControl.value = utils.to$(val);
+				result.on( "change", result );
 			})
 		} else if( percent ) {
 			inputControl.value = utils.toP(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.fromP(inputControl.value);
-				input[value] = inputControl.value = utils.toP(val);
+				input[value] = val;
+				inputControl.value = utils.toP(val);
+				result.on( "change", result );
+			})
+		} else if( number ) {
+			inputControl.value = input[value];
+			inputControl.addEventListener( "change", (e)=>{
+				var val = Number(inputControl.value);
+				input[value] = val;
+				inputControl.value = val;
+				result.on( "change", result );
 			})
 		}else {
 			inputControl.value = input[value];
 			inputControl.addEventListener( "input", (e)=>{
+			} );
+			inputControl.addEventListener( "input", (e)=>{
 				var val = inputControl.value;
-                           input[value] = val;
+				input[value] = val;
+				result.on( "change", result );
 			})
 		}
 	}
@@ -1104,7 +1121,23 @@ function makeTextInput( form, input, value, text, money, percent ){
 		} );
 	}
 
-	return {
+	const events = {};
+
+	const result = {
+		on( event, param ) {
+			if( "function" === typeof param ) {
+				events[event] = param;
+			} else {
+				if( event in events )
+				events[event](param);
+			}
+		},
+		get frame() {
+			return binder;
+		},
+		get frame() {
+			return binder;
+		},
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		blur() { inputControl.blur() },
 		get value () {
@@ -1112,6 +1145,8 @@ function makeTextInput( form, input, value, text, money, percent ){
 				return utils.toD(inputControl.value);
 			if( percent ) 
 				return utils.fromP(inputControl.value);
+			if( number ) 
+				return Number(inputControl.value);
 			return inputControl.value;
 		},
 		set value (val) {
@@ -1119,6 +1154,8 @@ function makeTextInput( form, input, value, text, money, percent ){
 				inputControl.value = utils.to$(val);
 			else if( percent )
 				inputControl.value = utils.toP(val);
+			else if( number )
+				inputControl.value = val;
 			else
 				inputControl.value = val;			
 		},
@@ -1137,6 +1174,7 @@ function makeTextInput( form, input, value, text, money, percent ){
                     return '';
                 }
 	}
+	return result;
 }
 
 

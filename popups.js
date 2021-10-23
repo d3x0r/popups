@@ -15,6 +15,8 @@ function _get(target, property, receiver) { if (typeof Reflect !== "undefined" &
 
 function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
 
+function _defineEnumerableProperties(obj, descs) { for (var key in descs) { var desc = descs[key]; desc.configurable = desc.enumerable = true; if ("value" in desc) desc.writable = true; Object.defineProperty(obj, key, desc); } if (Object.getOwnPropertySymbols) { var objectSymbols = Object.getOwnPropertySymbols(descs); for (var i = 0; i < objectSymbols.length; i++) { var sym = objectSymbols[i]; var desc = descs[sym]; desc.configurable = desc.enumerable = true; if ("value" in desc) desc.writable = true; Object.defineProperty(obj, sym, desc); } } return obj; }
+
 function _readOnlyError(name) { throw new TypeError("\"" + name + "\" is read-only"); }
 
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
@@ -70,6 +72,8 @@ var utils = globalThis.utils || {
   ROUND_NATURAL: 3,
   // --------- These need to go into utils or something
   to$: function to$(val, rounder) {
+    if ("string" === typeof val) val = utils.toD(val);
+
     function pad(val, n) {
       if (val.length < n) {
         val = '00000'.substr(0, n - val.length) + val;
@@ -284,6 +288,8 @@ function addCaptionHandler(c, popup_) {
         state.y = evt.touches[0].clientY - pRect.top;
         state.dragging = true;
       }
+    }, {
+      passive: true
     });
     c.addEventListener("touchmove", function (evt) {
       if (!popup_.useMouse) return;
@@ -302,6 +308,8 @@ function addCaptionHandler(c, popup_) {
           localStorage.setItem(state.frame.id + "/y", popup.divFrame.style.top);
         }
       }
+    }, {
+      passive: true
     });
     c.addEventListener("touchend", function (evt) {
       if (!popup_.useMouse) return; //popupTracker.raise( popup );
@@ -310,6 +318,8 @@ function addCaptionHandler(c, popup_) {
         evt.preventDefault();
         state.dragging = false;
       }
+    }, {
+      passive: true
     });
   }
 
@@ -516,8 +526,8 @@ var Popup = /*#__PURE__*/function () {
 
 exports.Popup = Popup;
 
-function createPopup(caption, forContent) {
-  return new Popup(caption, null, forContent);
+function createPopup(caption, parent, opts) {
+  return new Popup(caption, parent, opts);
 }
 
 function createSimpleForm(title, question, defaultValue, ok, cancelCb) {
@@ -608,11 +618,15 @@ function handleButtonEvents(button, onClick) {
   button.addEventListener("touchstart", function (evt) {
     evt.preventDefault();
     setClass(button, "pressed");
+  }, {
+    passive: true
   });
   button.addEventListener("touchend", function (evt) {
     evt.preventDefault();
     clearClass(button, "pressed");
     onClick();
+  }, {
+    passive: true
   });
   button.addEventListener("mousedown", function (evt) {
     evt.preventDefault();
@@ -1177,15 +1191,18 @@ function makeSlider(form, o, field, text) {
   };
 }
 
-function makeTextInput(form, input, value, text, money, percent) {
+function makeTextInput(form, input, value, text, money, percent, number, suffix_) {
+  var _frame, _value, _value2, _result, _mutatorMap;
+
   var initialValue = input[value];
-  var suffix = form instanceof Popup ? form.suffix : '';
+  var suffix = form instanceof Popup ? form.suffix : suffix_ || '';
   var textMinmum = document.createElement("SPAN");
   textMinmum.textContent = text;
   var inputControl = document.createElement("INPUT");
-  inputControl.className = "textInputOption" + suffix + " rightJustify";
-  inputControl.addEventListener("mousedown", function (evt) {
-    return evt.stopPropagation();
+  inputControl.className = "textInputOption" + suffix + " rightJustify"; //inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+
+  inputControl.addEventListener("click", function (evt) {
+    return inputControl.select();
   }); //textDefault.
 
   if (form instanceof Popup) {
@@ -1202,19 +1219,33 @@ function makeTextInput(form, input, value, text, money, percent) {
       inputControl.value = utils.to$(input[value]);
       inputControl.addEventListener("change", function (e) {
         var val = utils.toD(inputControl.value);
-        input[value] = inputControl.value = utils.to$(val);
+        input[value] = val;
+        inputControl.value = utils.to$(val);
+        result.on("change", result);
       });
     } else if (percent) {
       inputControl.value = utils.toP(input[value]);
       inputControl.addEventListener("change", function (e) {
         var val = utils.fromP(inputControl.value);
-        input[value] = inputControl.value = utils.toP(val);
+        input[value] = val;
+        inputControl.value = utils.toP(val);
+        result.on("change", result);
+      });
+    } else if (number) {
+      inputControl.value = input[value];
+      inputControl.addEventListener("change", function (e) {
+        var val = Number(inputControl.value);
+        input[value] = val;
+        inputControl.value = val;
+        result.on("change", result);
       });
     } else {
       inputControl.value = input[value];
+      inputControl.addEventListener("input", function (e) {});
       inputControl.addEventListener("input", function (e) {
         var val = inputControl.value;
         input[value] = val;
+        result.on("change", result);
       });
     }
   }
@@ -1238,36 +1269,44 @@ function makeTextInput(form, input, value, text, money, percent) {
     });
   }
 
-  return {
-    addEventListener: function addEventListener(a, b) {
-      return inputControl.addEventListener(a, b);
-    },
-    blur: function blur() {
-      inputControl.blur();
-    },
-
-    get value() {
-      if (money) return utils.toD(inputControl.value);
-      if (percent) return utils.fromP(inputControl.value);
-      return inputControl.value;
-    },
-
-    set value(val) {
-      if (money) inputControl.value = utils.to$(val);else if (percent) inputControl.value = utils.toP(val);else inputControl.value = val;
-    },
-
-    reset: function reset() {
-      input[value] = initialValue;
-      setValue();
-    },
-    changes: function changes() {
-      if (input[value] !== initialValue) {
-        return text + popups.strings.get(" changed from ") + initialValue + popups.strings.get(" to ") + input[value];
+  var events = {};
+  var result = (_result = {
+    on: function on(event, param) {
+      if ("function" === typeof param) {
+        events[event] = param;
+      } else {
+        if (event in events) events[event](param);
       }
+    },
 
-      return '';
+    get frame() {
+      return binder;
     }
-  };
+
+  }, _frame = "frame", _mutatorMap = {}, _mutatorMap[_frame] = _mutatorMap[_frame] || {}, _mutatorMap[_frame].get = function () {
+    return binder;
+  }, _defineProperty(_result, "addEventListener", function addEventListener(a, b) {
+    return inputControl.addEventListener(a, b);
+  }), _defineProperty(_result, "blur", function blur() {
+    inputControl.blur();
+  }), _value = "value", _mutatorMap[_value] = _mutatorMap[_value] || {}, _mutatorMap[_value].get = function () {
+    if (money) return utils.toD(inputControl.value);
+    if (percent) return utils.fromP(inputControl.value);
+    if (number) return Number(inputControl.value);
+    return inputControl.value;
+  }, _value2 = "value", _mutatorMap[_value2] = _mutatorMap[_value2] || {}, _mutatorMap[_value2].set = function (val) {
+    if (money) inputControl.value = utils.to$(val);else if (percent) inputControl.value = utils.toP(val);else if (number) inputControl.value = val;else inputControl.value = val;
+  }, _defineProperty(_result, "reset", function reset() {
+    input[value] = initialValue;
+    setValue();
+  }), _defineProperty(_result, "changes", function changes() {
+    if (input[value] !== initialValue) {
+      return text + popups.strings.get(" changed from ") + initialValue + popups.strings.get(" to ") + input[value];
+    }
+
+    return '';
+  }), _defineEnumerableProperties(_result, _mutatorMap), _result);
+  return result;
 }
 
 function makeTextField(form, input, value, text, money, percent) {
@@ -2410,7 +2449,7 @@ var SashPicker = /*#__PURE__*/function (_Popup4) {
 
 
 function makeLoginForm(doLogin, opts) {
-  var loginForm = createPopup("Connecting", null, {
+  var loginForm = createPopup("Connecting", opts === null || opts === void 0 ? void 0 : opts.parent, {
     enableClose: false
   });
   var pickSashForm = null;
