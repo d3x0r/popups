@@ -2290,12 +2290,12 @@ export var AlertForm = /*#__PURE__*/function (_Popup3) {
 
   var _super3 = _createSuper(AlertForm);
 
-  function AlertForm() {
+  function AlertForm(parent) {
     var _this7;
 
     _classCallCheck(this, AlertForm);
 
-    _this7 = _super3.call(this, null, null, {
+    _this7 = _super3.call(this, null, parent, {
       suffix: "-alert"
     });
 
@@ -2339,6 +2339,12 @@ export var AlertForm = /*#__PURE__*/function (_Popup3) {
 }(Popup);
 var alertForm = null; //initAlertForm();
 //alertForm.hide();
+
+function Alert(msg) {
+  if (!alertForm) alterForm = new AlertForm();
+  alterForm.caption = msg;
+  alertForm.show();
+}
 
 var SashPicker = /*#__PURE__*/function (_Popup4) {
   _inherits(SashPicker, _Popup4);
@@ -2476,6 +2482,8 @@ function makeLoginForm(doLogin, opts) {
 
     return p.p;
   };
+
+  loginForm.Alert = Alert;
 
   loginForm.setClient = function (wsClient_) {
     wsClient = wsClient_;

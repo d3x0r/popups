@@ -2162,8 +2162,8 @@ function makeApp() {
 
 export class AlertForm extends Popup {
 
-	constructor() {
-		super( null, null, {suffix:"-alert"} );
+	constructor(parent) {
+		super( null, parent, {suffix:"-alert"} );
 		const this_ = this;
 		this.divContent.setAttribute( "tabIndex", 0 )
 		this.divContent.className += " alert-content";
@@ -2191,6 +2191,11 @@ export class AlertForm extends Popup {
 var alertForm = null;//initAlertForm();
 //alertForm.hide();
 
+function Alert(msg) {
+	if( !alertForm ) alterForm = new AlertForm();
+	alterForm.caption = msg;
+	alertForm.show();
+}
 
 class SashPicker extends Popup{
 	choices = [];
@@ -2282,7 +2287,7 @@ function makeLoginForm( doLogin, opts  ) {
 		}
 		return p.p;
 	};
-
+	loginForm.Alert = Alert;
         loginForm.setClient = function(wsClient_) {
 		wsClient = wsClient_;
 	};
