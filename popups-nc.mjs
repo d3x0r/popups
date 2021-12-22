@@ -123,45 +123,6 @@ var utils = globalThis.utils || {
   }
 };
 var localStorage = globalThis.localStorage;
-var popups = {
-  defaultDrag: true,
-  autoRaise: true,
-  create: createPopup,
-  simpleForm: createSimpleForm,
-  simpleNotice: createSimpleNotice,
-  makeList: createList,
-  makeCheckbox: makeCheckbox,
-  makeRadioChoice: makeRadioChoice,
-  makeLeftRadioChoice: makeLeftRadioChoice,
-  makeNameInput: makeNameInput,
-  // form, object, field, text; popup to rename
-  makeTextInput: makeTextInput,
-  // form, object, field, text
-  makeSlider: makeSlider,
-  // form, object, field, text
-  makeTextField: makeTextField,
-  makeButton: makeButton,
-  handleButtonEvents: handleButtonEvents,
-  // expose just the button handler of makeButton
-  makeChoiceInput: makeChoiceInput,
-  // form, object, field, choiceArray, text
-  makeDateInput: makeDateInput,
-  // form, object, field, text
-  strings: {
-    get: function get(s) {
-      return s;
-    }
-  },
-  setClass: setClass,
-  toggleClass: toggleClass,
-  clearClass: clearClass,
-  createMenu: createPopupMenu,
-  makeLoginForm: makeLoginForm,
-  makeWindowManager: makeWindowManager,
-  fillFromURL: fillFromURL,
-  utils: utils // expose formatting utility functions.
-
-};
 var unique = Date.now();
 var globalMouseState = {
   activeFrame: null
@@ -1103,7 +1064,12 @@ function makeRadioChoice(form, o, field, text, groupName, left) {
   };
 }
 
-function makeSlider(form, o, field, text) {
+function makeSlider(form, o, field, text, f) {
+  if (f && "function" !== typeof f) {
+    console.log("makeSlider: Function to transform value is not a function:", f);
+    f = null;
+  }
+
   var suffix = form instanceof Popup ? form.suffix : '';
   var initialValue = o[field];
   var textCountIncrement = document.createElement("SPAN");
@@ -1113,7 +1079,9 @@ function makeSlider(form, o, field, text) {
   inputCountIncrement.setAttribute("min", 1);
   inputCountIncrement.setAttribute("max", 1000);
   inputCountIncrement.className = "valueSlider" + suffix + " rightJustify";
-  inputCountIncrement.value = o[field]; //textDefault.
+  inputCountIncrement.value = o[field];
+  var valueCountIncrement = document.createElement("SPAN");
+  valueCountIncrement.textContent = "0"; //textDefault.
 
   var onChange = [];
   var binder = document.createElement("div");
@@ -1121,11 +1089,14 @@ function makeSlider(form, o, field, text) {
   //	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
 
   inputCountIncrement.addEventListener("input", function (e) {
-    o[field] = inputCountIncrement.value;
+    if (f) o[field] = f(inputCountIncrement.value);else o[field] = inputCountIncrement.value;
+    valueCountIncrement.textContent = o[field];
+    control.on("change", control); //if( form instanceof Popup ) form.on("update", control );	
   });
   form.appendChild(binder);
   binder.appendChild(textCountIncrement);
   binder.appendChild(inputCountIncrement);
+  binder.appendChild(valueCountIncrement);
   binder.addEventListener("mousedown", function (evt) {
     evt.stopPropagation();
   });
@@ -1140,10 +1111,16 @@ function makeSlider(form, o, field, text) {
   } //form.appendChild( document.createElement( "br" ) );
 
 
-  return {
+  var control = {
     on: function on(event, cb) {
-      if (event === "change") onChange.push(cb);
-      inputCountIncrement.addEventListener(event, cb);
+      if ("function" === typeof cb) {
+        if (event === "change") onChange.push(cb);
+        inputCountIncrement.addEventListener(event, cb);
+      } else {
+        if (event === "change") onChange.forEach(function (f) {
+          return f(cb);
+        });
+      }
     },
 
     get value() {
@@ -1175,6 +1152,7 @@ function makeSlider(form, o, field, text) {
     }
 
   };
+  return control;
 }
 
 function makeTextInput(form, input, value, text, money, percent, number, suffix_) {
@@ -1708,19 +1686,24 @@ function makeChoiceInput(form, input, value, choices, text) {
 } //--------------------------- Quick Popup Menu System ------------------------------
 
 
-var mouseCatcher = document.createElement("div");
-document.body.appendChild(mouseCatcher);
-mouseCatcher.addEventListener("contextmenu", function (evt) {
-  evt.preventDefault();
-  evt.stopPropagation();
-  return false;
-});
-mouseCatcher.className = "mouseCatcher";
-var topMenu;
-mouseCatcher.addEventListener("click", function (evt) {
-  mouseCatcher.style.visibility = "hidden";
-  if (topMenu) topMenu.hide(true);
-});
+var mouseCatcher = null;
+
+function initMouseCatcher() {
+  if (mouseCatcher) return;
+  mouseCatcher = document.createElement("div");
+  document.body.appendChild(mouseCatcher);
+  mouseCatcher.addEventListener("contextmenu", function (evt) {
+    evt.preventDefault();
+    evt.stopPropagation();
+    return false;
+  });
+  mouseCatcher.className = "mouseCatcher";
+  var topMenu;
+  mouseCatcher.addEventListener("click", function (evt) {
+    mouseCatcher.style.visibility = "hidden";
+    if (topMenu) topMenu.hide(true);
+  });
+}
 
 function createPopupMenu(opts) {
   var suffix = (opts === null || opts === void 0 ? void 0 : opts.suffix) || '';
@@ -1851,6 +1834,7 @@ function createPopupMenu(opts) {
 
     }
   };
+  if (!mouseCacher) initMouseCacher();
   mouseCatcher.appendChild(menu.container);
   menu.container.className = "popup" + suffix;
   menu.container.style.zIndex = 50;
@@ -2579,5 +2563,46 @@ function fillFromURL(popup, url) {
   }
 }
 
-export { popups };
 export { Popup };
+var popups = {
+  Popup: Popup,
+  defaultDrag: true,
+  autoRaise: true,
+  create: createPopup,
+  simpleForm: createSimpleForm,
+  simpleNotice: createSimpleNotice,
+  makeList: createList,
+  makeCheckbox: makeCheckbox,
+  makeRadioChoice: makeRadioChoice,
+  makeLeftRadioChoice: makeLeftRadioChoice,
+  makeNameInput: makeNameInput,
+  // form, object, field, text; popup to rename
+  makeTextInput: makeTextInput,
+  // form, object, field, text
+  makeSlider: makeSlider,
+  // form, object, field, text
+  makeTextField: makeTextField,
+  makeButton: makeButton,
+  handleButtonEvents: handleButtonEvents,
+  // expose just the button handler of makeButton
+  makeChoiceInput: makeChoiceInput,
+  // form, object, field, choiceArray, text
+  makeDateInput: makeDateInput,
+  // form, object, field, text
+  strings: {
+    get: function get(s) {
+      return s;
+    }
+  },
+  setClass: setClass,
+  toggleClass: toggleClass,
+  clearClass: clearClass,
+  createMenu: createPopupMenu,
+  makeLoginForm: makeLoginForm,
+  makeWindowManager: makeWindowManager,
+  fillFromURL: fillFromURL,
+  utils: utils // expose formatting utility functions.
+
+};
+export { popups };
+export default popups;
