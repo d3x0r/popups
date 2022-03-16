@@ -1082,35 +1082,35 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 	function setValue() {
 		if( money ) {
-			inputControl.textContent = utils.to$(input[value]);
+			inputControl.value = utils.to$(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
-				var val = utils.toD(inputControl.textContent);
+				var val = utils.toD(inputControl.value);
 				input[value] = val;
 				inputControl.value = utils.to$(val);
 				result.on( "change", result );
 			})
 		} else if( percent ) {
-			inputControl.textContent = utils.toP(input[value]);
+			inputControl.value = utils.toP(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
-				var val = utils.fromP(inputControl.textContent);
+				var val = utils.fromP(inputControl.value);
 				input[value] = val;
 				inputControl.value = utils.toP(val);
 				result.on( "change", result );
 			})
 		} else if( number ) {
-			inputControl.textContent = input[value];
+			inputControl.value = input[value];
 			inputControl.addEventListener( "change", (e)=>{
-				var val = Number(inputControl.textContent);
+				var val = Number(inputControl.value);
 				input[value] = val;
 				inputControl.textContent = val;
 				result.on( "change", result );
 			})
 		}else {
-			inputControl.textContent = input[value];
+			inputControl.value = input[value];
 			inputControl.addEventListener( "input", (e)=>{
 			} );
 			inputControl.addEventListener( "input", (e)=>{
-				var val = inputControl.textContent;
+				var val = inputControl.value;
 				input[value] = val;
 				result.on( "change", result );
 			})
