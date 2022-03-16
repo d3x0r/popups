@@ -252,6 +252,25 @@ function addCaptionHandler( c, popup_ ) {
 
 }
 
+class ValueOfType {	
+	#type = 0; // undefined
+	constructor( type, value ) {
+		this.#type = type;
+		this.value = value;
+	}
+}
+
+ValueOfType.Unset = 0;
+ValueOfType.Number = 1;
+ValueOfType.Dollar = 2;
+ValueOfType.Percent = 3;
+ValueOfType.String = 4;
+ValueOfType.SSN = 5;
+ValueOfType.Zip = 6;
+ValueOfType.Date = 7;
+
+Object.freeze( ValueOfType );
+
 function initPopupTracker() {
 
 	var tracker = {
@@ -795,6 +814,7 @@ function makeCheckbox( form, o, field, text )
 	let initialValue = o[field];
         const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textCountIncrement = document.createElement( "SPAN" );
+	textCountIncrement.className = "field-unit-span";
 	textCountIncrement.textContent = text;
 	var inputCountIncrement = document.createElement( "INPUT" );
 	inputCountIncrement.setAttribute( "type", "checkbox");
@@ -945,11 +965,15 @@ function makeRadioChoice( form, o, field, text, groupName, left )
 	}
 }
 
-function makeSlider( form, o, field, text, f ) 
+function makeSlider( form, o, field, text, f, g ) 
 {
 	if( f && "function" !== typeof f ) {
 		console.log( "makeSlider: Function to transform value is not a function:", f  );
 		f = null;
+	}
+	if( g && "function" !== typeof g ) {
+		console.log( "makeSlider: Function to transform from value to slider is not a function:", f  );
+		g = null;
 	}
         const suffix = ( form instanceof Popup )?form.suffix:'';
 	let initialValue = o[field];
@@ -960,14 +984,15 @@ function makeSlider( form, o, field, text, f )
 	inputCountIncrement.setAttribute( "min", 1);
 	inputCountIncrement.setAttribute( "max", 1000);
 	inputCountIncrement.className = "valueSlider"+suffix + " rightJustify";
-	inputCountIncrement.value = o[field];
+	inputCountIncrement.value = g?g(o[field]):o[field];
 
 	const valueCountIncrement = document.createElement( "SPAN" );
-	valueCountIncrement.textContent = "0";
+	valueCountIncrement.textContent = o[field];
+	valueCountIncrement.className = "field-unit-span"+suffix;
 	//textDefault.
 	const onChange = [];
 	const binder = document.createElement( "div" );
-	binder.className = "fieldUnit"+suffix;
+	binder.className = "field-unit"+suffix;
 	//binder.addEventListener( "click", (e)=>{ 
 	//	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
 	inputCountIncrement.addEventListener( "input", (e)=>{ 
@@ -1057,35 +1082,35 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 	function setValue() {
 		if( money ) {
-			inputControl.value = utils.to$(input[value]);
+			inputControl.textContent = utils.to$(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
-				var val = utils.toD(inputControl.value);
+				var val = utils.toD(inputControl.textContent);
 				input[value] = val;
 				inputControl.value = utils.to$(val);
 				result.on( "change", result );
 			})
 		} else if( percent ) {
-			inputControl.value = utils.toP(input[value]);
+			inputControl.textContent = utils.toP(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
-				var val = utils.fromP(inputControl.value);
+				var val = utils.fromP(inputControl.textContent);
 				input[value] = val;
 				inputControl.value = utils.toP(val);
 				result.on( "change", result );
 			})
 		} else if( number ) {
-			inputControl.value = input[value];
+			inputControl.textContent = input[value];
 			inputControl.addEventListener( "change", (e)=>{
-				var val = Number(inputControl.value);
+				var val = Number(inputControl.textContent);
 				input[value] = val;
-				inputControl.value = val;
+				inputControl.textContent = val;
 				result.on( "change", result );
 			})
 		}else {
-			inputControl.value = input[value];
+			inputControl.textContent = input[value];
 			inputControl.addEventListener( "input", (e)=>{
 			} );
 			inputControl.addEventListener( "input", (e)=>{
-				var val = inputControl.value;
+				var val = inputControl.textContent;
 				input[value] = val;
 				result.on( "change", result );
 			})
@@ -1176,7 +1201,7 @@ function makeTextField( form, input, value, text, money, percent ){
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
-	inputControl.className = "textInputOption"+suffix+" rightJustify";
+	inputControl.className = "text-field"+suffix+" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
         function setValue() {
@@ -1210,10 +1235,10 @@ function makeTextField( form, input, value, text, money, percent ){
 
 	if( form instanceof Popup ) {
 		form.on( "accept", ()=>{
-			initialValue = inputControl.value;
+			initialValue = inputControl.textContent;
 		} );
 		form.on( "reject", ()=>{
-			inputControl.value = initialValue;
+			inputControl.textContent = initialValue;
 		} );
 	}
 
@@ -1225,18 +1250,18 @@ function makeTextField( form, input, value, text, money, percent ){
 		},
 		get value () {
 			if( money )
-				return utils.toD(inputControl.value);
+				return utils.toD(inputControl.textContent);
 			if( percent ) 
-				return utils.fromP(inputControl.value);
-			return inputControl.value;
+				return utils.fromP(inputControl.textContent);
+			return inputControl.textContent;
 		},
 		set value (val) {
 			if( money )
-				inputControl.value = utils.to$(val);
+				inputControl.textContent = utils.to$(val);
 			else if( percent )
-				inputControl.value = utils.toP(val);
+				inputControl.textContent = utils.toP(val);
 			else
-				inputControl.value = val;			
+				inputControl.textContent = val;			
 		},
                 reset(){
                     input[value] = initialValue;
@@ -1730,7 +1755,7 @@ function createPopupMenu( opts ) {
 		}
 	};
 
-	if( !mouseCacher ) initMouseCacher();
+	if( !mouseCatcher ) initMouseCatcher();
 	mouseCatcher.appendChild( menu.container );
 	menu.container.className = "popup"+suffix;
 	menu.container.style.zIndex = 50;
@@ -2172,7 +2197,8 @@ export class AlertForm extends Popup {
 		})
 	}
 
-	show() {
+	show(caption) {
+		if( "string" === typeof caption  ) this.caption = caption;
 		this.raise();
 		super.show();
 		this.divFrame.focus();
@@ -2387,6 +2413,356 @@ function fillFromURL(popup, url) {
 }
 
 
+class DataGridRow {
+
+	rowData = null;
+	el = null;
+	addUpdates=null;
+	cells=[];
+	#dataGrid = null;
+	newInput= {
+		// update
+	};
+
+	constructor( grid, threshold, newRow ) {
+		this.#dataGrid = grid;
+		this.el = newRow;
+		this.rowData = threshold;
+
+	}
+
+
+/*	
+		const row = {
+			threshold:threshold,
+			el: newRow,
+			addUpdates:null,
+			cells:cells,
+			newInput: {
+				update(t){
+					["threshold","primary_percent","secondary_percent","tertiary_percent", "kitty", "house"].forEach( (key,id)=>{
+				    	const c = cells[id].cell;
+					const upd = cells[id].upd;
+				    	// update current value.
+					if( !upd ) row.addUpdates( t );
+					else {
+				    	if( upd.money )
+						c.textContent = popups.utils.to$( t[upd.f] );
+					else if( upd.percent )
+						c.textContent = popups.utils.toP( t[upd.f] );
+					else
+						c.textContent = t[upd.f];
+					}
+					} );
+				},
+				
+			},
+
+			
+		}
+		thresholdRows.push(row );
+*/
+}
+
+class DataGrid {
+
+	#initialValue = undefined;
+	#suffix = '';
+	#obj = null;
+	#field = null;
+	#table = null;
+	#header = null;
+	#opts = null;
+	#cells = [];
+
+	#subFields = null;
+/*
+
+	const dg = new DataGrid(form, {rows:[]}, "rows", { columns : [{name: "Threshold Value", field:"threshold", className:"threshold-value" }  );
+								    .{name:"Primary Percent", field:"primary", className:"threshold-primary" } ] 
+							} );
+	dg.addColumn( name, field, classname );
+
+	input.thresholds.forEach( t=>{
+		addRow( thresholdTable, thresholdRows, t );
+	} );
+	addRow( thresholdTable, thresholdRows, null );
+
+*/
+
+	constructor( form, o, field, opts ) 
+	{
+		this.#field= field;
+		this.#subFields = opts.columns;
+		this.#opts = opts;
+		this.#obj = o;
+		
+		this.#initialValue = o[field];
+	        
+                this.#suffix = ( form instanceof Popup )?form.suffix:'';
+                
+		const thresholdRows = ()=>this.#obj[this.#field];
+	        
+		form.on( "apply", function() {
+		} )
+		/*
+		popup.refresh = function() {
+			['name','everyTally','housePercent','startingValue'].forEach( key=>{
+				controls[key].value = input[key];
+			});
+	        
+			for( let threshold of input.thresholds ) {
+				addRow( thresholdTable, thresholdRows, threshold );
+			}
+	        
+			for( let inp of input.inputs ) {
+				for( let form of l.inputForms ){
+					if( form.id === inp.accrual_input_group_id ){
+						form.glist.subItems.update( input );
+					}
+				}
+			}
+	        
+			for( let activity of input.activities ){
+				for( let form of l.activities ){
+					if( form.activity === activity ){
+						form.jlist.subItems.update( input );
+					}
+				}
+			}
+			
+		}
+		*/
+		form.on( "show", ()=>{
+		//	input.value = defaultValue;
+//	//		input.focus();
+//	//		input.select();
+		})
+		form.on( "close", ()=>{
+			// aborted...
+			cancel && cancel();
+		});
+	        
+	        
+		this.#table = document.createElement( "table" );
+		this.#table.className = "threshold-table"+ this.#suffix;
+	        
+		this.#header = this.#table.insertRow();
+		this.#header.className = "threshold-header-row"+ this.#suffix;
+
+		form.appendChild( this.#table );
+	        
+		this.#subFields.forEach( col=>{
+			this.addColumn( col.name, col.field, col.className );
+		} );
+
+		this.fill();
+	}
+
+	fill() {
+		this.#initialValue.forEach( row=>{
+			this.addRow( row );
+		} );
+		this.addRow( this.#table, this.#obj[this.#field], null );
+
+	}
+
+	addColumn( name, subField, className ) {
+		const cell = this.#header.insertCell();
+		cell.textContent = name;//"Threshold Value";
+		this.#cells.push( {cell:cell, name:name, field:subField, className }  );
+	}
+
+	addRow(newRow) {
+
+		const thresholdTable = this.#table;
+		const thresholdRows = this.#initialValue;
+
+		function setCaret(el) {
+			function isTextNodeAndContentNoEmpty(node) {
+				return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
+			}
+			let range = document.createRange(),
+			      sel = window.getSelection(),
+			      lastKnownIndex = -1;
+			for (let i = 0; i < el.childNodes.length; i++) {
+			    if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
+			      lastKnownIndex = i;
+			    }
+			  }
+			  if (lastKnownIndex === -1) {
+			    throw new Error('Could not find valid text content');
+			  }
+			  let row = el.childNodes[lastKnownIndex],
+			      col = row.textContent.length;
+			  range.setStart(row, col);
+			  range.collapse(true);
+			  sel.removeAllRanges();
+			  sel.addRange(range);
+			  //el.focus();
+		}
+	        
+	        
+		function selAll(el) {
+			function isTextNodeAndContentNoEmpty(node) {
+			  return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
+			}
+	        
+			let range = document.createRange(),
+			      sel = window.getSelection(),
+			      lastKnownIndex = -1;
+			for (let i = 0; i < el.childNodes.length; i++) {
+				if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
+				  lastKnownIndex = i;
+				}
+			}
+			if (lastKnownIndex === -1) {
+				throw new Error('Could not find valid text content');
+			}
+			let row = el.childNodes[lastKnownIndex],
+			    col = row.textContent.length;
+			range.setStart(row, 0);
+			range.setEnd(row, col);
+			//range.collapse(true);
+			sel.removeAllRanges();
+			sel.addRange(range);
+			//el.focus();
+		}
+	
+	
+		//function addRow( thresholdTable, thresholdRows, threshold ) 
+		{
+			if( newRow ) {
+				//if( this.#opts.orderBy ) {
+/*					
+				const oldRow = thresholdRows.find( r=>  !r.realRow || ( r.threshold.row_order === newRow.row_order ) );
+				if( oldRow ) {
+					if( !oldRow.threshold ) {
+						oldRow.realRow = newRow;
+						this.addRow( null ); // add a new null row.
+					}
+		
+					//oldRow.newInput.update( newRow );
+					return;
+				}       	
+*/
+			}
+	        
+			const newTableRow = this.#table.insertRow();
+	        
+			const row = new DataGridRow( this, newRow, newTableRow );
+	        
+			thresholdRows.push(row );
+	        
+			this.#cells.forEach( cell=>{
+	        
+				let newCell = newTableRow.insertCell();
+				newCell.className = cell.class + this.#suffix;
+				newCell.textContent = "";//cell.;
+				newCell.setAttribute("contenteditable",true );
+				cell.newInput = onEdit( newCell, newRow );
+				
+			} )
+	        
+			function onEdit( c, threshold ) {
+			    	function newInput(evt) {
+			    		if( !row.threshold ) {
+						evt.target.textContent += "00";
+					    row.threshold = threshold = accruals.getThreshold(input);
+	        
+					    addUpdates( threshold );
+					    addRow( thresholdTable, thresholdRows, null );
+						//evt.target.
+						
+					    setCaret( evt.target );
+						//evt.target.setSelectionRange(evt.target.textContent.length, -1);
+	        
+					}
+				}
+				if( !threshold ) {
+					c.addEventListener( "input", newInput );
+				} else
+					addUpdates( threshold );
+				row.addUpdates = addUpdates;
+	        
+				return {
+					update(t){
+						["threshold","primary_percent","secondary_percent","tertiary_percent", "kitty", "house"].forEach( (key,id)=>{
+					    	const c = this.#cells[id].cell;
+					    	const upd = this.#cells[id].upd;
+	        
+					    	// update current value.
+					    	if( upd.money )
+							c.textContent = popups.utils.to$( threshold[upd.field] );
+						else if( upd.percent )
+							c.textContent = popups.utils.toP( threshold[upd.field] );
+						else
+							c.textContent = threshold[upd.field];
+						} );
+					},
+					
+				};
+				function addUpdates( threshold ) {
+	        
+					this.#cells[0].upd = addUpdate( cells[0], "threshold", false, true );
+	        
+					this.#cells[1].upd = addUpdate( cells[1], "primary_percent", true, false );
+					this.#cells[2].upd = addUpdate( cells[2], "secondary_percent", true, false );
+					this.#cells[3].upd = addUpdate( cells[3], "tertiary_percent", true, false );
+					this.#cells[4].upd = addUpdate( cells[4], "kitty", true, false );
+					this.#cells[5].upd = addUpdate( cells[5], "house", true, false );
+
+					if( !row.threshold )	row.threshold = threshold;
+
+
+					function addUpdate( cell, field, percent, money ) {
+					    	const c = cell.cell;
+	        
+					    	// update current value.
+						if( c.textContent  !== "" ) {
+							c.textContent = popups.utils.to$( c.textContent );
+						} else {
+					    		if( money )
+								c.textContent = popups.utils.to$( threshold[field] );
+							else if( percent )
+								c.textContent = popups.utils.toP( threshold[field] );
+							else
+								c.textContent = threshold[field];
+						}
+	        
+						c.removeEventListener( "input", cell.newInput );
+						
+						c.addEventListener( "focus", (evt)=>{
+							if( percent ) {
+								selAll( evt.target );
+							}
+						} );
+						c.addEventListener( "blur", (evt)=>{
+					    		if( money ) {
+						    		threshold[field] = popups.utils.toD( c.textContent );
+						    		c.textContent = popups.utils.to$( threshold[field] );
+							}
+					    		else if( percent ) {
+						    		threshold[field] = popups.utils.fromP( c.textContent );
+						    		c.textContent = popups.utils.toP( threshold[field] );
+							}
+							else
+						    		threshold[field] = c.textContent;
+					    	} );
+						return {
+							c:c, percent:percent,money:money,f:field
+						};
+					}
+				}
+			}
+			return row;
+		}
+	}
+
+}
+
+
+
 export {Popup};
 
 const popups = {
@@ -2417,6 +2793,8 @@ const popups = {
         makeWindowManager : makeWindowManager,
         fillFromURL : fillFromURL,
 	utils : utils, // expose formatting utility functions.
+	DataGrid,
+	ValueOfType,  // carry formatting information with value
 }
 
 export {popups};
