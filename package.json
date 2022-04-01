@@ -1,6 +1,6 @@
 {
   "name": "@d3x0r/popups",
-  "version": "1.0.103",
+  "version": "1.0.104",
   "description": "Simple popup windows using HTML controls.",
   "main": "popups.mjs",
   "scripts": {
@@ -15,6 +15,7 @@
   "devDependencies": {
     "@babel/cli": "latest",
     "@babel/core": "latest",
-    "@babel/preset-env": "latest"
+    "@babel/preset-env": "latest",
+    "eslint": "^8.10.0"
   }
 }

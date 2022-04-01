@@ -165,7 +165,7 @@ function addCaptionHandler( c, popup_ ) {
 			}
 		}
 		function mouseDown(evt){
-			if( evt.target !== c ) return;
+			if( evt.target !== c && evt.target.parentNode !=  c ) return;
 			//evt.preventDefault();
                     if( !popup_.useMouse ) return;
 
@@ -369,7 +369,8 @@ class Popup {
 		this.caption = caption_;
 		parent = (parent&&parent.divContent) || parent || document.body;
 
-		parent.appendChild( this.divFrame );
+		if( !forContent )
+			parent.appendChild( this.divFrame );
 
 	}
 
@@ -564,7 +565,7 @@ function makeButton( form, caption, onClick ) {
 	buttonInner.className = "buttonInner"+suffix;
 	buttonInner.style.width = "max-content"+suffix;
 	buttonInner.textContent = caption;
-
+	button.buttonInner = buttonInner;
         button.appendChild(buttonInner);
 	handleButtonEvents( button, onClick );
 	form.appendChild( button );
@@ -2218,8 +2219,8 @@ var alertForm = null;//initAlertForm();
 //alertForm.hide();
 
 function Alert(msg) {
-	if( !alertForm ) alterForm = new AlertForm();
-	alterForm.caption = msg;
+	if( !alertForm ) alertForm = new AlertForm();
+	alertForm.caption = msg;
 	alertForm.show();
 }
 
@@ -2800,6 +2801,8 @@ const popups = {
 	utils : utils, // expose formatting utility functions.
 	DataGrid,
 	ValueOfType,  // carry formatting information with value
+	AlertForm:AlertForm,
+	Alert,
 }
 
 export {popups};
