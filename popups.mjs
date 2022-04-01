@@ -563,7 +563,7 @@ function makeButton( form, caption, onClick ) {
 	button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
 	buttonInner.className = "buttonInner"+suffix;
-	buttonInner.style.width = "max-content"+suffix;
+	//buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 	button.buttonInner = buttonInner;
         button.appendChild(buttonInner);
