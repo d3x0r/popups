@@ -8,6 +8,7 @@ module.exports =function(api) {
 
   const presets = [ ['@babel/preset-env', { "modules": false }]];
   const plugins = [
+    '@babel/plugin-proposal-private-property-in-object',
     '@babel/plugin-proposal-class-properties',
     '@babel/plugin-transform-classes',
   ];
