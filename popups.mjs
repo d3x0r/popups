@@ -563,13 +563,36 @@ function makeButton( form, caption, onClick ) {
 	button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
 	buttonInner.className = "buttonInner"+suffix;
-	buttonInner.style.width = "max-content"+suffix;
+	buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 	button.buttonInner = buttonInner;
         button.appendChild(buttonInner);
 	handleButtonEvents( button, onClick );
 	form.appendChild( button );
-        return button;
+	return {
+		button,
+		buttonInner,
+		show() {
+			button.style.display = "";
+
+		},
+		hide() {
+			button.style.display = "none";
+		},
+		remove() {
+			button.remove();
+		},
+		set className(val) {
+			button.className = val;
+		},
+		get className() {
+			return button.className;
+		},
+		get style() {
+			return button.style;
+		}
+	}
+      //  return button;
 
 }
 
@@ -1205,28 +1228,28 @@ function makeTextField( form, input, value, text, money, percent ){
 	inputControl.className = "text-field"+suffix+" rightJustify";
         inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
-        function setValue() {
-	if( money ) {
-		inputControl.value = utils.to$(input[value]);
-		inputControl.addEventListener( "change", (e)=>{
-			var val = utils.toD(inputControl.value);
-			input[value] = inputControl.textContent = utils.to$(val);
-		})
-	} else if( percent ) {
-		inputControl.value = utils.toP(input[value]);
-		inputControl.addEventListener( "change", (e)=>{
-			var val = utils.fromP(inputControl.value);
-			input[value] = inputControl.textContent = utils.toP(val);
-		})
-	}else {
-		inputControl.textContent = input[value];
-		inputControl.addEventListener( "input", (e)=>{
-			var val = inputControl.value;
-                        input[value] = val;
-		})
+	function setValue() {
+		if( money ) {
+			inputControl.textContent = utils.to$(input[value]);
+			inputControl.addEventListener( "change", (e)=>{
+				var val = utils.toD(inputControl.value);
+				input[value] = inputControl.textContent = utils.to$(val);
+			})
+		} else if( percent ) {
+			inputControl.textContent = utils.toP(input[value]);
+			inputControl.addEventListener( "change", (e)=>{
+				var val = utils.fromP(inputControl.value);
+				input[value] = inputControl.textContent = utils.toP(val);
+			})
+		}else {
+			inputControl.textContent = input[value];
+			inputControl.addEventListener( "input", (e)=>{
+				var val = inputControl.value;
+							input[value] = val;
+			})
+		}
 	}
-        }
-        setValue();
+	setValue();
 
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
@@ -1246,7 +1269,8 @@ function makeTextField( form, input, value, text, money, percent ){
 	return {
             	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		refresh() {
-			inputControl.textContent = initialValue = input[value];
+			 initialValue = input[value];
+			 setValue();
 			
 		},
 		get value () {
