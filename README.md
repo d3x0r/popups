@@ -45,13 +45,16 @@ some of the popups.makeButton sort of methods return just a simple html element.
 |        list | (parentList,toString) | Creates a list with a specified tostring method for elements.   |
 |        makeCheckbox | (form, o, text, field )  |  make a checkmark button, which is bound to object 'o' and member 'field'.  The title is shown next to the checkbox.  |
 |        makeNameInput | (form, o, text, field ) | make a static text display, with a button to click to edit the text   |
- |       makeTextInput |(form,o,text,field) |  make a text input with a lable next to it   |
-|        makeTextField |(form,o,text,field)  | make a text display with a label next to it (like input but readonly)   |
+ |       makeTextInput |(form,o,text,field, money, percent) |  make a text input with a lable next to it   |
+|        makeTextField |(form,o,text,field, money, percent)  | make a text display with a label next to it (like input but readonly)   |
  |       makeButton | (parentElement,text, callback) | adds a button; is 2 divs nested and styled.  Callback is called when the button is clicked/touched. |
 |	setClass| (element.class) | Set a class in className |
 |	toggleClass| (element,class) | if a class is in a class, remove it, else add it |
 |	clearClass| (element,class) | remove a class from className |
 | createMenu | () | returns a menu object which is a popup menu |
+|   |  |     |
+| Alert | (string) | Show a generic singleton alert banner; hide() is available, if multiple show(newString) happen, the banner remains up, and just updates the text content |
+| AlertForm | () | This is the form used by Alert, it extends `Popup()`, and just has simple single-touch/any click to clear.  |
 
 ### Lists
 
@@ -72,7 +75,14 @@ const subMenu = menu.addMenu( "Menu Entry Text" );
 ```
 
 ## Changelog
-- 1.0.104(in progress)
+- 1.0.106 (in progress)
+  - modify makeButton; results with a object with a more interface more similar to popups.
+  - some fixes for refreshing text fields.
+- 1.0.105
+  - Expose Alert, and AlertForm.
+  - some misc updates
+- 1.0.104
+  - ?? (Please review) 
 - 1.0.103
   - fixed tracking mouse events to specific controls (avoid being so leaky with events)
   - Added just popup alert form.
