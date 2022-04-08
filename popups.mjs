@@ -602,22 +602,20 @@ function createSimpleNotice( title, question, ok, cancel ) {
 
 class SimpleNotice extends Popup {
 	//const popup = popups.create( title );
+
+	textOutput = document.createElement( "SPAN" );
+
 	constructor( title, question, ok, cancel ) {
 		super( title, null, {suffix:"-notice"} );
 		const popup = this;
 	const form = document.createElement( "form" );
-	this.okay = makeButton( form, "Okay", ()=>{
-		this.hide();
-		ok && ok( );
-	})
-	
 	{
 		const	show_ = this.show.bind(this);
 
 	this.show = function( caption, content ) {
 		if( caption && content ) {
 			this.divCaption.textContent = caption;
-			textOutput.textContent = content;
+			this.textOutput.textContent = content;
 		}
 		else if( caption )
 			this.textContent = caption;
@@ -625,7 +623,7 @@ class SimpleNotice extends Popup {
 	}
 
 	this.on( "show", ()=>{
-		this.okay.focus();
+		this.okay.button.focus();
 	})
 	this.on( "close", ()=>{
 		// aborted...
@@ -644,16 +642,13 @@ class SimpleNotice extends Popup {
 		this.hide();
 	} );	
 
-	var textOutput = document.createElement( "SPAN" );
-	textOutput.className = "noticeText";
-	textOutput.textContent = question;
+	this.textOutput.className = "noticeText";
+	this.textOutput.textContent = question;
 
 	this.setMessage = (msg)=>{
-		textOutput.textContent = msg;
+		this.textOutput.textContent = msg;
 	}
 	
-	this.okay.className += " notice";
-	this.okay.children[0].className += " notice";
 
 
 
@@ -665,10 +660,17 @@ class SimpleNotice extends Popup {
 		}
 	})
 	this.divContent.appendChild( form );
-	form.appendChild( textOutput );
+	form.appendChild( this.textOutput );
 	form.appendChild( document.createElement( "br" ) );
 	form.appendChild( document.createElement( "br" ) );
-	form.appendChild( this.okay );
+	//form.appendChild( this.okay.button );
+	this.okay = makeButton( form, "Okay", ()=>{
+		this.hide();
+		ok && ok( );
+	})
+	
+	this.okay.className += " notice";
+	this.okay.button.children[0].className += " notice";
 
 	if( cancel )  {
 		let cbut = makeButton( form, "Cancel", ()=>{
@@ -676,7 +678,7 @@ class SimpleNotice extends Popup {
 			cancel && cancel( );
 		})
 		cbut.className += " notice";
-		cbut.children[0].className += " notice";
+		cbut.button.children[0].className += " notice";
 	}
 	this.center();
 	this.hide();
