@@ -170,7 +170,10 @@ const subMenu = menu.addMenu( "Menu Entry Text" );
 
 
 ## Changelog
-- 1.0.106 (in progress)
+- 1.0.108 (inprogress)
+- 1.0.107
+  - expose internals of notice form better.
+- 1.0.106 
   - modify makeButton; results with a object with a more interface more similar to popups.
   - some fixes for refreshing text fields.
 - 1.0.105
