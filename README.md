@@ -170,7 +170,10 @@ const subMenu = menu.addMenu( "Menu Entry Text" );
 
 
 ## Changelog
-- 1.0.108 (inprogress)
+- 1.0.109 (in progress)
+- 1.0.108
+  - fix negative currency formatting.
+  - allow 'id' option to allow recovering saved window positions.
 - 1.0.107
   - expose internals of notice form better.
 - 1.0.106 

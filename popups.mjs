@@ -31,6 +31,8 @@ const utils = globalThis.utils || {
             }
             return val;
         }
+	let negate = false;
+	if( val < 0 ) { val = -val; negate = true }
         var digits = Math.log10(val) - 2;
         var n;
         var r = '';
@@ -68,13 +70,18 @@ const utils = globalThis.utils || {
                 c = (c / 1000)|0;
             }
         }
-        r = '$' + (c%1000) + r;
+        r = (negate?"-":"")+'$' + (c%1000) + r;
         return r;
     },
 
     toD($) {
         if( "string" !== typeof $ )
             $ = $.toString();
+	let negate = false;
+        if( $[0] === '-' ) {
+            $ = $.substr(1);
+            negate = true;
+	}
         if( $[0] === '$' )
             $ = $.substr(1);
         //   throw new Error( "NOT A DOLLAR AMOUNT" );
@@ -82,13 +89,13 @@ const utils = globalThis.utils || {
         if( i >= 0 && $.length-i > 2 ) {
             var trunc = $.split(',' ).join('').split('.');
             trunc[trunc.length-1] = trunc[trunc.length-1].substr(0,2);
-            return Number( trunc.join('') );
+            return (negate?-1:1)*Number( trunc.join('') );
 
         } else if( i >= 0 && $.length-i == 3 )
-            return Number( $.split(',' ).join('').split('.').join('') );
+            return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') );
         else if( i >= 0 && $.length-i == 2 )
-            return Number( $.split(',' ).join('').split('.').join('') ) * 10;
-            return (Number( $.split(',' ).join('') ) * 100)|0;
+            return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') ) * 10;
+            return (negate?-1:1)*(Number( $.split(',' ).join('') ) * 100)|0;
     },
 
     toP(p) {
@@ -325,6 +332,7 @@ class Popup {
 	constructor(caption_,parent,opts) {
             	this.suffix = opts?.suffix ||'';
 		const closeButton = opts?.enableClose || false;
+		
 		// make popup from control.
 		const forContent = opts?.from;
                 if( forContent ) {
@@ -336,9 +344,15 @@ class Popup {
                 }else  {
         		this.divFrame.className = (parent?"formContainer":"frameContainer")+this.suffix;
                 }
-
-		this.divFrame.style.left= 0;
-		this.divFrame.style.top= 0;
+                if( opts?.id ) this.divFrame.id = opts.id;
+		if( this.divFrame.id ) {
+			this.divFrame.style.left = localStorage.getItem( this.divFrame.id + "/x" );
+			this.divFrame.style.top = localStorage.getItem( this.divFrame.id + "/y" );						
+		}
+		else {
+			this.divFrame.style.left= 0;
+			this.divFrame.style.top= 0;
+		}
                 if( this.divCaption ) {
 			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
