@@ -2448,7 +2448,7 @@ function fillFromURL(popup, url) {
 class DataGridRow {
 
 	rowData = null;
-	el = null;
+	el = null;   // table row element
 	addUpdates=null;
 	cells=[];
 	#dataGrid = null;
@@ -2499,6 +2499,7 @@ class DataGridRow {
 class DataGrid {
 
 	#initialValue = undefined;
+	#initialValues = undefined;
 	#suffix = '';
 	#obj = null;
 	#field = null;
@@ -2506,8 +2507,10 @@ class DataGrid {
 	#header = null;
 	#opts = null;
 	#cells = [];
+	#rows = [];
 
 	#subFields = null;
+	#newRowCallback= (()=>({}));
 /*
 
 	const dg = new DataGrid(form, {rows:[]}, "rows", { columns : [{name: "Threshold Value", field:"threshold", className:"threshold-value" }  );
@@ -2528,15 +2531,30 @@ class DataGrid {
 		this.#subFields = opts.columns;
 		this.#opts = opts;
 		this.#obj = o;
+		const cancel = opts?.onCancel;
 		
-		this.#initialValue = o[field];
+		//this.#initialValue = o[field];
+		// keep a copy of the original array with original member addresses...
+		this.#initialValue = o[field].map(o=>o);
+
+		// keep the original valuess... with a shallow deep copy  (deep shallow?)
+		this.#initialValues = o[field].map(o=>{
+			const obj = {};
+			this.#subFields.forEach( col=>obj[col.field] = o[col.field] );
+			return obj;
+		});
+		
 	        
-                this.#suffix = ( form instanceof Popup )?form.suffix:'';
+                this.#suffix = opts?.suffix || (( form instanceof Popup )?form.suffix:'');
+		
+		if( opts?.onNewRow ) this.#newRowCallback = opts.onNewRow;
                 
 		const thresholdRows = ()=>this.#obj[this.#field];
 	        
-		form.on( "apply", function() {
-		} )
+		if( form instanceof Popup ) {
+			form.on( "apply", function() {
+			} )
+
 		/*
 		popup.refresh = function() {
 			['name','everyTally','housePercent','startingValue'].forEach( key=>{
@@ -2565,16 +2583,21 @@ class DataGrid {
 			
 		}
 		*/
-		form.on( "show", ()=>{
+			form.on( "show", ()=>{
 		//	input.value = defaultValue;
 //	//		input.focus();
 //	//		input.select();
-		})
-		form.on( "close", ()=>{
+			})
+
+			form.on( "close", ()=>{
 			// aborted...
-			cancel && cancel();
-		});
-	        
+				cancel && cancel();
+			});
+			form.on( "cancel", ()=>{
+			// aborted...
+				cancel && cancel();
+			});
+	        }
 	        
 		this.#table = document.createElement( "table" );
 		this.#table.className = "threshold-table"+ this.#suffix;
@@ -2585,57 +2608,104 @@ class DataGrid {
 		form.appendChild( this.#table );
 	        
 		this.#subFields.forEach( col=>{
-			this.addColumn( col.name, col.field, col.className );
+			this.addColumn( col.name, col.field, col.className, col.type );
 		} );
 
 		this.fill();
 	}
 
+	reset() {
+		const data = this.#obj[this.#field]; data.length = 0;
+		for( let v of this.#initialValue ) data.push(v);
+		for( let v=0; v < this.#initialValues.length; v++  ) {
+			const o = data[v];
+			const v = this.#initialValues[v];
+			this.subFields.forEach( field=>{
+				o[field.field] = v[field.field];
+			} );
+		}
+		// any old data has a chance to be wrong.
+		while( this.#rows.length ) {
+			const row = this.#rows[0];
+			this.#rows.splice( 0, 1 );
+			row.el.remove();
+		}
+		
+	}
+
+	refresh() {
+	}
+
 	fill() {
+		// empty existing table.
+		while( this.#rows.length ) {
+			const row = this.#rows[0];
+			this.#rows.splice( 0, 1 );
+			row.el.remove();
+		}
+		
 		this.#initialValue.forEach( row=>{
 			this.addRow( row );
 		} );
-		this.addRow( this.#table, this.#obj[this.#field], null );
+		/// plus one blank row to create a new entry.
+		this.addRow( null );
 
 	}
 
-	addColumn( name, subField, className ) {
+	addColumn( name, subField, className, type ) {
 		const cell = this.#header.insertCell();
 		cell.textContent = name;//"Threshold Value";
-		this.#cells.push( {cell:cell, name:name, field:subField, className }  );
+		this.#cells.push( {cell:cell, name:name, field:subField, className, type }  );
+	}
+
+	swapRows( row1, row2 ) {
+		// somehow swap..
+	}
+
+	moveRowUp( row ) {
+	}
+
+	moveRowDown( row ) {
 	}
 
 	addRow(newRow) {
 
-		const thresholdTable = this.#table;
-		const thresholdRows = this.#initialValue;
+		function setCaret(el,cell,ofs) {
+			if( cell.cell.type.options ) {
+				//const select = cell.list.selectedIndex;
+				cell.list.selectedIndex = 0;
+			} else {
 
-		function setCaret(el) {
-			function isTextNodeAndContentNoEmpty(node) {
-				return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
+				function isTextNodeAndContentNoEmpty(node) {
+					return ((node.nodeType == Node.ELEMENT_NODE ) || ( node.nodeType == Node.TEXT_NODE ) )&& node.textContent.trim().length > 0
+				}
+				let range = document.createRange(),
+				      sel = window.getSelection(),
+			        
+				lastKnownIndex = -1;
+				for (let i = 0; i < el.childNodes.length; i++) {
+				    if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
+				      lastKnownIndex = i;
+				    }
+				  }
+				  if (lastKnownIndex === -1) {
+				    throw new Error('Could not find valid text content');
+				  }
+				  let row = el.childNodes[lastKnownIndex],
+				      col = row.textContent.length;
+				  range.setStart(row, col+ofs);
+				  range.collapse(true);
+				  sel.removeAllRanges();
+				  sel.addRange(range);
 			}
-			let range = document.createRange(),
-			      sel = window.getSelection(),
-			      lastKnownIndex = -1;
-			for (let i = 0; i < el.childNodes.length; i++) {
-			    if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
-			      lastKnownIndex = i;
-			    }
-			  }
-			  if (lastKnownIndex === -1) {
-			    throw new Error('Could not find valid text content');
-			  }
-			  let row = el.childNodes[lastKnownIndex],
-			      col = row.textContent.length;
-			  range.setStart(row, col);
-			  range.collapse(true);
-			  sel.removeAllRanges();
-			  sel.addRange(range);
 			  //el.focus();
 		}
 	        
 	        
-		function selAll(el) {
+		function selAll(el, cell) {
+			if( cell.cell.type.options ) {
+				return;
+			}
 			function isTextNodeAndContentNoEmpty(node) {
 			  return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
 			}
@@ -2662,128 +2732,159 @@ class DataGrid {
 		}
 	
 	
-		//function addRow( thresholdTable, thresholdRows, threshold ) 
 		{
-			if( newRow ) {
-				//if( this.#opts.orderBy ) {
-/*					
-				const oldRow = thresholdRows.find( r=>  !r.realRow || ( r.threshold.row_order === newRow.row_order ) );
-				if( oldRow ) {
-					if( !oldRow.threshold ) {
-						oldRow.realRow = newRow;
-						this.addRow( null ); // add a new null row.
-					}
-		
-					//oldRow.newInput.update( newRow );
-					return;
-				}       	
-*/
-			}
 	        
 			const newTableRow = this.#table.insertRow();
 	        
 			const row = new DataGridRow( this, newRow, newTableRow );
 	        
-			thresholdRows.push(row );
+			this.#rows.push( row );
+			const this_ = this;
 	        
 			this.#cells.forEach( cell=>{
 	        
-				let newCell = newTableRow.insertCell();
-				newCell.className = cell.class + this.#suffix;
-				newCell.textContent = "";//cell.;
-				newCell.setAttribute("contenteditable",true );
-				cell.newInput = onEdit( newCell, newRow );
+				let newCell = {
+					cell:cell,
+					el:newTableRow.insertCell(),
+					list : null,
+					filled : false,
+					options : []
+				};
+					
+				newCell.el.className = cell.class + this.#suffix;
+				if( cell.type.options ) {
+					newCell.list = document.createElement( "select" );
+					newCell.el.appendChild( newCell.list );
+				}else {
+					newCell.el.textContent = "";//cell.;
+					newCell.el.setAttribute("contenteditable",true );
+				}
+				row.cells.push( newCell );
+				cell.newInput = onEdit( cell, newCell, newRow, row );
 				
 			} )
 	        
-			function onEdit( c, threshold ) {
+			function onEdit( cell, newCell, rowData, row ) {
+
+				const c = newCell.el;
+
 			    	function newInput(evt) {
-			    		if( !row.threshold ) {
-						evt.target.textContent += "00";
-					    row.threshold = threshold = accruals.getThreshold(input);
+			    		if( !row.rowData ) {
+			    		    // if( cell.type.money )
+						//evt.target.textContent += "00";
+						if( newCell.list ) {
+							fillOptions( newCell );
+
+						}
+					    row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
 	        
-					    addUpdates( threshold );
-					    addRow( thresholdTable, thresholdRows, null );
+					    addUpdates( rowData );
+					    this_.addRow( null );
 						//evt.target.
 						
-					    setCaret( evt.target );
+					    setCaret( evt.target, newCell, cell.type.percent?-1:0 );
 						//evt.target.setSelectionRange(evt.target.textContent.length, -1);
 	        
 					}
 				}
-				if( !threshold ) {
+				function fillOptions(newCell) {
+					const cell = newCell.cell;
+					if( !newCell.filled ) 
+					if( cell.type.options ) {
+						const opts = cell.type.options;
+						if( rowData ) {
+							newCell.filled = true;
+							opts.forEach( op=>{
+								const opt = { el:document.createElement( "option" ),
+									val:op };
+								opt.el.textContent = op.name;
+								opt.el.addEventListener( "select", ()=>{
+									console.log( "Option selected in context is for:", op );
+								} );
+								newCell.list.appendChild( opt.el );
+								newCell.options.push( opt );
+							} );
+						}
+					}
+				}
+				if( !rowData ) {
 					c.addEventListener( "input", newInput );
-				} else
-					addUpdates( threshold );
+					c.addEventListener( "click", newInput );
+				} else {
+					addUpdates( rowData );
+					fillOptions();
+				}
 				row.addUpdates = addUpdates;
 	        
-				return {
-					update(t){
-						["threshold","primary_percent","secondary_percent","tertiary_percent", "kitty", "house"].forEach( (key,id)=>{
-					    	const c = this.#cells[id].cell;
+				return  (t)=>{
+						this.#subFields.forEach( (key,id)=>{
+
+					    	//const c = this.#cells[id].cell;
 					    	const upd = this.#cells[id].upd;
 	        
 					    	// update current value.
 					    	if( upd.money )
-							c.textContent = popups.utils.to$( threshold[upd.field] );
+							c.textContent = popups.utils.to$( rowData[upd.field] );
 						else if( upd.percent )
-							c.textContent = popups.utils.toP( threshold[upd.field] );
+							c.textContent = popups.utils.toP( rowData[upd.field] );
 						else
-							c.textContent = threshold[upd.field];
+							c.textContent = rowData[upd.field];
 						} );
-					},
+					}
+
+				function addUpdates( rowData ) {
+					if( !row.rowData )	row.rowData = rowData;
 					
-				};
-				function addUpdates( threshold ) {
-	        
-					this.#cells[0].upd = addUpdate( cells[0], "threshold", false, true );
-	        
-					this.#cells[1].upd = addUpdate( cells[1], "primary_percent", true, false );
-					this.#cells[2].upd = addUpdate( cells[2], "secondary_percent", true, false );
-					this.#cells[3].upd = addUpdate( cells[3], "tertiary_percent", true, false );
-					this.#cells[4].upd = addUpdate( cells[4], "kitty", true, false );
-					this.#cells[5].upd = addUpdate( cells[5], "house", true, false );
+	        			this_.#cells.forEach( (cell,idx)=>addUpdate( cell, row.cells[idx] ) );
 
-					if( !row.threshold )	row.threshold = threshold;
-
-
-					function addUpdate( cell, field, percent, money ) {
-					    	const c = cell.cell;
+					function addUpdate( cell_header, newCell ) {
+						const c = newCell.el;
+						const field = cell_header.field;
+						const type = cell_header.type;
 	        
-					    	// update current value.
-						if( c.textContent  !== "" ) {
-							c.textContent = popups.utils.to$( c.textContent );
+						if( newCell.list ) {
+							fillOptions( newCell );
 						} else {
-					    		if( money )
-								c.textContent = popups.utils.to$( threshold[field] );
-							else if( percent )
-								c.textContent = popups.utils.toP( threshold[field] );
-							else
-								c.textContent = threshold[field];
+
+					     	   	// update current value.
+							if( c.textContent  !== "" ) {
+								
+					     	   		if( type.money ) {
+									const val = popups.utils.toD( c.textContent );
+									c.textContent = popups.utils.to$( val );
+								} else if( type.percent ) {
+									const val = popups.utils.fromP( c.textContent );
+									c.textContent = popups.utils.toP( val );
+								}
+							} else {
+					     	   		if( type.money )
+									c.textContent = popups.utils.to$( rowData[cell_header.field] );
+								else if( type.percent )
+									c.textContent = popups.utils.toP( rowData[cell_header.field] );
+								else
+									c.textContent = rowData[field];
+							}
 						}
 	        
-						c.removeEventListener( "input", cell.newInput );
+						c.removeEventListener( "input", newInput );
 						
 						c.addEventListener( "focus", (evt)=>{
-							if( percent ) {
-								selAll( evt.target );
+							if( type.percent ) {
+								selAll( evt.target, newCell );
 							}
 						} );
 						c.addEventListener( "blur", (evt)=>{
-					    		if( money ) {
-						    		threshold[field] = popups.utils.toD( c.textContent );
-						    		c.textContent = popups.utils.to$( threshold[field] );
+					    		if( type.money ) {
+						    		rowData[field] = popups.utils.toD( c.textContent );
+						    		c.textContent = popups.utils.to$( rowData[cell_header.field] );
 							}
-					    		else if( percent ) {
-						    		threshold[field] = popups.utils.fromP( c.textContent );
-						    		c.textContent = popups.utils.toP( threshold[field] );
+					    		else if( type.percent ) {
+						    		rowData[field] = popups.utils.fromP( c.textContent );
+						    		c.textContent = popups.utils.toP( rowData[cell_header.field] );
 							}
 							else
-						    		threshold[field] = c.textContent;
+						    		rowData[field] = c.textContent;
 					    	} );
-						return {
-							c:c, percent:percent,money:money,f:field
-						};
 					}
 				}
 			}
