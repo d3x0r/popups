@@ -1,0 +1,47 @@
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<title>Data Grid Test</title>
+</head>
+
+
+
+<script type="module">
+
+import {popups} from "../popups.mjs"
+
+const form = popups.create( "Test" );
+
+class rowValue {
+	val1= "string"; val2=100;val3=100;val4=3;
+}
+
+const data = {values: [ ] };
+
+const dataGrid = new popups.DataGrid( form, data, "values", {
+				columns : [ 
+	                                { name:"Value 1", field:"val1", className:"value1-class", type:{ } }
+	                                ,{ name:"Money Value" , field:"val2", className:"value2-class", type:{ money : true }  }
+	                                ,{ name:"Percent Value" , field:"val3", className:"value3-class", type:{ percent : true }  }
+	                                ,{ name:"Choice List" , field:"val4", className:"value4-class", type:{ options : [{ name:"Pick 1" },{ name:"Pick 2" },{ name:"Pick 3" },{ name:"Pick 4" },] }  }
+                                ]
+                                , onNewRow() {
+                                	const row = new rowValue();  data.values.push( row );
+				     return row;
+                                }
+			} );
+        
+const pre = document.createElement( "pre" );
+pre.style.border = "solid blue 2px" ;
+form.appendChild( pre );
+        
+popups.makeButton( form, "Update", updateValues );
+updateValues();
+
+function updateValues() {
+	pre.textContent = JSON.stringify( data, null, '\t' );
+}
+
+</script>
+
+</html>
