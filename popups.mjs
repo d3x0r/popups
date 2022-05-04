@@ -2615,10 +2615,10 @@ class DataGrid {
 	        }
 	        
 		this.#table = document.createElement( "table" );
-		this.#table.className = "threshold-table"+ this.#suffix;
+		this.#table.className = "data-grid-table"+ this.#suffix;
 	        
 		this.#header = this.#table.insertRow();
-		this.#header.className = "threshold-header-row"+ this.#suffix;
+		this.#header.className = "data-grid-header-row"+ this.#suffix;
 
 		form.appendChild( this.#table );
 	        
@@ -2750,7 +2750,7 @@ class DataGrid {
 		{
 	        
 			const newTableRow = this.#table.insertRow();
-	        
+	        	newTableRow.className = "data-grid-row" + this.#suffix;
 			const row = new DataGridRow( this, newRow, newTableRow );
 	        
 			this.#rows.push( row );
@@ -2766,7 +2766,7 @@ class DataGrid {
 					options : []
 				};
 					
-				newCell.el.className = cell.class + this.#suffix;
+				newCell.el.className = cell.className + this.#suffix;
 				if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
@@ -2804,22 +2804,33 @@ class DataGrid {
 				}
 				function fillOptions(newCell) {
 					const cell = newCell.cell;
-					if( !newCell.filled ) 
-					if( cell.type.options ) {
-						const opts = cell.type.options;
-						if( rowData ) {
-							newCell.filled = true;
-							opts.forEach( op=>{
-								const opt = { el:document.createElement( "option" ),
-									val:op };
-								opt.el.textContent = op.name;
-								opt.el.addEventListener( "select", ()=>{
-									console.log( "Option selected in context is for:", op );
+					
+					if( !newCell.filled )  {
+						if( cell.type.options ) {
+							const opts = cell.type.options;
+							if( rowData ) {
+								newCell.filled = true;
+								opts.forEach( op=>{
+									const opt = { el:document.createElement( "option" ),
+										val:op };
+									opt.el.textContent = op.name;
+									opt.el.value = op.value;
+
+									opt.el.addEventListener( "select", ()=>{
+										rowData[cell.field] = op.value;
+										console.log( "Option selected in context is for:", op );
+									} );
+									newCell.list.appendChild( opt.el );
+									newCell.options.push( opt );
 								} );
-								newCell.list.appendChild( opt.el );
-								newCell.options.push( opt );
-							} );
+								rowData[cell.field] = opts[0].value;
+							}
 						}
+						newCell.list.addEventListener( "change", (evt)=>{ 
+							const i = evt.target.selectedIndex; if( i > 0 ) {
+								rowData[cell.field] = newCell.options[i].val.value;
+							}
+						} );
 					}
 				}
 				if( !rowData ) {
@@ -2882,6 +2893,7 @@ class DataGrid {
 						}
 	        
 						c.removeEventListener( "input", newInput );
+						c.removeEventListener( "click", newInput );
 						
 						c.addEventListener( "focus", (evt)=>{
 							if( type.percent ) {

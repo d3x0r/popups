@@ -23,7 +23,9 @@ const dataGrid = new popups.DataGrid( form, data, "values", {
 	                                { name:"Value 1", field:"val1", className:"value1-class", type:{ } }
 	                                ,{ name:"Money Value" , field:"val2", className:"value2-class", type:{ money : true }  }
 	                                ,{ name:"Percent Value" , field:"val3", className:"value3-class", type:{ percent : true }  }
-	                                ,{ name:"Choice List" , field:"val4", className:"value4-class", type:{ options : [{ name:"Pick 1" },{ name:"Pick 2" },{ name:"Pick 3" },{ name:"Pick 4" },] }  }
+	                                ,{ name:"Choice List" , field:"val4", className:"value4-class"
+						, type:{ options : [{ name:"Pick 1", value: { o:"object 1"} }
+							,{ name:"Pick 2", value: { o:"object 2"} },{ name:"Pick 3", value: { o:"object 3"} },{ name:"Pick 4", value: { o:"object 4"} },] }  }
                                 ]
                                 , onNewRow() {
                                 	const row = new rowValue();  data.values.push( row );

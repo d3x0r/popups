@@ -531,3 +531,20 @@ div.mouseCatcher{
 			padding-bottom:0px;
 
 }
+
+[class^="data-grid-table"], [class^="data-grid-riw"], td, th {
+  color: #FFF;
+  border: 1px solid #fff;
+  border-collapse: collapse;
+}
+[class^="data-grid-table"] {
+ margin: 1em 0;
+}
+[class^="data-grid-header-row"] {
+  background-color: #666;
+  
+}
+td, th {
+  padding: 0 .4em;
+  text-align: center;
+}
