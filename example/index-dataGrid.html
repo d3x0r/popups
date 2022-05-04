@@ -1,0 +1,32 @@
+<html>
+<head>
+	<link rel="stylesheet" href="../styles.css">
+<body>
+</body>
+<script type="module"> 
+
+import {popups} from "../popups.mjs"
+
+const form = new popups.Popup( "Test Form" );
+
+form.center();
+form.show();
+
+const myData = {
+	table:[
+		{ name:"bob", address:"123 street", moved:new Date() }
+	]
+};
+
+const dg = new popups.DataGrid( form, myData, "table", { columns: [ 
+					{ name:"User Name", field:"name", type:popups.ValueOfType.String, className:"name-field" }
+					, { name:"Address", field:"address", type:popups.ValueOfType.String, className:"address-field" }
+					, { name:"Moved", field:"moved", type:popups.ValueOfType.String, className:"moved-field" }
+				] } );
+
+
+
+
+
+</script>
+</html>

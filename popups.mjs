@@ -2411,8 +2411,9 @@ function fillFromURL(popup, url) {
 	
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
-                (popup.divContent||popup.divFrame).innerHTML = text;
-		nodeScriptReplace(popup.divContent||popup.divFrame);
+        	const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
+                control.innerHTML = text;
+		nodeScriptReplace(control);
 		return popup;
 	} );
        })
@@ -2909,6 +2910,171 @@ class DataGrid {
 }
 
 
+/* 
+
+Generic Paged Frame ... along the top or side are navigation controls...
+
+*/
+
+class PageFramePage {
+	content = document.createElement( 'div' );
+	handle = document.createElement( 'div' );
+	pages = null;
+	#frame = null;
+	#page = null;
+	constructor(frame ) {
+		if( frame instanceof PagedFrame ) {
+			this.#frame = frame;
+
+			this.content.className = 'page-frame-page-container'+frame.suffix;
+			this.handle.className = 'page-frame-page-handle'+frame.suffix;
+			frame.pages.handleContainer.appendChild( this.handle );
+			frame.pages.pageContainer.appendChild( this.content );
+			this.handle.addEventListener( "click", (evt)=>{
+				this.#frame.activate( this );
+			} );
+			this.content.style.display = "none";
+			frame.pages.push( this );
+
+		} else {
+			this.#page = frame;
+
+			this.content.className = 'page-frame-page-page-container'+frame.suffix;
+			this.handle.className = 'page-frame-page-page-handle'+frame.suffix;
+
+			frame.pages.handleContainer.appendChild( this.handle );
+			frame.pages.pageContainer.appendChild( this.content );
+
+			this.handle.addEventListener( "click", (evt)=>{
+				this.activate();
+				//this.frame.activate( this );
+			} );
+			this.content.style.display = "none";
+			frame.pages.push( this );
+		}
+	}
+
+	activate() {
+		this.handle.classList.add( "pressed" );
+		this.content.style.display="";
+		if( this.pages ) {
+			this.pages.handleContainer.style.display = "";
+		}
+		return this;
+	}
+
+	deactivate() {
+		this.handle.classList.remove( "pressed" );
+		this.content.style.display="none";
+		if( this.pages ) {
+			this.pages.handleContainer.style.display = "none";
+		}
+		
+	}
+
+	get frame() {
+		if( this.#frame ) return this.#frame; 
+		return this.#page.frame;
+	}
+	set textContent( text ) {
+		this.handle.textContent = text;
+	}
+	
+	appendChild( el ) {
+        	this.content.appendChild( el );
+	}
+
+	addPage(title, url) {
+		if( !this.pages ) {
+			if( this.#frame ) 
+				this.pages = new PageFramePages( this, this.#frame.suffix );
+			else 
+				this.pages = new PageFramePages( this, this.frame.suffix );
+			this.pages.handleContainer.style.display = "none";
+		}
+		const pf = new PageFramePage( this );
+		pf.textContent = title;
+		if( url )
+			fillFromURL( pf.content, url );
+		return pf;	
+	}
+
+
+}
+
+class PageFramePages extends Array {
+	handleContainer = document.createElement( 'div' );
+	pageContainer = document.createElement( 'div' );
+	
+	#frame = null;
+	#page = null;
+	constructor( frame, suffix ) {
+	        super();
+		if( frame instanceof PagedFrame ) {
+			this.#frame = frame;
+			this.handleContainer.className = 'page-frame-handle-container' + suffix;
+			this.pageContainer.className = 'page-frame-page-frame' + suffix;
+			frame.frame.appendChild( this.handleContainer );
+			frame.frame.appendChild( this.pageContainer );
+		}else if( frame instanceof PageFramePage ) {
+			this.#page = frame;
+			this.handleContainer.className = 'page-frame-page-handle-container' + suffix;
+			this.pageContainer.className = 'page-frame-page-page-frame' + suffix;
+			frame.frame.pages.handleContainer.appendChild( this.handleContainer );
+			frame.content.appendChild( this.pageContainer );
+		}
+	}
+}
+
+
+class  PagedFrame {
+
+	frame = document.createElement( 'div' );
+
+        pages = null;
+	
+	#oldPage = null;
+        suffix = '';
+	constructor( parent, opts ) {
+
+		const alignTop = ( opts.top ) ;
+		const pageDefs =  opts.pages;
+
+		this.suffix = (alignTop?"-top":"") + ((opts?.suffix)?'-'+opts.suffix:'');
+
+
+		this.frame.className = 'page-frame' + this.suffix;
+				
+		this.pages = new PageFramePages( this, this.suffix );
+
+       
+			for( let pageDef of pageDefs ) {
+				this.addPage( pageDef.title, pageDef.url );
+			}
+		if( this.pages.length)
+		this.activate( this.pages[0] );
+		parent.appendChild( this.frame );
+	}
+
+
+	addPage(title, url) {
+			const pf = new PageFramePage( this );
+			pf.textContent = title;
+			if( url )
+				fillFromURL( pf.content, url );
+			return pf;				
+	       }
+
+
+	activate( page ) {
+		if( this.#oldPage ) {
+			this.#oldPage.deactivate();
+		}
+		this.#oldPage = page.activate();
+	}
+
+}
+
 
 export {Popup};
 
@@ -2941,6 +3107,7 @@ const popups = {
         fillFromURL : fillFromURL,
 	utils : utils, // expose formatting utility functions.
 	DataGrid,
+	PagedFrame,
 	ValueOfType,  // carry formatting information with value
 	AlertForm:AlertForm,
 	Alert,

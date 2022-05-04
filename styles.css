@@ -481,3 +481,53 @@ div.mouseCatcher{
 }
 
 
+.page-frame {
+	border:solid 1px black;
+	
+}
+
+
+[class^='page-frame-handle-container'] {
+	display:inline-block;
+	padding:5px;
+}
+[class^='page-frame-page-frame'] {
+	display:inline-block;
+	vertical-align: top;
+}
+
+[class^='page-frame-page-handle'].pressed {
+			border-style:inset;
+	padding:15px;
+}
+
+[class^='page-frame-page-handle'] {
+	padding:15px;
+	border-style:outset;
+	
+}
+
+
+[class^='page-frame-handle-container-top'] {
+	display:block;
+	padding:5px;
+}
+
+[class^='page-frame-page-frame-top'] {
+	display:block;
+	vertical-align: top;
+}
+[class^='page-frame-page-handle-top'] {
+	display:inline-block;
+	padding:15px;
+	border-left:solid 1px black;
+}
+
+[class^='page-frame-page-handle-top'] .pressed {
+			border-style:inset;
+			padding-left:2px;
+			padding-top:2px;
+			padding-right:0px;
+			padding-bottom:0px;
+
+}

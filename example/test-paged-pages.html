@@ -1,0 +1,45 @@
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<title>Login Form Test</title>
+</head>
+
+
+
+<script type="module">
+
+import {popups} from "../popups.mjs"
+
+const form = popups.create( "Test" );
+
+const pages = new popups.PagedFrame( form, { pages: [ { title: "Page One", url: "pageOne.html" }
+				, { title: "Page Two", url: "pageTwo.html" } ] } );
+
+const subPageOption = pages.addPage( "Third Option", null );
+subPageOption.addPage( "Topic 1", "./thirdOption-1.html" );
+subPageOption.addPage( "Topic 2", "./thirdOption-1.html" );
+subPageOption.addPage( "Topic 3", "./thirdOption-1.html" );
+
+{
+
+
+const form = popups.create( "Test top layout" );
+
+const pages = new popups.PagedFrame( form, { top:true,pages: [ { title: "Page One", url: "pageOne.html" }
+				, { title: "Page Two", url: "pageTwo.html" } ] } );
+
+const subPageOption = pages.addPage( "Third Option", null );
+subPageOption.addPage( "Topic 1", "./thirdOption-1.html" );
+subPageOption.addPage( "Topic 2", "./thirdOption-2.html" );
+subPageOption.addPage( "Topic 3", "./thirdOption-3.html" );
+
+
+
+
+}
+
+
+
+</script>
+
+</html>
