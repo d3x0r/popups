@@ -169,7 +169,63 @@ menu.separate();
 const subMenu = menu.addMenu( "Menu Entry Text" );
 ```
 
-### ata Grid
+### Data Grid
+
+``` 
+new DataGrid( parent, object, field, opts );
+```
+
+
+Constructor options
+
+|option| type | description |
+|----|----|----|
+|columns| Array of column descriptions | Specifies the columns and fields used object[field] |
+|onCancel | function | called when containing frame is canceled |
+|suffix | string | name to append to class name of these this datagrid |
+|onNewRow | function | called when a new row is created, allows application to return add a meaningful object to the list of objects in the list |
+|
+
+Column Description 
+
+| field | type | description |
+|-----|----|-----|
+| field | string | name of the field in the value array |
+| name | string | name to show for column of data |
+| className | string | name to specify as class for this column field |
+| type | object | column type object specified below |
+
+Column Type
+
+| name | type | description |
+|----|----|----|
+| money | boolean | format value as money using popups currency utilities |
+| percent | boolean | format value as a percentage value |
+| options | array of options | This specifies that a choice list should be built for this data grid element |
+
+Column Type Option Description 
+
+| name | string | used for option name in choice list |
+|----|----|----|
+| value | any | used as the value for an option in a choice list - when picked, is updated into the record. |
+
+
+### Paged Frame
+
+Constructor options
+
+|Option| value | description |
+|----|----|----|
+|top | bool | align to top of parent instead of left side |
+| pages | `[ PageDef,...]` | page definition below... |
+| suffix | string | suffix applied to frame |
+
+
+| field | value | description |
+|---|---|---|
+|title| string | text on page selection tab |
+| url| optional string | Load page Contnt from URL |
+
 
 
 ## Changelog

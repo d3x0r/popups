@@ -2406,12 +2406,13 @@ function makeWindowManager() {
         }
 }
 
+const filledControls = new Map();
+
 function fillFromURL(popup, url) {
 	//const urlPath =  url.split( "/");
-	
+    const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
-        	const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
                 control.innerHTML = text;
 		nodeScriptReplace(control);
 		return popup;
@@ -2447,6 +2448,7 @@ function fillFromURL(popup, url) {
 		}
 		*/
 		script.id = "Unique"+(unique++);
+		filledControls.set( script.id, popup );
 		if( script.textContent && script.textContent.length ) {
 			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
 		}
@@ -2459,6 +2461,22 @@ function fillFromURL(popup, url) {
 
 }
 
+
+class DataGridCell {
+}
+
+class DataGridTableCell extends DataGridCell {
+}
+
+
+class DataGridTextCell extends DataGridCell {
+}
+
+class DataGridCheckCell extends DataGridCell {
+}
+
+class DataGridChoiceCell extends DataGridCell {
+}
 
 class DataGridRow {
 
@@ -2543,8 +2561,8 @@ class DataGrid {
 	constructor( form, o, field, opts ) 
 	{
 		this.#field= field;
-		this.#subFields = opts.columns;
-		this.#opts = opts;
+		this.#opts = opts || {};
+		this.#subFields = (opts?.columns) || [];
 		this.#obj = o;
 		const cancel = opts?.onCancel;
 		
@@ -2684,6 +2702,8 @@ class DataGrid {
 	}
 
 	addRow(newRow) {
+
+		
 
 		function setCaret(el,cell,ofs) {
 			if( cell.cell.type.options ) {
@@ -3048,7 +3068,7 @@ class  PagedFrame {
 	#oldPage = null;
         suffix = '';
 	constructor( parent, opts ) {
-
+		opts = opts || {};
 		const alignTop = ( opts.top ) ;
 		const pageDefs =  opts.pages;
 
@@ -3059,7 +3079,7 @@ class  PagedFrame {
 				
 		this.pages = new PageFramePages( this, this.suffix );
 
-       
+       		if( pageDefs )
 			for( let pageDef of pageDefs ) {
 				this.addPage( pageDef.title, pageDef.url );
 			}
@@ -3123,6 +3143,9 @@ const popups = {
 	ValueOfType,  // carry formatting information with value
 	AlertForm:AlertForm,
 	Alert,
+	getParentPopup( id ) {
+		return filledControls.get( id );
+	}
 }
 
 export {popups};

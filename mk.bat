@@ -3,9 +3,10 @@
 
 :start cmd /c babel --config-file=./babel.config.js  -o popups.js popups.mjs 
 
-call babel --config-file=./babel.noclasses.js  -o popups-nc.mjs popups.mjs 
+call npx babel --config-file=./babel.config.js  -o popups.js popups.mjs 
 
-call babel --config-file=./babel.config.js  -o popups.js popups.mjs 
+call npx babel --config-file=./babel.noclasses.js  -o popups-nc.mjs popups.mjs 
+
 
 
 

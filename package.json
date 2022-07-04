@@ -4,7 +4,10 @@
   "description": "Simple popup windows using HTML controls.",
   "main": "popups.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "mk1": "babel --config-file=./babel.config.js  -o popups.js popups.mjs",
+    "mk2": "babel --config-file=./babel.noclasses.js  -o popups-nc.mjs popups.mjs",
+     "mk": "npm run mk1 && npm run mk2"
   },
   "private": false,
   "author": "d3x0r",
