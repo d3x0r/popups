@@ -2647,7 +2647,24 @@ class DataGrid {
 		this.fill();
 	}
 
+	reinit() {
+		const o = this.#obj;
+		const field = this.#field;
+		//this.#initialValue = o[field];
+		// keep a copy of the original array with original member addresses...
+		this.#initialValue = o[field].map(o=>o);
+
+		// keep the original valuess... with a shallow deep copy  (deep shallow?)
+		this.#initialValues = o[field].map(o=>{
+			const obj = {};
+			this.#subFields.forEach( col=>obj[col.field] = o[col.field] );
+			return obj;
+		});
+		this.fill();
+	}
+
 	reset() {
+		// this copies internal initial values to current object
 		const data = this.#obj[this.#field]; data.length = 0;
 		for( let v of this.#initialValue ) data.push(v);
 		for( let v=0; v < this.#initialValues.length; v++  ) {
@@ -2657,13 +2674,8 @@ class DataGrid {
 				o[field.field] = v[field.field];
 			} );
 		}
-		// any old data has a chance to be wrong.
-		while( this.#rows.length ) {
-			const row = this.#rows[0];
-			this.#rows.splice( 0, 1 );
-			row.el.remove();
-		}
-		
+		// fill removes all old data before including new data.
+		this.fill();
 	}
 
 	refresh() {
@@ -2813,7 +2825,7 @@ class DataGrid {
 						}
 					    row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
 	        
-					    addUpdates( rowData );
+					    addUpdate( cell, newCell );
 					    this_.addRow( null );
 						//evt.target.
 						
@@ -2846,21 +2858,22 @@ class DataGrid {
 								rowData[cell.field] = opts[0].value;
 							}
 						}
-						newCell.list.addEventListener( "change", (evt)=>{ 
-							const i = evt.target.selectedIndex; if( i > 0 ) {
-								rowData[cell.field] = newCell.options[i].val.value;
-							}
-						} );
+						if( newCell.list )
+							newCell.list.addEventListener( "change", (evt)=>{ 
+								const i = evt.target.selectedIndex; if( i > 0 ) {
+									rowData[cell.field] = newCell.options[i].val.value;
+								}
+							} );
 					}
 				}
 				if( !rowData ) {
 					c.addEventListener( "input", newInput );
 					c.addEventListener( "click", newInput );
 				} else {
-					addUpdates( rowData );
-					fillOptions();
+					addUpdate( cell, newCell );
+					fillOptions( newCell );
 				}
-				row.addUpdates = addUpdates;
+				row.addUpdates = addUpdate;
 	        
 				return  (t)=>{
 						this.#subFields.forEach( (key,id)=>{
@@ -2876,12 +2889,13 @@ class DataGrid {
 						else
 							c.textContent = rowData[upd.field];
 						} );
-					}
+					};
 
 				function addUpdates( rowData ) {
 					if( !row.rowData )	row.rowData = rowData;
 					
-	        			this_.#cells.forEach( (cell,idx)=>addUpdate( cell, row.cells[idx] ) );
+	        		this_.#cells.forEach( (cell,idx)=>addUpdate( cell, row.cells[idx] ) );
+				}
 
 					function addUpdate( cell_header, newCell ) {
 						const c = newCell.el;
@@ -2933,7 +2947,7 @@ class DataGrid {
 						    		rowData[field] = c.textContent;
 					    	} );
 					}
-				}
+				//}
 			}
 			return row;
 		}
