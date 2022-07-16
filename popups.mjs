@@ -2700,7 +2700,36 @@ class DataGrid {
 	addColumn( name, subField, className, type ) {
 		const cell = this.#header.insertCell();
 		cell.textContent = name;//"Threshold Value";
-		this.#cells.push( {cell:cell, name:name, field:subField, className, type }  );
+		const cellDef = {el:cell, idx:this.#cells.length, name:name, field:subField, className, type } ;
+		this.#cells.push( cellDef );
+		const this_ = this;
+		onClick( cellDef );
+
+		function onClick( header ) {
+			header.el.addEventListener( "click", click );
+			function click( evt ) {
+				console.log( "Cell clicked?", header.el );
+				if( header.type.list ) {
+					
+				}else {
+					this_.#rows.sort( (a,b)=>{		
+						if( !a.rowData ) return 1;
+						if( !b.rowData ) return -1;
+						if( a.cells[header.idx].el.textContent > b.cells[header.idx].el.textContent )
+							return 1;
+						if( a.cells[header.idx].el.textContent < b.cells[header.idx].el.textContent )
+							return -1;
+						return 0;
+					} )
+					for( let row of this_.#rows )
+						row.el.remove();
+					for( let row of this_.#rows )
+						this_.#table.appendChild( row.el )
+				}
+			}
+		}
+
+
 	}
 
 	swapRows( row1, row2 ) {
@@ -2758,8 +2787,8 @@ class DataGrid {
 			}
 	        
 			let range = document.createRange(),
-			      sel = window.getSelection(),
-			      lastKnownIndex = -1;
+			sel = window.getSelection(),
+			lastKnownIndex = -1;
 			for (let i = 0; i < el.childNodes.length; i++) {
 				if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
 				  lastKnownIndex = i;
@@ -2779,10 +2808,11 @@ class DataGrid {
 		}
 	
 	
+		// this is the body of addRow... 
 		{
 	        
 			const newTableRow = this.#table.insertRow();
-	        	newTableRow.className = "data-grid-row" + this.#suffix;
+	        newTableRow.className = "data-grid-row" + this.#suffix;
 			const row = new DataGridRow( this, newRow, newTableRow );
 	        
 			this.#rows.push( row );
@@ -2790,7 +2820,7 @@ class DataGrid {
 	        
 			this.#cells.forEach( cell=>{
 	        
-				let newCell = {
+				const newCell = {
 					cell:cell,
 					el:newTableRow.insertCell(),
 					list : null,
@@ -2807,10 +2837,12 @@ class DataGrid {
 					newCell.el.setAttribute("contenteditable",true );
 				}
 				row.cells.push( newCell );
+				// on update; does the right thing for edit boxes and listboxes
 				cell.newInput = onEdit( cell, newCell, newRow, row );
 				
 			} )
 	        
+
 			function onEdit( cell, newCell, rowData, row ) {
 
 				const c = newCell.el;
