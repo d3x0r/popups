@@ -2835,7 +2835,7 @@ class DataGrid {
 				
 				newCell.el.className = cell.className + this.#suffix;
 				if( cell.type.click ) {
-					newCell.el = makeButton( newCell.el, "X", cell.type.click, {suffix:newCell.el.className} );
+					newCell.el = makeButton( newCell.el, cell.type?.text?cell.type?.text:"X", cell.type.click, {suffix:newCell.el.className} );
 				}
 				else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
