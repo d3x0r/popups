@@ -202,10 +202,13 @@ Column Type
 | money | boolean | format value as money using popups currency utilities |
 | percent | boolean | format value as a percentage value |
 | options | array of options | This specifies that a choice list should be built for this data grid element |
+| click | function | creates a button in the column. |
+| text | string | used for text on buttons separate from header string |
+| edit | boolean | default true; controls whether the column is editable |
 
 Column Type Option Description 
 
-| name | string | used for option name in choice list |
+| name | type | used for option name in choice list |
 |----|----|----|
 | value | any | used as the value for an option in a choice list - when picked, is updated into the record. |
 
