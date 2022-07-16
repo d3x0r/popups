@@ -569,14 +569,15 @@ function handleButtonEvents( button, onClick ) {
 	})
 }
 
-function makeButton( form, caption, onClick ) {
+function makeButton( form, caption, onClick, options ) {
 
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+    const suffix = options?.suffix || (( form instanceof Popup )?form.suffix:'');
+
 	var button = document.createElement( "div" );
-	button.className = "button"+suffix;
+	button.className = suffix?"button-"+suffix:"button";
 	button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
-	buttonInner.className = "buttonInner"+suffix;
+	buttonInner.className = suffix?"buttonInner-"+suffix:"buttonInner";
 	//buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 	button.buttonInner = buttonInner;
@@ -2703,6 +2704,8 @@ class DataGrid {
 		const cellDef = {el:cell, idx:this.#cells.length, name:name, field:subField, className, type } ;
 		this.#cells.push( cellDef );
 		const this_ = this;
+		
+
 		onClick( cellDef );
 
 		function onClick( header ) {
@@ -2779,6 +2782,7 @@ class DataGrid {
 	        
 	        
 		function selAll(el, cell) {
+			if( !cell.canEdit ) return;
 			if( cell.cell.type.options ) {
 				return;
 			}
@@ -2822,23 +2826,28 @@ class DataGrid {
 	        
 				const newCell = {
 					cell:cell,
+					canEdit : ( ("edit" in cell.type) ? !cell.type.edit : true ),
 					el:newTableRow.insertCell(),
 					list : null,
 					filled : false,
 					options : []
 				};
-					
+				
 				newCell.el.className = cell.className + this.#suffix;
-				if( cell.type.options ) {
+				if( cell.type.click ) {
+					newCell.el = makeButton( newCell.el, "X", cell.type.click, {suffix:newCell.el.className} );
+				}
+				else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
+					cell.newInput = onEdit( cell, newCell, newRow, row );
 				}else {
 					newCell.el.textContent = "";//cell.;
-					newCell.el.setAttribute("contenteditable",true );
+					newCell.el.setAttribute("contenteditable",newCell.canEdit );
+					cell.newInput = onEdit( cell, newCell, newRow, row );
 				}
 				row.cells.push( newCell );
 				// on update; does the right thing for edit boxes and listboxes
-				cell.newInput = onEdit( cell, newCell, newRow, row );
 				
 			} )
 	        
@@ -2964,7 +2973,8 @@ class DataGrid {
 						c.addEventListener( "focus", (evt)=>{
 							if( type.percent ) {
 								selAll( evt.target, newCell );
-							}
+							}else
+								selAll( evt.target, newCell );
 						} );
 						c.addEventListener( "blur", (evt)=>{
 					    		if( type.money ) {
