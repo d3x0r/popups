@@ -2716,12 +2716,19 @@ class DataGrid {
 
 		sortText.textContent = "";//"Threshold Value";
 		sortText.className = "data-grid-header-sort" + this.#suffix;
+		sortText.textContent = '▬';
 		//sortText.style.float="right";
 
 
-		const cellDef = {el:cell, cellText,sortText,idx:this.#cells.length, name:name, field:subField, className, type } ;
-		this.#cells.push( cellDef );
+		const cellDef = {el:cell, cellText,sortText, sort:false, idx:this.#cells.length, name:name, field:subField, className, type } ;
 		const this_ = this;
+
+		if( this.#cells.length )
+			sortText.style.visibility= "hidden";
+		else
+			this.#sort.prior = cellDef;
+
+		this.#cells.push( cellDef );
 		
 		
 		onClick( cellDef );
@@ -2729,25 +2736,41 @@ class DataGrid {
 		function onClick( header ) {
 			header.el.addEventListener( "click", click );
 			function click( evt ) {
-				console.log( "Cell clicked?", header.el );
+				//console.log( "Cell clicked?", header.el );
 				if( this_.#sort.prior ) {
-					this_.#sort.prior.sortText.textContent = '';
+					if( this_.#sort.prior === cellDef ) {
+						this_.#sort.prior.sort = !this_.#sort.prior.sort;
+						if( this_.#sort.prior.sort )
+							this_.#sort.prior.sortText.textContent = '▼';
+						else
+							this_.#sort.prior.sortText.textContent = '▲';
+					} else {
+						this_.#sort.prior.sortText.textContent = '▼';
+						this_.#sort.prior.sortText.style.visibility= "hidden";
+						this_.#sort.prior = cellDef;
+						cellDef.sort = true;
+						this_.#sort.prior.sortText.textContent = '▼';
+					}
+					
+				} else {
+					this_.#sort.prior = cellDef;
+					cellDef.sort = true;
+					this_.#sort.prior.sortText.textContent = '▼';
 				}
-				this_.#sort.prior = cellDef;
-				this_.#sort.prior.sortText.textContent = '▼';
+				this_.#sort.prior.sortText.style.visibility = '';
 
 				if( header.type.list ) {
 					
 				}else {
 					//sortText.textContent = "▼";//"Threshold Value";
 
-					this_.#rows.sort( (a,b)=>{		
+					this_.#rows.sort( (a,b)=>{
 						if( !a.rowData ) return 1;
 						if( !b.rowData ) return -1;
 						if( a.cells[header.idx].el.textContent > b.cells[header.idx].el.textContent )
-							return 1;
+							return cellDef.sort?1:-1;
 						if( a.cells[header.idx].el.textContent < b.cells[header.idx].el.textContent )
-							return -1;
+							return cellDef.sort?-1:1;
 						return 0;
 					} )
 					for( let row of this_.#rows )
