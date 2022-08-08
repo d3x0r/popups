@@ -2538,6 +2538,7 @@ class DataGrid {
 	#obj = null;
 	#field = null;
 	#table = null;
+	#tableContainer = null;
 	#header = null;
 	#opts = null;
 	#cells = [];
@@ -2545,6 +2546,7 @@ class DataGrid {
 
 	#subFields = null;
 	#newRowCallback= (()=>({}));
+	#sort = {prior:null};
 /*
 
 	const dg = new DataGrid(form, {rows:[]}, "rows", { columns : [{name: "Threshold Value", field:"threshold", className:"threshold-value" }  );
@@ -2633,13 +2635,17 @@ class DataGrid {
 			});
 	        }
 	        
+		this.#tableContainer = document.createElement( "div" );
+		this.#tableContainer.className = "data-grid-container"+this.#suffix;
+	
 		this.#table = document.createElement( "table" );
 		this.#table.className = "data-grid-table"+ this.#suffix;
 	        
 		this.#header = this.#table.insertRow();
 		this.#header.className = "data-grid-header-row"+ this.#suffix;
 
-		form.appendChild( this.#table );
+		form.appendChild( this.#tableContainer );
+		this.#tableContainer.appendChild( this.#table );
 	        
 		this.#subFields.forEach( col=>{
 			this.addColumn( col.name, col.field, col.className, col.type );
@@ -2700,21 +2706,41 @@ class DataGrid {
 
 	addColumn( name, subField, className, type ) {
 		const cell = this.#header.insertCell();
-		cell.textContent = name;//"Threshold Value";
-		const cellDef = {el:cell, idx:this.#cells.length, name:name, field:subField, className, type } ;
+		const cellText = document.createElement( 'span' );
+		const sortText = document.createElement( 'span' );
+		cell.appendChild( cellText );
+		cell.appendChild( sortText );
+		
+		cellText.textContent = name;
+		cellText.className = "data-grid-header-text" + this.#suffix;
+
+		sortText.textContent = "";//"Threshold Value";
+		sortText.className = "data-grid-header-sort" + this.#suffix;
+		//sortText.style.float="right";
+
+
+		const cellDef = {el:cell, cellText,sortText,idx:this.#cells.length, name:name, field:subField, className, type } ;
 		this.#cells.push( cellDef );
 		const this_ = this;
 		
-
+		
 		onClick( cellDef );
 
 		function onClick( header ) {
 			header.el.addEventListener( "click", click );
 			function click( evt ) {
 				console.log( "Cell clicked?", header.el );
+				if( this_.#sort.prior ) {
+					this_.#sort.prior.sortText.textContent = '';
+				}
+				this_.#sort.prior = cellDef;
+				this_.#sort.prior.sortText.textContent = '▼';
+
 				if( header.type.list ) {
 					
 				}else {
+					//sortText.textContent = "▼";//"Threshold Value";
+
 					this_.#rows.sort( (a,b)=>{		
 						if( !a.rowData ) return 1;
 						if( !b.rowData ) return -1;

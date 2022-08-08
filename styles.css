@@ -541,9 +541,13 @@ div.mouseCatcher{
  margin: 1em 0;
 }
 [class^="data-grid-header-row"] {
-  background-color: #666;
-  
+    background-color: #666;  
 }
+
+[class^="data-grid-header-sort"] {
+	float:right;
+}
+
 td, th {
   padding: 0 .4em;
   text-align: center;
