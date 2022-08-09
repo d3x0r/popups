@@ -19,94 +19,94 @@ popup.divContent  // insert frame content here
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
 const utils = globalThis.utils || {
-    ROUND_DOWN:1,
-    ROUND_UP :2,
-    ROUND_NATURAL:3,
-    // --------- These need to go into utils or something
-    to$(val,rounder) {
+	ROUND_DOWN:1,
+	ROUND_UP :2,
+	ROUND_NATURAL:3,
+	// --------- These need to go into utils or something
+	to$(val,rounder) {
 	if( "string" === typeof val ) val = utils.toD(val);
-        function pad(val, n) {
-            if( val.length < n) {
-                val = '00000'.substr(0,n-val.length)+val;
-            }
-            return val;
-        }
+		function pad(val, n) {
+			if( val.length < n) {
+				val = '00000'.substr(0,n-val.length)+val;
+			}
+			return val;
+		}
 	let negate = false;
 	if( val < 0 ) { val = -val; negate = true }
-        var digits = Math.log10(val) - 2;
-        var n;
-        var r = '';
-        var c = (val/100)|0;
-        var cnts;
-        if( cnts = val % 100 ) {
-            if( rounder === 1 ) {
-                if( val < 0 )
-                    val -= 1;
-                else   
-                    val += 1;
-            }else if( rounder === 2 ){
-                if( val < 0 )
-                    val += 1;
-                    else
-                    val -=1 ;
-            }else if( rounder === 3 ) {
-                if( val < 0 )
-                    if( cnts >= 50 )
-                        val -= 1;
-                    else
-                        val += 1;
-                else
-                    if( cnts >= 50 )
-                        val += 1;
-                    else
-                        val -= 1;
-            }
-            else
-                r = '.' + pad((val%100).toString(),2);
-        }
-        if( digits >= 3 ) {
-            for( n = 0; n <= digits-3; n += 3) {
-                r = "," + pad(((c%1000)|0).toString(),3) + r;
-                c = (c / 1000)|0;
-            }
-        }
-        r = (negate?"-":"")+'$' + (c%1000) + r;
-        return r;
-    },
+		var digits = Math.log10(val) - 2;
+		var n;
+		var r = '';
+		var c = (val/100)|0;
+		var cnts;
+		if( cnts = val % 100 ) {
+			if( rounder === 1 ) {
+				if( val < 0 )
+					val -= 1;
+				else   
+					val += 1;
+			}else if( rounder === 2 ){
+				if( val < 0 )
+					val += 1;
+					else
+					val -=1 ;
+			}else if( rounder === 3 ) {
+				if( val < 0 )
+					if( cnts >= 50 )
+						val -= 1;
+					else
+						val += 1;
+				else
+					if( cnts >= 50 )
+						val += 1;
+					else
+						val -= 1;
+			}
+			else
+				r = '.' + pad((val%100).toString(),2);
+		}
+		if( digits >= 3 ) {
+			for( n = 0; n <= digits-3; n += 3) {
+				r = "," + pad(((c%1000)|0).toString(),3) + r;
+				c = (c / 1000)|0;
+			}
+		}
+		r = (negate?"-":"")+'$' + (c%1000) + r;
+		return r;
+	},
 
-    toD($) {
-        if( "string" !== typeof $ )
-            $ = $.toString();
+	toD($) {
+		if( "string" !== typeof $ )
+			$ = $.toString();
 	let negate = false;
-        if( $[0] === '-' ) {
-            $ = $.substr(1);
-            negate = true;
+		if( $[0] === '-' ) {
+			$ = $.substr(1);
+			negate = true;
 	}
-        if( $[0] === '$' )
-            $ = $.substr(1);
-        //   throw new Error( "NOT A DOLLAR AMOUNT" );
-        var i = $.indexOf('.' );
-        if( i >= 0 && $.length-i > 2 ) {
-            var trunc = $.split(',' ).join('').split('.');
-            trunc[trunc.length-1] = trunc[trunc.length-1].substr(0,2);
-            return (negate?-1:1)*Number( trunc.join('') );
+		if( $[0] === '$' )
+			$ = $.substr(1);
+		//   throw new Error( "NOT A DOLLAR AMOUNT" );
+		var i = $.indexOf('.' );
+		if( i >= 0 && $.length-i > 2 ) {
+			var trunc = $.split(',' ).join('').split('.');
+			trunc[trunc.length-1] = trunc[trunc.length-1].substr(0,2);
+			return (negate?-1:1)*Number( trunc.join('') );
 
-        } else if( i >= 0 && $.length-i == 3 )
-            return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') );
-        else if( i >= 0 && $.length-i == 2 )
-            return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') ) * 10;
-            return (negate?-1:1)*(Number( $.split(',' ).join('') ) * 100)|0;
-    },
+		} else if( i >= 0 && $.length-i == 3 )
+			return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') );
+		else if( i >= 0 && $.length-i == 2 )
+			return (negate?-1:1)*Number( $.split(',' ).join('').split('.').join('') ) * 10;
+			return (negate?-1:1)*(Number( $.split(',' ).join('') ) * 100)|0;
+	},
 
-    toP(p) {
-        if( "string" !== typeof p )
-            p = p.toString();
-        return p + "%";
-    },
-    fromP(p){
-        p = p.split('%').join('');
-        return Number(p);        
-    }
+	toP(p) {
+		if( "string" !== typeof p )
+			p = p.toString();
+		return p + "%";
+	},
+	fromP(p){
+		p = p.split('%').join('');
+		return Number(p);		
+	}
 }
 
 
@@ -115,8 +115,8 @@ const localStorage = globalThis.localStorage;
 
 let unique = Date.now();
 const globalMouseState = {
-        activeFrame : null
-    }
+		activeFrame : null
+	}
 var popupTracker;
 
 function addCaptionHandler( c, popup_ ) {
@@ -174,7 +174,7 @@ function addCaptionHandler( c, popup_ ) {
 		function mouseDown(evt){
 			if( evt.target !== c && evt.target.parentNode !=  c ) return;
 			//evt.preventDefault();
-                    if( !popup_.useMouse ) return;
+				if( !popup_.useMouse ) return;
 
 			if( globalMouseState.activeFrame ) {
 				return;
@@ -195,7 +195,7 @@ function addCaptionHandler( c, popup_ ) {
 		}
 		function mouseUp(evt){
 			evt.preventDefault();
-                        globalMouseState.activeFrame = null;
+			globalMouseState.activeFrame = null;
 			state.dragging = false;
 			if( added ) {
 				added = false;
@@ -209,7 +209,7 @@ function addCaptionHandler( c, popup_ ) {
 		//c.addEventListener( "mousemove", mouseMove );
 
 		c.addEventListener( "touchstart", (evt)=>{
-                    if( !popup_.useMouse ) return;
+		    if( !popup_.useMouse ) return;
 			var pRect = state.frame.getBoundingClientRect();
 			popupTracker.raise( popup );
 			//state.x = evt.clientX-pRect.left;
@@ -223,7 +223,7 @@ function addCaptionHandler( c, popup_ ) {
 			
 		}, { passive:true } )
 		c.addEventListener( "touchmove", (evt)=>{
-                    if( !popup_.useMouse ) return;
+		    if( !popup_.useMouse ) return;
 			if( state.dragging ) {
 				evt.preventDefault();
 				const points = evt.touches;
@@ -240,7 +240,7 @@ function addCaptionHandler( c, popup_ ) {
 			
 		}, { passive:true })
 		c.addEventListener( "touchend", (evt)=>{
-                    if( !popup_.useMouse ) return;
+		    if( !popup_.useMouse ) return;
 			//popupTracker.raise( popup );
 			if( evt.target === c )  {
 				evt.preventDefault();
@@ -322,29 +322,29 @@ class Popup {
 	divFrame = document.createElement( "div" );
 	divCaption = document.createElement( "div" );
 	divTitle = document.createElement( "span" );
-        divContent = document.createElement( "div" );
-        divClose = document.createElement( "div" );
+	divContent = document.createElement( "div" );
+	divClose = document.createElement( "div" );
 	popup = this;
-        // per frame mouse disable...
-        useMouse = true;
-        suffix = '';
+	// per frame mouse disable...
+	useMouse = true;
+	suffix = '';
 
 	constructor(caption_,parent,opts) {
-            	this.suffix = opts?.suffix ||'';
+	    	this.suffix = opts?.suffix ||'';
 		const closeButton = opts?.enableClose || false;
 		
 		// make popup from control.
 		const forContent = opts?.from;
-                if( forContent ) {
-                    this.divFrame = forContent;
-                    this.divContent = null;
-                    this.divCaption = null;
-                    this.divClose = null;
-                    this.divTitle = null;
-                }else  {
-        		this.divFrame.className = (parent?"formContainer":"frameContainer")+this.suffix;
-                }
-                if( opts?.id ) this.divFrame.id = opts.id;
+		if( forContent ) {
+		    this.divFrame = forContent;
+		    this.divContent = null;
+		    this.divCaption = null;
+		    this.divClose = null;
+		    this.divTitle = null;
+		}else  {
+			this.divFrame.className = (parent?"formContainer":"frameContainer")+this.suffix;
+		}
+		if( opts?.id ) this.divFrame.id = opts.id;
 		if( this.divFrame.id ) {
 			this.divFrame.style.left = localStorage.getItem( this.divFrame.id + "/x" );
 			this.divFrame.style.top = localStorage.getItem( this.divFrame.id + "/y" );						
@@ -353,7 +353,7 @@ class Popup {
 			this.divFrame.style.left= 0;
 			this.divFrame.style.top= 0;
 		}
-                if( this.divCaption ) {
+		if( this.divCaption ) {
 			if( caption_ && caption_ != "" ) {
 				this.divFrame.appendChild( this.divCaption );
 				this.divCaption.appendChild( this.divTitle );
@@ -362,22 +362,22 @@ class Popup {
 			}
 
 			this.divCaption.className = "frameCaption"+this.suffix;
-	                if( this.divCaption )
+			if( this.divCaption )
 				addCaptionHandler( this.divCaption, this );
-                }
+		}
 		if( this.divContent ){
 			this.divContent.className = "frameContent"+this.suffix;
 			this.divFrame.appendChild( this.divContent );
-                }
+		}
 
-                if( this.divClose ) {
+		if( this.divClose ) {
 			this.divClose.className = "captionButton"+this.suffix +" closeButton"+this.suffix;
 			this.divClose.addEventListener( "click", (evt)=>{
 				this.hide();
 			} );
 		}
 
-        	popupTracker.addPopup( this );
+		popupTracker.addPopup( this );
 
 
 		this.caption = caption_;
@@ -532,19 +532,19 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 
 function handleButtonEvents( button, onClick ) {
 
-        button.addEventListener( "keydown", (evt)=>{
+	button.addEventListener( "keydown", (evt)=>{
 		if( evt.key === "Enter" || evt.key === " " ) {
 			evt.preventDefault();
 			evt.stopPropagation();
-	                onClick();
-                }
+			onClick();
+		}
 	} );
 	//var okay = document.createElement( "BUTTON" );
 	//okay.className = "popupOkay"+suffix;
 	//okay.textContent = caption;
 	button.addEventListener( "click", (evt)=>{
 		evt.preventDefault();
-                onClick();
+		onClick();
 	})
 	button.addEventListener( "touchstart", (evt)=>{
 		evt.preventDefault();
@@ -554,7 +554,7 @@ function handleButtonEvents( button, onClick ) {
 	button.addEventListener( "touchend", (evt)=>{
 		evt.preventDefault();
 		clearClass( button, "pressed" );
-                onClick();
+		onClick();
 		
 	}, { passive:true })
 	button.addEventListener( "mousedown", (evt)=>{
@@ -581,7 +581,7 @@ function makeButton( form, caption, onClick, options ) {
 	//buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 	button.buttonInner = buttonInner;
-        button.appendChild(buttonInner);
+	button.appendChild(buttonInner);
 	handleButtonEvents( button, onClick );
 	form.appendChild( button );
 	return {
@@ -712,12 +712,12 @@ class List {
 		 groups = [];
 		 itemOpens = false;
     constructor( parentDiv, parentList, toString )
-        {
-            console.log( "List constructor could use the popup to get suffix..." );
+	{
+	    console.log( "List constructor could use the popup to get suffix..." );
 		this.toString = toString
 		this.divTable = parentDiv;
-                this.parentList = parentList;
-        }
+		this.parentList = parentList;
+	}
 
 		push(group, toString_, opens) {
 			var itemList = this.divTable.childNodes;
@@ -759,17 +759,17 @@ class List {
 			var newRow;
 			var subItems = createList( this, newSubList, toString_, true );
 			this.groups.push( newRow={ opens : false, group:group, item: newLi, subItems:subItems
-                        	, parent:this.parentList
-                                , set text(s) {
-                                	treeLabel.textContent = s;
-                               	}
-                        	, hide() {
-                                	this.item.style.display = "none";
-                                }
-                        	, show() {
-                                	this.item.style.display = "";
-                                }
-                        } );
+				, parent:this.parentList
+				, set text(s) {
+					treeLabel.textContent = s;
+			       	}
+				, hide() {
+					this.item.style.display = "none";
+				}
+				, show() {
+					this.item.style.display = "";
+				}
+			} );
 			return newRow;
 		}
 		enableOpen(item) {
@@ -853,7 +853,7 @@ function createList( parent, parentList, toString, opens ) {
 function makeCheckbox( form, o, field, text ) 
 {
 	let initialValue = o[field];
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.className = "field-unit-span";
 	textCountIncrement.textContent = text;
@@ -881,9 +881,9 @@ function makeCheckbox( form, o, field, text )
 			inputCountIncrement.checked = initialValue;
 		} );
 	}
-        binder.addEventListener( "mousedown", (evt)=>{
-                evt.stopPropagation();
-        })
+	binder.addEventListener( "mousedown", (evt)=>{
+		evt.stopPropagation();
+	})
 
 	return {
 		on(event,cb){
@@ -902,20 +902,20 @@ function makeCheckbox( form, o, field, text )
 			inputCountIncrement.checked = val;
 			onChange.forEach( cb=>cb());
 		 }
-                ,
-                reset(){
-                    o[field] = initialValue;
-                    inputCountIncrement.checked = initialValue;
-                },
-                changes() {
-                    if( o[field] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + o[field];
-                    }
-                    return '';
+		,
+		reset(){
+		    o[field] = initialValue;
+		    inputCountIncrement.checked = initialValue;
+		},
+		changes() {
+		    if( o[field] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + o[field];
+		    }
+		    return '';
 				},
 		get style() {
 			return binder.style;
@@ -931,7 +931,7 @@ function makeLeftRadioChoice( form, o, field, text, groupName )
 function makeRadioChoice( form, o, field, text, groupName, left ) 
 {
 	let initialValue = o[field];
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textOption = document.createElement( "SPAN" );
 	if( left ) 
 		textOption.className = "radio-text"+suffix + " rightJustify";
@@ -964,9 +964,9 @@ function makeRadioChoice( form, o, field, text, groupName, left )
 	}
 	//form.appendChild( document.createElement( "br" ) );
 
-        binder.addEventListener( "mousedown", (evt)=>{
-                evt.stopPropagation();
-        })
+	binder.addEventListener( "mousedown", (evt)=>{
+		evt.stopPropagation();
+	})
 
 	return {
 		on(event,cb){
@@ -985,20 +985,20 @@ function makeRadioChoice( form, o, field, text, groupName, left )
 			option.checked = val;
 			onChange.forEach( cb=>cb());
 		 }
-                ,
-                reset(){
-                    o[field] = initialValue;
-                    option.checked = initialValue;
-                },
-                changes() {
-                    if( o[field] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + o[field];
-                    }
-                    return '';
+		,
+		reset(){
+		    o[field] = initialValue;
+		    option.checked = initialValue;
+		},
+		changes() {
+		    if( o[field] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + o[field];
+		    }
+		    return '';
 				},
 		get style() {
 			return binder.style;
@@ -1016,7 +1016,7 @@ function makeSlider( form, o, field, text, f, g )
 		console.log( "makeSlider: Function to transform from value to slider is not a function:", f  );
 		g = null;
 	}
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	let initialValue = o[field];
 	const textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
@@ -1049,9 +1049,9 @@ function makeSlider( form, o, field, text, f, g )
 	binder.appendChild( inputCountIncrement );
 	binder.appendChild( valueCountIncrement );
 
-        binder.addEventListener( "mousedown", (evt)=>{
-                evt.stopPropagation();
-        })
+	binder.addEventListener( "mousedown", (evt)=>{
+		evt.stopPropagation();
+	})
 
 	if( form instanceof Popup ) {
 		form.on( "accept", ()=>{
@@ -1078,20 +1078,20 @@ function makeSlider( form, o, field, text, f, g )
 			inputCountIncrement.checked = val;
 			onChange.forEach( cb=>cb());
 		 }
-                ,
-                reset(){
-                    o[field] = initialValue;
-                    inputCountIncrement.checked = initialValue;
-                },
-                changes() {
-                    if( o[field] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + o[field];
-                    }
-                    return '';
+		,
+		reset(){
+		    o[field] = initialValue;
+		    inputCountIncrement.checked = initialValue;
+		},
+		changes() {
+		    if( o[field] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + o[field];
+		    }
+		    return '';
 				},
 		get style() {
 			return binder.style;
@@ -1102,14 +1102,14 @@ function makeSlider( form, o, field, text, f, g )
 
 function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
 	const initialValue = input[value];
-        const suffix = ( form instanceof Popup )?form.suffix:(suffix_||'');
+	const suffix = ( form instanceof Popup )?form.suffix:(suffix_||'');
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix +" rightJustify";
-        //inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
-        inputControl.addEventListener( "click", (evt)=>inputControl.select() );
+	//inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+	inputControl.addEventListener( "click", (evt)=>inputControl.select() );
 	//textDefault.
 
 	if( form instanceof Popup ) {
@@ -1165,9 +1165,9 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
 
-        binder.addEventListener( "mousedown", (evt)=>{
-                evt.stopPropagation();
-        })
+	binder.addEventListener( "mousedown", (evt)=>{
+		evt.stopPropagation();
+	})
 
 	if( form instanceof Popup ) {
 		form.on( "accept", ()=>{
@@ -1195,7 +1195,7 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 		get frame() {
 			return binder;
 		},
-            	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+	    	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		blur() { inputControl.blur() },
 		get value () {
 			if( money )
@@ -1216,20 +1216,20 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 			else
 				inputControl.value = val;			
 		},
-                reset(){
-                    input[value] = initialValue;
-                    setValue();
-                },
-                changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		reset(){
+		    input[value] = initialValue;
+		    setValue();
+		},
+		changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 	return result;
 }
@@ -1238,12 +1238,12 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 function makeTextField( form, input, value, text, money, percent ){
 	let initialValue = input[value];
 
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
 	inputControl.className = "text-field"+suffix+" rightJustify";
-        inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
 	function setValue() {
 		if( money ) {
@@ -1284,7 +1284,7 @@ function makeTextField( form, input, value, text, money, percent ){
 	}
 
 	return {
-            	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+	    	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		refresh() {
 			 initialValue = input[value];
 			 setValue();
@@ -1305,27 +1305,27 @@ function makeTextField( form, input, value, text, money, percent ){
 			else
 				inputControl.textContent = val;			
 		},
-                reset(){
-                    input[value] = initialValue;
-                    setValue();
-                },
+		reset(){
+		    input[value] = initialValue;
+		    setValue();
+		},
 		divFrame : binder,
-                changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 }
 
 function makeNameInput( form, input, value, text ){
 	const initialValue = input[value];
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
 	textLabel.textContent = text;
@@ -1336,18 +1336,18 @@ function makeNameInput( form, input, value, text ){
 	const buttonRename = document.createElement( "Button" );
 	buttonRename.textContent = popups.strings.get("(rename)");
 	buttonRename.className="buttonOption"+suffix+" rightJustify";
-        buttonRename.addEventListener("click", (evt)=>{
+	buttonRename.addEventListener("click", (evt)=>{
 		evt.preventDefault();
-                //title, question, defaultValue, ok, cancelCb
+		//title, question, defaultValue, ok, cancelCb
 		const newName = createSimpleForm( popups.strings.get("Change Name")
-                                                 , popups.strings.get("Enter new name")
-                                                 , input[value]
-                                                 , (v)=>{
-                                                 	input[value] = v;
+						 , popups.strings.get("Enter new name")
+						 , input[value]
+						 , (v)=>{
+						 	input[value] = v;
 							textOutput.textContent = v;
-                                                 }
-                                                 );
-                newName.show();
+						 }
+						 );
+		newName.show();
 	} );
 
 	binder = document.createElement( "div" );
@@ -1374,20 +1374,20 @@ function makeNameInput( form, input, value, text ){
 		set value(val) {
 			textOutput.textContent = val;
 		},
-                reset(){
-                    input[value] = initialValue;
-                    textLabel.textContent = initialValue;
-                },
-                changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		reset(){
+		    input[value] = initialValue;
+		    textLabel.textContent = initialValue;
+		},
+		changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 }
 
@@ -1412,27 +1412,27 @@ function makeNameInput( form, input, value, text ){
 	}
 
 function makeDateInput( form, input, value, text ){
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
-        inputControl.type = "date"; // returns date at midnight UTC not local.
-        inputControl.addEventListener( "mousedown", (evt)=>{
+	inputControl.type = "date"; // returns date at midnight UTC not local.
+	inputControl.addEventListener( "mousedown", (evt)=>{
 		evt.stopPropagation() // halt on this control
-        } );
+	} );
 
 	//textDefault.
 	if( input[value] instanceof Date ) {
 		inputControl.valueAsDate = input[value];
-        }else
+	}else
 		inputControl.value = input[value];
-        inputControl.addEventListener( "change",(evt)=>{
+	inputControl.addEventListener( "change",(evt)=>{
 		console.log( "Date type:", inputControl.value, new Date( inputControl.value ) );
 		input[value] = new Date( inputControl.value );
-                // convert to wall clock?  What if browser isn't in birth locale?
-                //input[value].setMinutes( input[value].getTimezoneOffset());
+		// convert to wall clock?  What if browser isn't in birth locale?
+		//input[value].setMinutes( input[value].getTimezoneOffset());
 	} );
 
 	var binder = document.createElement( "div" );
@@ -1451,51 +1451,51 @@ function makeDateInput( form, input, value, text ){
 	}
 
 	return {
-            	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+	    	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		get value () {
 			return inputControl.value;
 		},
 		set value (val) {
-                    	//input[value] = val;
+		    	//input[value] = val;
 			inputControl.value = val;
 		}
-        	, hide() {
-                	this.item.style.display = "none";
-                }
-        	, show() {
-                	this.item.style.display = "";
-                }
-                , reset(){
-                    input[value] = initialValue;
-                    inputControl.valueAsDate = initialValue;
-                }
-                , changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		, hide() {
+			this.item.style.display = "none";
+		}
+		, show() {
+			this.item.style.display = "";
+		}
+		, reset(){
+		    input[value] = initialValue;
+		    inputControl.valueAsDate = initialValue;
+		}
+		, changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 }
 
 function makeZipInput( form, input, value ){
 
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
-        inputControl.type = "date";
-        inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+	inputControl.type = "date";
+	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 
 	//textDefault.
 	inputControl.value = input[value];
-        inputControl.addEventListener( "change",(evt)=>{
+	inputControl.addEventListener( "change",(evt)=>{
 		input[value] = inputControl.value;
 	} );
 
@@ -1526,17 +1526,17 @@ function makeZipInput( form, input, value ){
 
 function makeSSNInput( form, input, value ){
 
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
-        inputControl.type = "date";
+	inputControl.type = "date";
 
 	//textDefault.
 	inputControl.value = input[value];
-        inputControl.addEventListener( "change",(evt)=>{
+	inputControl.addEventListener( "change",(evt)=>{
 		input[value] = inputControl.value;
 	} );
 
@@ -1562,50 +1562,50 @@ function makeSSNInput( form, input, value ){
 		set value (val) {
 			inputControl.value = val;
 		},
-                reset(){
-                    input[value] = initialValue;
-                    inputControl.value = initialValue;
-                },
-                changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		reset(){
+		    input[value] = initialValue;
+		    inputControl.value = initialValue;
+		},
+		changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 }
 
 // --------------- Dropdown choice list ---------------------------
 function makeChoiceInput( form, input, value, choices, text ){
-        const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SELECT" );
 	inputControl.className = "selectInput"+suffix+" rightJustify";
-        inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
+	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 
-        for( let choice of choices ) {
-            	const option = document.createElement( "option" );
-                option.text = choice;
-                if( choice === input[value] ) {
-	           inputControl.selectedIndex = inputControl.options.length-1;
-                }
+	for( let choice of choices ) {
+	    	const option = document.createElement( "option" );
+		option.text = choice;
+		if( choice === input[value] ) {
+		   inputControl.selectedIndex = inputControl.options.length-1;
+		}
 		inputControl.add( option );
-        }
+	}
 	//textDefault.
 	inputControl.value = input[value];
-        inputControl.addEventListener( "change",(evt)=>{
+	inputControl.addEventListener( "change",(evt)=>{
 		const idx = inputControl.selectedIndex;
 		if( idx >= 0 ) {
 			console.log( "Value in select is :", inputControl.options[idx].text );
 			input[value] = inputControl.options[idx].text;
-                }
+		}
 	} );
 
 	var binder = document.createElement( "div" );
@@ -1631,20 +1631,20 @@ function makeChoiceInput( form, input, value, choices, text ){
 		set value (val) {
 			inputControl.value = val;
 		},
-                reset(){
-                    input[value] = initialValue;
-                    inputControl.value = initialValue;
-                },
-                changes() {
-                    if( input[value] !== initialValue ) {
-                        return text
-                            + popups.strings.get( " changed from " )
-                            + initialValue
-                            + popups.strings.get( " to " )
-                            + input[value];
-                    }
-                    return '';
-                }
+		reset(){
+		    input[value] = initialValue;
+		    inputControl.value = initialValue;
+		},
+		changes() {
+		    if( input[value] !== initialValue ) {
+			return text
+			    + popups.strings.get( " changed from " )
+			    + initialValue
+			    + popups.strings.get( " to " )
+			    + input[value];
+		    }
+		    return '';
+		}
 	}
 }
 
@@ -1701,11 +1701,11 @@ function createPopupMenu( opts ) {
 		subOpen : null,
 		container : document.createElement( "div" ),
 		board : null,
-                suffix : '',
+		suffix : '',
 		separate( ) {
 			var newItem = document.createElement( "HR" );
 			menu.container.appendChild( newItem );
-                },
+		},
 
 		addItem( text, cb ) {
 				var newItem = document.createElement( "A" );
@@ -1736,7 +1736,7 @@ function createPopupMenu( opts ) {
 				const value = createPopupMenu();
 				{
 					value.parent = this;
-                                       	this.items.push( value );
+				       	this.items.push( value );
 					newItem.addEventListener( "mouseover", (evt)=>{
 						var r = newItem.getBoundingClientRect();
 						keepShow = true;
@@ -1753,7 +1753,7 @@ function createPopupMenu( opts ) {
 					} );
 					newItem.addEventListener( "mousemove", (evt)=>{
 						if( this.subOpen )
-                                                	this.subOpen.lastShow = Date.now();
+							this.subOpen.lastShow = Date.now();
 					} );
 				}
 				return value;
@@ -1761,24 +1761,24 @@ function createPopupMenu( opts ) {
 		hide( all ) {
 			if( menu.lastShow ) return menuCloser();			
 			this.container.style.visibility = "hidden";
-                        const sub = this.subOpen;
-                        if( sub ) {
-                                this.subOpen = null;
-                        	sub.hide( all );
-                        }
+			const sub = this.subOpen;
+			if( sub ) {
+				this.subOpen = null;
+				sub.hide( all );
+			}
 
 			if( this.parent && this.parent.subOpen ) {
 				if( all ) {
-                                	// close from here up
+					// close from here up
 					this.parent.hide( all );
-                                }
+				}
 			} else {
 				mouseCatcher.style.visibility = "hide"
 			}
 		},
 		show( x, y, cb ) {
-                    	if( this.parent )
-	                    	this.parent.subOpen = this;
+		    	if( this.parent )
+			    	this.parent.subOpen = this;
 			menu.lastShow = Date.now();
 			//this.board = board;
 			menu.cb = cb;
@@ -1811,9 +1811,9 @@ export class GraphicFrame extends Popup {
 
     constructor () {
     	//const defaultFont1 = "20px Arial";
-        super(null,null);
+	super(null,null);
 
-        const appCanvas = this.divContent;
+	const appCanvas = this.divContent;
 
 var rect = appCanvas.getBoundingClientRect();
 appCanvas.width = rect.right-rect.left;//window.innerWidth;
@@ -1867,18 +1867,18 @@ function mouse( x,y,b ) {
 		
 		switch( wasMouse.section ) {
 		default: 
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appDragging = onFrame;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			}
-	                else if( !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			else if( !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				appDragging = null;
 			}
 			//console.log( "Section not found:", wasMouse.section );
 			break;
 		case 1:
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
@@ -1886,26 +1886,26 @@ function mouse( x,y,b ) {
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				// last left.
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 					onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
 					onFrame.x += wasMouse.x - onFrame.startX;
 			}
 			break;
 		case 2: // right side, center
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
 				onFrame.startX = wasMouse.x;
 			}
 			break;
 		case 4:
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
@@ -1913,13 +1913,13 @@ function mouse( x,y,b ) {
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				// last left.
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY) );
 				onFrame.y += wasMouse.y - onFrame.startY;
 			}
 			break;
 		case 8:
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
@@ -1927,20 +1927,20 @@ function mouse( x,y,b ) {
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				// last left.
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				onFrame.setHeight( onFrame.h + (wasMouse.y - onFrame.startY) );
 				onFrame.startY = wasMouse.y;
 			}
 			break;
 		case 1+4: // top left
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			} else if( appSizing && !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				// last left.
 				onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
 				onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY ) );
@@ -1949,14 +1949,14 @@ function mouse( x,y,b ) {
 			}
 			break;
 		case 2 + 4: // right side, upper corner
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
 				onFrame.startX = wasMouse.x;
 
@@ -1966,14 +1966,14 @@ function mouse( x,y,b ) {
 			break;
 
 		case 1+8: // top left
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			} else if( appSizing && !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				// last left.
 				onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
 				onFrame.setHeight( onFrame.h + wasMouse.y - onFrame.startY );
@@ -1982,14 +1982,14 @@ function mouse( x,y,b ) {
 			}
 			break;
 		case 2 + 8: // right side, upper corner
-	                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+			if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = onFrame;
 				usingSection = wasMouse.section;
 				onFrame.startX = wasMouse.x;
 				onFrame.startY = wasMouse.y;
 			} else if( appSizing && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				appSizing = null;
-	                } else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+			} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 				onFrame.setWidth( onFrame.w + ( wasMouse.x - onFrame.startX ) );
 				onFrame.startX = wasMouse.x;
 				onFrame.setHeight( onFrame.h + (wasMouse.y - onFrame.startY) );
@@ -2005,13 +2005,13 @@ function mouse( x,y,b ) {
 	}
 
 	{ // LEFT BTUTTON
-                if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+		if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 			// start left.
 		}
-                else if( ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+		else if( ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 			// drag left.
 		}
-                else if( !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+		else if( !( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
 			// last left.
 		}
 
@@ -2246,7 +2246,7 @@ export class AlertForm extends Popup {
 		this.divFrame.focus();
 		this.center();
 	}
-	hide() {           
+	hide() {	   
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
@@ -2279,7 +2279,7 @@ class SashPicker extends Popup{
 			console.log( "Sash form resulted with an error?" );
 		} );
 
-	        this.hide();
+		this.hide();
 
 		fillFromURL( this, form ).then( ()=>{
 			this.center();
@@ -2327,13 +2327,13 @@ function makeLoginForm( doLogin, opts  ) {
 	let wsClient = opts?.wsLoginClient;
 
        	loginForm.connect = function() {
-            	loginForm.caption = "Login Ready...";
-        }
+	    	loginForm.caption = "Login Ready...";
+	}
 
        	loginForm.disconnect = function() {
-            	loginForm.caption = "Connecting...";
+	    	loginForm.caption = "Connecting...";
 		loginForm.show();
-        }
+	}
 	loginForm.login = function() {     	
 		if( doLogin ) doLogin( wsClient );
 	};
@@ -2356,10 +2356,10 @@ function makeLoginForm( doLogin, opts  ) {
 		return p.p;
 	};
 	loginForm.Alert = Alert;
-        loginForm.setClient = function(wsClient_) {
+	loginForm.setClient = function(wsClient_) {
 		wsClient = wsClient_;
 	};
-        loginForm.hide();
+	loginForm.hide();
 
 	fillFromURL( loginForm, form ).then( ()=>{
 		if( wsClient ) {
@@ -2393,18 +2393,18 @@ function makeWindowManager() {
 
 
 	addCaptionHandler( taskButton, null );
-        taskButton.addEventListener( "click", (evt)=>{
+	taskButton.addEventListener( "click", (evt)=>{
     		evt.preventDefault();
-                // if was not dragging?
-                //alert( "CLICK!" );
+		// if was not dragging?
+		//alert( "CLICK!" );
 	} );
 	//addDragEvent( taskButton ); // add support for click-drag like caption handler....
 
-        return {
-            close() {
-                console.log( "this should remove this whole construct from the page" );
-            }
-        }
+	return {
+	    close() {
+		console.log( "this should remove this whole construct from the page" );
+	    }
+	}
 }
 
 const filledControls = new Map();
@@ -2414,7 +2414,7 @@ function fillFromURL(popup, url) {
     const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
-                control.innerHTML = text;
+		control.innerHTML = text;
 		nodeScriptReplace(control);
 		return popup;
 	} );
@@ -2422,17 +2422,17 @@ function fillFromURL(popup, url) {
 
 
 	function nodeScriptReplace(node) {
-                if ( nodeScriptIs(node) === true ) {
-                        node.parentNode.replaceChild( nodeScriptClone(node) , node );
-                }
-                else {
-                        var i = -1, children = node.childNodes;
-                        while ( ++i < children.length ) {
-                              nodeScriptReplace( children[i] );
-                        }
-                }
+		if ( nodeScriptIs(node) === true ) {
+			node.parentNode.replaceChild( nodeScriptClone(node) , node );
+		}
+		else {
+			var i = -1, children = node.childNodes;
+			while ( ++i < children.length ) {
+			      nodeScriptReplace( children[i] );
+			}
+		}
 
-        	return node;
+		return node;
 	}
 	function nodeScriptClone(node){
 		var script  = document.createElement("script");
@@ -2457,7 +2457,7 @@ function fillFromURL(popup, url) {
 	}
 
 	function nodeScriptIs(node) {
-        	return node.tagName === 'SCRIPT';
+		return node.tagName === 'SCRIPT';
 	}
 
 }
@@ -2497,7 +2497,9 @@ class DataGridRow {
 
 	}
 
-
+	remove() {
+		this.el.remove();
+	}
 /*	
 		const row = {
 			threshold:threshold,
@@ -2543,7 +2545,7 @@ class DataGrid {
 	#opts = null;
 	#cells = [];
 	#rows = [];
-
+	#newRowIndex = 0;
 	#subFields = null;
 	#newRowCallback= (()=>({}));
 	#sort = {prior:null};
@@ -2580,13 +2582,13 @@ class DataGrid {
 			return obj;
 		});
 		
-	        
-                this.#suffix = opts?.suffix || (( form instanceof Popup )?form.suffix:'');
+		
+		this.#suffix = opts?.suffix || (( form instanceof Popup )?form.suffix:'');
 		
 		if( opts?.onNewRow ) this.#newRowCallback = opts.onNewRow;
-                
+		
 		const thresholdRows = ()=>this.#obj[this.#field];
-	        
+		
 		if( form instanceof Popup ) {
 			form.on( "apply", function() {
 			} )
@@ -2596,11 +2598,11 @@ class DataGrid {
 			['name','everyTally','housePercent','startingValue'].forEach( key=>{
 				controls[key].value = input[key];
 			});
-	        
+		
 			for( let threshold of input.thresholds ) {
 				addRow( thresholdTable, thresholdRows, threshold );
 			}
-	        
+		
 			for( let inp of input.inputs ) {
 				for( let form of l.inputForms ){
 					if( form.id === inp.accrual_input_group_id ){
@@ -2608,7 +2610,7 @@ class DataGrid {
 					}
 				}
 			}
-	        
+		
 			for( let activity of input.activities ){
 				for( let form of l.activities ){
 					if( form.activity === activity ){
@@ -2633,20 +2635,20 @@ class DataGrid {
 			// aborted...
 				cancel && cancel();
 			});
-	        }
-	        
+		}
+		
 		this.#tableContainer = document.createElement( "div" );
 		this.#tableContainer.className = "data-grid-container"+this.#suffix;
 	
 		this.#table = document.createElement( "table" );
 		this.#table.className = "data-grid-table"+ this.#suffix;
-	        
+		
 		this.#header = this.#table.insertRow();
 		this.#header.className = "data-grid-header-row"+ this.#suffix;
 
 		form.appendChild( this.#tableContainer );
 		this.#tableContainer.appendChild( this.#table );
-	        
+		
 		this.#subFields.forEach( col=>{
 			this.addColumn( col.name, col.field, col.className, col.type );
 		} );
@@ -2660,7 +2662,6 @@ class DataGrid {
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
 		this.#initialValue = o[field].map(o=>o);
-
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
 		this.#initialValues = o[field].map(o=>{
 			const obj = {};
@@ -2695,6 +2696,7 @@ class DataGrid {
 			this.#rows.splice( 0, 1 );
 			row.el.remove();
 		}
+		this.#newRowIndex = 0;  // -1 is header... and is a thing actually
 		
 		this.#initialValue.forEach( row=>{
 			this.addRow( row );
@@ -2809,7 +2811,7 @@ class DataGrid {
 				}
 				let range = document.createRange(),
 				      sel = window.getSelection(),
-			        
+				
 				lastKnownIndex = -1;
 				for (let i = 0; i < el.childNodes.length; i++) {
 				    if (isTextNodeAndContentNoEmpty(el.childNodes[i])) {
@@ -2828,8 +2830,8 @@ class DataGrid {
 			}
 			  //el.focus();
 		}
-	        
-	        
+		
+		
 		function selAll(el, cell) {
 			if( !cell.canEdit ) return;
 			if( cell.cell.type.options ) {
@@ -2838,7 +2840,7 @@ class DataGrid {
 			function isTextNodeAndContentNoEmpty(node) {
 			  return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
 			}
-	        
+		
 			let range = document.createRange(),
 			sel = window.getSelection(),
 			lastKnownIndex = -1;
@@ -2863,16 +2865,21 @@ class DataGrid {
 	
 		// this is the body of addRow... 
 		{
-	        
-			const newTableRow = this.#table.insertRow();
-	        newTableRow.className = "data-grid-row" + this.#suffix;
+		
+			const newTableRow = this.#table.insertRow(newRow?this.#newRowIndex+1:-1);
+
+			newTableRow.className = "data-grid-row" + this.#suffix;
 			const row = new DataGridRow( this, newRow, newTableRow );
-	        
-			this.#rows.push( row );
+			if( newRow ) {
+				this.#rows.splice( this.#newRowIndex, 0, row ); /* header row is 1 */
+				this.#newRowIndex = this.#rows.length + ((this.#rows.length && !this.#rows[this.#rows.length-1].rowData )?-1:0); 
+			} else {
+				this.#rows.push( row );
+			}
 			const this_ = this;
-	        
+		
 			this.#cells.forEach( cell=>{
-	        
+		
 				const newCell = {
 					cell:cell,
 					canEdit : ( ("edit" in cell.type) ? !cell.type.edit : true ),
@@ -2885,7 +2892,7 @@ class DataGrid {
 				newCell.el.className = cell.className + this.#suffix;
 				if( cell.type.click ) {
 					const text = cell.field?rowData[cell.field]:(cell.type?.text?cell.type?.text:"X");
-					newCell.el = makeButton( newCell.el, text, cell.type.click, {suffix:newCell.el.className} );
+					newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
 				}
 				else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
@@ -2900,7 +2907,7 @@ class DataGrid {
 				// on update; does the right thing for edit boxes and listboxes
 				
 			} )
-	        
+		
 
 			function onEdit( cell, newCell, rowData, row ) {
 
@@ -2915,14 +2922,14 @@ class DataGrid {
 
 						}
 					    row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
-	        
+		
 					    addUpdate( cell, newCell );
 					    this_.addRow( null );
 						//evt.target.
 						
 					    setCaret( evt.target, newCell, cell.type.percent?-1:0 );
 						//evt.target.setSelectionRange(evt.target.textContent.length, -1);
-	        
+		
 					}
 				}
 				function fillOptions(newCell) {
@@ -2965,13 +2972,13 @@ class DataGrid {
 					fillOptions( newCell );
 				}
 				row.addUpdates = addUpdate;
-	        
+		
 				return  (t)=>{
 						this.#subFields.forEach( (key,id)=>{
 
 					    	//const c = this.#cells[id].cell;
 					    	const upd = this.#cells[id].upd;
-	        
+		
 					    	// update current value.
 					    	if( upd.money )
 							c.textContent = popups.utils.to$( rowData[upd.field] );
@@ -2985,14 +2992,14 @@ class DataGrid {
 				function addUpdates( rowData ) {
 					if( !row.rowData )	row.rowData = rowData;
 					
-	        		this_.#cells.forEach( (cell,idx)=>addUpdate( cell, row.cells[idx] ) );
+					this_.#cells.forEach( (cell,idx)=>addUpdate( cell, row.cells[idx] ) );
 				}
 
 					function addUpdate( cell_header, newCell ) {
 						const c = newCell.el;
 						const field = cell_header.field;
 						const type = cell_header.type;
-	        
+		
 						if( newCell.list ) {
 							fillOptions( newCell );
 						} else {
@@ -3016,7 +3023,7 @@ class DataGrid {
 									c.textContent = rowData[field];
 							}
 						}
-	        
+		
 						c.removeEventListener( "input", newInput );
 						c.removeEventListener( "click", newInput );
 						
@@ -3043,6 +3050,19 @@ class DataGrid {
 			}
 			return row;
 		}
+	}
+
+	deleteRow( rowData ) {
+		this.#newRowIndex--;
+		this.#rows.find( (row, idx)=>{
+			if( row.rowData === rowData ) {
+				console.log( "Row is to be removed from the data and grid...", row );
+				this.#rows.splice( idx, 1 );
+				row.remove();
+				return true;
+			}
+			return false;
+		} );
 	}
 
 }
@@ -3119,7 +3139,7 @@ class PageFramePage {
 	}
 	
 	appendChild( el ) {
-        	this.content.appendChild( el );
+		this.content.appendChild( el );
 	}
 
 	addPage(title, url) {
@@ -3147,7 +3167,7 @@ class PageFramePages extends Array {
 	#frame = null;
 	#page = null;
 	constructor( frame, suffix ) {
-	        super();
+		super();
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
 			this.handleContainer.className = 'page-frame-handle-container' + suffix;
@@ -3169,10 +3189,10 @@ class  PagedFrame {
 
 	frame = document.createElement( 'div' );
 
-        pages = null;
+	pages = null;
 	
 	#oldPage = null;
-        suffix = '';
+	suffix = '';
 	constructor( parent, opts ) {
 		opts = opts || {};
 		const alignTop = ( opts.top ) ;
@@ -3223,26 +3243,26 @@ const popups = {
 	create : createPopup,
 	simpleForm : createSimpleForm,
 	simpleNotice : createSimpleNotice,
-        makeList : createList,
-        makeCheckbox : makeCheckbox,
-        makeRadioChoice : makeRadioChoice,
-        makeLeftRadioChoice : makeLeftRadioChoice,
-        makeNameInput : makeNameInput,  // form, object, field, text; popup to rename
-        makeTextInput : makeTextInput,  // form, object, field, text
-        makeSlider : makeSlider,  // form, object, field, text
-        makeTextField : makeTextField,
-        makeButton : makeButton,
+	makeList : createList,
+	makeCheckbox : makeCheckbox,
+	makeRadioChoice : makeRadioChoice,
+	makeLeftRadioChoice : makeLeftRadioChoice,
+	makeNameInput : makeNameInput,  // form, object, field, text; popup to rename
+	makeTextInput : makeTextInput,  // form, object, field, text
+	makeSlider : makeSlider,  // form, object, field, text
+	makeTextField : makeTextField,
+	makeButton : makeButton,
 	handleButtonEvents : handleButtonEvents, // expose just the button handler of makeButton
-        makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
-        makeDateInput : makeDateInput,  // form, object, field, text
+	makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
+	makeDateInput : makeDateInput,  // form, object, field, text
 	strings : { get(s) { return s } },
 	setClass: setClass,
 	toggleClass: toggleClass,
 	clearClass:clearClass,
 	createMenu : createPopupMenu,
-        makeLoginForm: makeLoginForm,
-        makeWindowManager : makeWindowManager,
-        fillFromURL : fillFromURL,
+	makeLoginForm: makeLoginForm,
+	makeWindowManager : makeWindowManager,
+	fillFromURL : fillFromURL,
 	utils : utils, // expose formatting utility functions.
 	DataGrid,
 	PagedFrame,
