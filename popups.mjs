@@ -2891,8 +2891,10 @@ class DataGrid {
 				
 				newCell.el.className = cell.className + this.#suffix;
 				if( cell.type.click ) {
-					const text = cell.field?rowData[cell.field]:(cell.type?.text?cell.type?.text:"X");
-					newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
+					if( row.rowData ) {
+						const text = cell.field?rowData[cell.field]:(cell.type?.text?cell.type?.text:"X");
+						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
+					}
 				}
 				else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
