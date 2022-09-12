@@ -2464,6 +2464,41 @@ function fillFromURL(popup, url) {
 
 
 class DataGridCell {
+	
+	#cell = null;
+	#row = null;
+
+	constructor( row, cell ) {
+		this.#cell = cell,
+		this.#row = row;
+		this.canEdit = ( ("edit" in cell.type) ? !cell.type.edit : true ),
+		this.el=row.el.insertCell(),
+		this.list = null,
+		this.filled = false,
+		this.options = [],
+
+		this.el.className = cell.className + row.suffix;
+	}
+
+	get cell() {
+		return this.#cell;
+
+	}
+
+	refresh() {
+		const rowData = this.#row.rowData;
+		if( !rowData ) return;
+		if( this.#cell.type.hasOwnProperty( "toString" ) )
+			this.el.textContent = this.#cell.type.toString( rowData );
+		else if( this.#cell.type.options ) {
+		} else if( this.#cell.type.money )
+			this.el.textContent = popups.utils.to$( rowData[cell_header.field] );
+		else if( this.#cell.type.percent )
+			this.el.textContent = popups.utils.toP( rowData[cell_header.field] );
+		else 
+			this.el.textContent = rowData[this.#cell.field];
+	}
+
 }
 
 class DataGridTableCell extends DataGridCell {
@@ -2497,39 +2532,14 @@ class DataGridRow {
 
 	}
 
+	get suffix() {
+		return this.#dataGrid.suffix;
+	}
+
 	remove() {
 		this.el.remove();
 	}
-/*	
-		const row = {
-			threshold:threshold,
-			el: newRow,
-			addUpdates:null,
-			cells:cells,
-			newInput: {
-				update(t){
-					["threshold","primary_percent","secondary_percent","tertiary_percent", "kitty", "house"].forEach( (key,id)=>{
-				    	const c = cells[id].cell;
-					const upd = cells[id].upd;
-				    	// update current value.
-					if( !upd ) row.addUpdates( t );
-					else {
-				    	if( upd.money )
-						c.textContent = popups.utils.to$( t[upd.f] );
-					else if( upd.percent )
-						c.textContent = popups.utils.toP( t[upd.f] );
-					else
-						c.textContent = t[upd.f];
-					}
-					} );
-				},
-				
-			},
 
-			
-		}
-		thresholdRows.push(row );
-*/
 }
 
 class DataGrid {
@@ -2549,6 +2559,10 @@ class DataGrid {
 	#subFields = null;
 	#newRowCallback= (()=>({}));
 	#sort = {prior:null};
+
+	get el() {
+		return this.#tableContainer;
+	}
 /*
 
 	const dg = new DataGrid(form, {rows:[]}, "rows", { columns : [{name: "Threshold Value", field:"threshold", className:"threshold-value" }  );
@@ -2593,38 +2607,7 @@ class DataGrid {
 			form.on( "apply", function() {
 			} )
 
-		/*
-		popup.refresh = function() {
-			['name','everyTally','housePercent','startingValue'].forEach( key=>{
-				controls[key].value = input[key];
-			});
-		
-			for( let threshold of input.thresholds ) {
-				addRow( thresholdTable, thresholdRows, threshold );
-			}
-		
-			for( let inp of input.inputs ) {
-				for( let form of l.inputForms ){
-					if( form.id === inp.accrual_input_group_id ){
-						form.glist.subItems.update( input );
-					}
-				}
-			}
-		
-			for( let activity of input.activities ){
-				for( let form of l.activities ){
-					if( form.activity === activity ){
-						form.jlist.subItems.update( input );
-					}
-				}
-			}
-			
-		}
-		*/
 			form.on( "show", ()=>{
-		//	input.value = defaultValue;
-//	//		input.focus();
-//	//		input.select();
 			})
 
 			form.on( "close", ()=>{
@@ -2656,6 +2639,10 @@ class DataGrid {
 		this.fill();
 	}
 
+	get suffix() {
+		return this.#suffix;
+	}
+
 	reinit() {
 		const o = this.#obj;
 		const field = this.#field;
@@ -2678,7 +2665,7 @@ class DataGrid {
 		for( let v=0; v < this.#initialValues.length; v++  ) {
 			const o = data[v];
 			const v = this.#initialValues[v];
-			this.subFields.forEach( field=>{
+			this.#subFields.forEach( field=>{
 				o[field.field] = v[field.field];
 			} );
 		}
@@ -2687,6 +2674,17 @@ class DataGrid {
 	}
 
 	refresh() {
+
+		const rows = this.#obj[this.#field];
+		for( let v=0; v < rows.length; v++  ) {
+			const row = rows[v];
+			const dataRow = this.#rows[v];
+			dataRow.cells.forEach( cell=>{
+				if( !cell.canEdit )
+					cell.refresh();
+			} );
+		}
+
 	}
 
 	fill() {
@@ -2880,23 +2878,20 @@ class DataGrid {
 		
 			this.#cells.forEach( cell=>{
 		
-				const newCell = {
-					cell:cell,
-					canEdit : ( ("edit" in cell.type) ? !cell.type.edit : true ),
-					el:newTableRow.insertCell(),
-					list : null,
-					filled : false,
-					options : []
-				};
+				const newCell = new DataGridCell( row, cell );
 				
-				newCell.el.className = cell.className + this.#suffix;
+				
+				//newCell.el.className = cell.className + this.#suffix;
+
 				if( cell.type.click ) {
+					newCell.canEdit = false;
 					if( row.rowData ) {
 						const text = cell.field?rowData[cell.field]:(cell.type?.text?cell.type?.text:"X");
 						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
 					}
-				}
-				else if( cell.type.options ) {
+				} else if( cell.type.hasOwnProperty( "toString" ) ) {
+					newCell.canEdit = false;				
+				} else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
 					cell.newInput = onEdit( cell, newCell, newRow, row );
@@ -2905,6 +2900,7 @@ class DataGrid {
 					newCell.el.setAttribute("contenteditable",newCell.canEdit );
 					cell.newInput = onEdit( cell, newCell, newRow, row );
 				}
+				newCell.refresh();				
 				row.cells.push( newCell );
 				// on update; does the right thing for edit boxes and listboxes
 				
@@ -3006,24 +3002,18 @@ class DataGrid {
 							fillOptions( newCell );
 						} else {
 
-					     	   	// update current value.
-							if( c.textContent  !== "" ) {
-								
-					     	   		if( type.money ) {
-									const val = popups.utils.toD( c.textContent );
-									c.textContent = popups.utils.to$( val );
+					     	// update current value.
+							if( c.canEdit && c.textContent  !== "" ) {
+								if( type.money ) {
+									rowData[field] = popups.utils.toD( c.textContent );
 								} else if( type.percent ) {
-									const val = popups.utils.fromP( c.textContent );
-									c.textContent = popups.utils.toP( val );
+									rowData[field] = popups.utils.fromP( c.textContent );
+								} else {
+									rowData[field] = c.textContent;
 								}
-							} else {
-					     	   		if( type.money )
-									c.textContent = popups.utils.to$( rowData[cell_header.field] );
-								else if( type.percent )
-									c.textContent = popups.utils.toP( rowData[cell_header.field] );
-								else
-									c.textContent = rowData[field];
-							}
+							} 
+							newCell.refresh();
+							
 						}
 		
 						c.removeEventListener( "input", newInput );
@@ -3036,15 +3026,17 @@ class DataGrid {
 								selAll( evt.target, newCell );
 						} );
 						c.addEventListener( "blur", (evt)=>{
-					    		if( type.money ) {
-						    		rowData[field] = popups.utils.toD( c.textContent );
-						    		c.textContent = popups.utils.to$( rowData[cell_header.field] );
+					    	if( type.money ) {
+								rowData[field] = popups.utils.toD( c.textContent );
+								c.textContent = popups.utils.to$( rowData[cell_header.field] );
 							}
-					    		else if( type.percent ) {
+					    	else if( type.percent ) {
 						    		rowData[field] = popups.utils.fromP( c.textContent );
 						    		c.textContent = popups.utils.toP( rowData[cell_header.field] );
 							}
-							else
+							else if( type.hasOwnProperty( "toString" ) ) {
+									// procedural output fields do not accept input.
+							} else 
 						    		rowData[field] = c.textContent;
 					    	} );
 					}

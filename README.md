@@ -190,7 +190,7 @@ Column Description
 
 | field | type | description |
 |-----|----|-----|
-| field | string | name of the field in the value array |
+| field | string | name of the field in the members of the value array |
 | name | string | name to show for column of data |
 | className | string | name to specify as class for this column field |
 | type | object | column type object specified below |
@@ -205,6 +205,8 @@ Column Type
 | click | function | creates a button in the column. |
 | text | string | used for text on buttons separate from header string |
 | edit | boolean | default true; controls whether the column is editable |
+| toString | function | used to get the value to display in the data grid. |
+| tick | number | milliseconds to auto-refresh the field |
 
 Column Type Option Description 
 
