@@ -1,5 +1,8 @@
 body {
 	margin:0;
+    font-family:Helvetica, Verdana;
+	background-color:rgba(150, 150, 150, 0.75);
+
 }
 
 .closeButton {
@@ -98,8 +101,10 @@ body {
 	top:25%; */
 	width:max-content;
 	height:max-content;
-	background-color:rgba(150, 150, 150, 0.75);
-	color:rgb(33, 0, 29);
+	/*background-color:rgba(150, 150, 150, 0.75);*/
+	background: #566268;
+	/*color:rgb(33, 0, 29);*/
+	color: #FFFFFF;
 	border-radius:10px;
 	/*padding:25px;*/
 }
@@ -108,11 +113,10 @@ body {
 	visibility:visible;
 	padding:0px;border-color:black;border-width:2px;
 	border-style:solid;z-index:100;position:absolute;
-	left: 0;
 	top:25%;
 	width:max-content;
 	height:max-content;
-	background-color:rgba(150, 150, 150, 0.75);
+	background-color:#566268;
 	color:rgb(33, 40, 29);
 	border-radius:10px;
 	/*padding:25px;*/
@@ -120,24 +124,17 @@ body {
 
 [class^="frameCaption"] {
 	padding:0px;
-	background-color:aquamarine;
+	background-color:#0275d8;
 	border-width:0px;
 	border-style:solid;
-	/*osition:absolute; */
-	color :black;
+	color: #f7f7f7;    ;
 	left:0;top:0;
-	/*width:100%;*/
 	padding-left:0.5em;
 	height:1.5em;
 	font-size:150%;
 	line-height:1.5em;
-	/*display:inline-table;*/
-
-
-    border-style: ridge;
-    border-width: 5;
     border-color: #9c9b9b;
-    border-radius: 10px;
+    border-radius: 10px 0 0;
 }
 
 [class^="frameContent"] {
@@ -307,57 +304,61 @@ span {
 .inputEditButton {
 }
 
-		.loginUsername {
-			background-color: teal;
-			text-color:white;
-			color:white;
-                        text-align:center;
-		}
-		.loginPassword {
-			-webkit-text-security:circle;
-			background-color: teal;
-			text-color:white;
-			color:white;
-                        text-align:center;
-		}
-    	[class^="button"]{
-			font-size:100%;
-			border-radius:10px;
-			background:linear-gradient(rgb(76, 139, 176), #8be2de,rgb(76, 148, 176) );
-			padding:0px;
-			border-style:outset;
-			padding-right:2px;
-			padding-bottom:2px;
-		}
-
-    	.pressed{
-			border-style:inset;
-			padding-left:2px;
-			padding-top:2px;
-			padding-right:0px;
-			padding-bottom:0px;
-		}
-
-	[class^="button"]:hover {
-			border-color:#0dd;
-	}
-	[class^="buttonInner"]:hover {
-			border-color:#000;
-	}
-
-    	[class^="buttonInner"]{
-			border-radius:10px;
-				background:lightgray;
-				padding-left:10px;
-				padding-right:10px;
-				margin:5px;
-				margin-left:25px;
-				margin-right:25px;
-				border-style:inset;
-				color:black;
-				font-weight:bold;
-		}
-
+.loginUsername {
+    background-color: teal;
+    text-color:white;
+    color:white;
+                text-align:center;
+}
+.loginPassword {
+    -webkit-text-security:circle;
+    background-color: teal;
+    text-color:white;
+    color:white;
+    text-align:center;
+}
+[class^="button"]{
+    /* font-size: 100%; */
+    border-radius: 10px;
+    background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
+    /* padding: 0px; */
+    /* border-style: outset; */
+    padding-right: 2px;
+    padding-bottom: 2px;
+}
+.info {
+    color: #5bc0de;
+}
+.success {
+    color: #28a745;
+}
+.danger {
+    color: #d9534f;
+}
+.warn {
+    color: #f0ad4e;
+}
+[class^="button"]:hover {
+        border-color:#0dd;
+}
+[class^="buttonInner"]:hover {
+        
+}
+[class^="buttonInner"]{
+    /* border-radius: 10px; */
+    /* background: lightgray; */
+    font-weight: bold;
+    padding-top: 4px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 6px 25px 3px 25px;
+    margin-left: 25px;
+    margin-right: 25px;
+    /* border-style: inset; */
+    /* color: black; */
+    cursor: pointer;
+}
+    
 .noticeText {
 	font-family:sans-serif;
 	font-size:200%;
@@ -488,8 +489,7 @@ div.mouseCatcher{
 
 
 [class^='page-frame-handle-container'] {
-	display:inline-block;
-	padding:5px;
+	display:flex;
 }
 [class^='page-frame-page-frame'] {
 	display:inline-block;
@@ -497,14 +497,18 @@ div.mouseCatcher{
 }
 
 [class^='page-frame-page-handle'].pressed {
-			border-style:inset;
-	padding:15px;
+	border-style:inset;
+	padding: .6vh 0.6vw;
+	margin-bottom: 1vh;
+	background: #999;
+	color: #000;
 }
 
 [class^='page-frame-page-handle'] {
-	padding:15px;
+	padding: .6vh 0.6vw;
 	border-style:outset;
-	
+	margin-bottom: 1vh;
+	background: #777;
 }
 
 
@@ -536,12 +540,14 @@ div.mouseCatcher{
   color: #FFF;
   border: 1px solid #fff;
   border-collapse: collapse;
+  border-spacing: .6vw;
 }
 [class^="data-grid-table"] {
  margin: 1em 0;
 }
 [class^="data-grid-header-row"] {
-    background-color: #666;  
+    background-color: #000;  
+    margin: 1vh 0;
 }
 
 [class^="data-grid-header-sort"] {
