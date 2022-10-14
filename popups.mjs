@@ -1580,7 +1580,7 @@ function makeSSNInput( form, input, value ){
 }
 
 // --------------- Dropdown choice list ---------------------------
-function makeChoiceInput( form, input, value, choices, text ){
+function makeChoiceInput( form, input, value, choices, text, opts ){
 	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
 
@@ -1592,7 +1592,13 @@ function makeChoiceInput( form, input, value, choices, text ){
 
 	for( let choice of choices ) {
 	    	const option = document.createElement( "option" );
-		option.text = choice;
+			if( "string" === typeof choice) {
+				option.text = choice;
+				option.value = choice.value;
+			} else{
+				option.text = choice.text;
+				option.value = choice.value;
+			}
 		if( choice === input[value] ) {
 		   inputControl.selectedIndex = inputControl.options.length-1;
 		}
@@ -1604,7 +1610,10 @@ function makeChoiceInput( form, input, value, choices, text ){
 		const idx = inputControl.selectedIndex;
 		if( idx >= 0 ) {
 			console.log( "Value in select is :", inputControl.options[idx].text );
-			input[value] = inputControl.options[idx].text;
+			if( opts?.useIndex )
+				input[value] = idx;
+			else
+				input[value] = inputControl.options[idx].value;
 		}
 	} );
 
@@ -3098,7 +3107,12 @@ class PageFramePage {
 			frame.pages.pageContainer.appendChild( this.content );
 
 			this.handle.addEventListener( "click", (evt)=>{
-				this.activate();
+				if( this.#page && this.#page.pages.lastPage )
+					this.#page.pages.lastPage.deactivate();
+				if( this.handle.classList.contains( "pressed" ))
+					this.deactivate();
+				else
+					this.activate();
 				//this.frame.activate( this );
 			} );
 			this.content.style.display = "none";
@@ -3109,6 +3123,9 @@ class PageFramePage {
 	activate() {
 		this.handle.classList.add( "pressed" );
 		this.content.style.display="";
+		if( this.#page && this.#page.pages ) {
+			this.#page.pages.lastPage = this;
+		}
 		if( this.pages ) {
 			this.pages.handleContainer.style.display = "";
 		}
@@ -3118,7 +3135,9 @@ class PageFramePage {
 	deactivate() {
 		this.handle.classList.remove( "pressed" );
 		this.content.style.display="none";
-		if( this.pages ) {
+		if( this.#page && this.#page.pages ) {
+			this.#page.pages.lastPage = null;
+		if( this.pages )
 			this.pages.handleContainer.style.display = "none";
 		}
 		
@@ -3172,7 +3191,7 @@ class PageFramePages extends Array {
 			this.#page = frame;
 			this.handleContainer.className = 'page-frame-page-handle-container' + suffix;
 			this.pageContainer.className = 'page-frame-page-page-frame' + suffix;
-			frame.frame.pages.handleContainer.appendChild( this.handleContainer );
+			frame.handle.appendChild( this.handleContainer );
 			frame.content.appendChild( this.pageContainer );
 		}
 	}
@@ -3184,7 +3203,7 @@ class  PagedFrame {
 	frame = document.createElement( 'div' );
 
 	pages = null;
-	
+	lastPage = null;
 	#oldPage = null;
 	suffix = '';
 	constructor( parent, opts ) {
