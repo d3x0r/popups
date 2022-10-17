@@ -314,6 +314,24 @@ function initPopupTracker() {
 }
 popupTracker = initPopupTracker();
 
+class Events {
+	events = {};
+	on(event,cb) {
+		if( cb && "function" === typeof cb )
+			if( this.events[event] )
+				this.events[event].push(cb);
+			else
+				this.events[event] = [cb];
+		else {
+			var cbList;
+			if( cbList = this.events[event]  ) {
+				return cbList.map( cbEvent=>cbEvent( cb ));
+			}
+		}
+	}
+
+}
+
 class Popup {
 	popupEvents = {
 		close : [],
@@ -3113,11 +3131,69 @@ class PageFramePage {
 					this.deactivate();
 				else
 					this.activate();
+				evt.stopPropagation();
 				//this.frame.activate( this );
 			} );
 			this.content.style.display = "none";
 			frame.pages.push( this );
 		}
+	}
+	reset() {
+		if( this.pages )
+			for( let page of this.pages )
+				page.remove();
+	}
+	remove() {
+		this.content.remove();
+		this.handle.remove();
+		const id = this.#page.pages.find( page=>page===this );
+		if( id >= 0 ) this.#page.pages.splice( id, 1 );
+	}
+
+	enableDrag( type, cbData ) {
+		
+		this.handle.setAttribute("draggable", true);
+		this.handle.addEventListener("dragstart", (evt) => {
+			//if( evt.dataTransfer.getData("text/plain" ) )
+			//	evt.preventDefault();
+			this.handle.classList.add("drag-over");
+			evt.dataTransfer.setData( "text/plain", JSON.stringify({ type: type, data:cbData() }))
+		})
+	}
+	enableDrop(type, cbDrop ) {
+			//console.log("drop type ", type );
+
+			this.handle.addEventListener("dragover", (evt) => {
+				evt.preventDefault();
+				evt.dataTransfer.dropEffect = "move";
+				this.handle.classList.add("drag-over");
+			})
+			this.handle.addEventListener("dragleave", (evt) => {
+				evt.preventDefault();
+				this.handle.classList.remove("drag-over");
+			})
+			this.handle.addEventListener("drop", (evt) => {
+				evt.preventDefault();
+				var objType = evt.dataTransfer.getData("text/plain");
+				const event = JSON.parse( objType ) 
+				if (type === event.type) {
+					//console.log("drop of:", evt.dataTransfer.getData("text/plain"));
+					const dropIn = this.handle.getBoundingClientRect();
+
+					cbDrop( {data:event.data, x:evt.clientX-dropIn.x,y:evt.clientY-dropIn.y, h:dropIn.height, w:dropIn.width, evt:evt } );
+				}				
+				this.handle.classList.remove("drag-over");
+			})
+	}
+	insertBeforePage( page ) {
+		this.handle.remove();
+		this.handle.insertBefore( page.handle );
+	}
+
+	activatePage( page ) {
+		if( this.pages.lastPage )
+			this.pages.lastPage.deactivate();
+		this.pages.lastPage = page.activate();
 	}
 
 	activate() {
@@ -3129,6 +3205,7 @@ class PageFramePage {
 		if( this.pages ) {
 			this.pages.handleContainer.style.display = "";
 		}
+		this.frame.on( "activate", this );
 		return this;
 	}
 
@@ -3137,10 +3214,10 @@ class PageFramePage {
 		this.content.style.display="none";
 		if( this.#page && this.#page.pages ) {
 			this.#page.pages.lastPage = null;
+		}
 		if( this.pages )
 			this.pages.handleContainer.style.display = "none";
-		}
-		
+		this.frame.on( "deactivate", this );
 	}
 
 	get frame() {
@@ -3154,7 +3231,10 @@ class PageFramePage {
 	appendChild( el ) {
 		this.content.appendChild( el );
 	}
+	removePage( pf ) {
+		pf.remove();
 
+	}
 	addPage(title, url) {
 		if( !this.pages ) {
 			if( this.#frame ) 
@@ -3169,9 +3249,11 @@ class PageFramePage {
 			fillFromURL( pf.content, url );
 		return pf;	
 	}
+	on(a,b) {
+		this.frame.on(a,b);
+	}
 
-
-}
+}	
 
 class PageFramePages extends Array {
 	handleContainer = document.createElement( 'div' );
@@ -3195,10 +3277,14 @@ class PageFramePages extends Array {
 			frame.content.appendChild( this.pageContainer );
 		}
 	}
+	remove() {
+		this.handleContainer.remove();
+		this.pageContainer.remove();
+	}
 }
 
 
-class  PagedFrame {
+class  PagedFrame extends Events{
 
 	frame = document.createElement( 'div' );
 
@@ -3207,6 +3293,7 @@ class  PagedFrame {
 	#oldPage = null;
 	suffix = '';
 	constructor( parent, opts ) {
+		super();
 		opts = opts || {};
 		const alignTop = ( opts.top ) ;
 		const pageDefs =  opts.pages;
