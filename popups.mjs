@@ -2498,7 +2498,7 @@ class DataGridCell {
 	constructor( row, cell ) {
 		this.#cell = cell,
 		this.#row = row;
-		this.canEdit = ( ("edit" in cell.type) ? !cell.type.edit : true ),
+		this.canEdit = ( ("edit" in cell.type) ? cell.type.edit : true ),
 		this.el=row.el.insertCell(),
 		this.list = null,
 		this.filled = false,
@@ -2518,10 +2518,11 @@ class DataGridCell {
 		if( this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
 		else if( this.#cell.type.options ) {
+			this.list.value = rowData[this.cell.field];
 		} else if( this.#cell.type.money )
-			this.el.textContent = popups.utils.to$( rowData[cell_header.field] );
+			this.el.textContent = popups.utils.to$( rowData[this.cell.field] );
 		else if( this.#cell.type.percent )
-			this.el.textContent = popups.utils.toP( rowData[cell_header.field] );
+			this.el.textContent = popups.utils.toP( rowData[this.cell.field] );
 		else 
 			this.el.textContent = rowData[this.#cell.field];
 	}
@@ -2978,7 +2979,9 @@ class DataGrid {
 									newCell.list.appendChild( opt.el );
 									newCell.options.push( opt );
 								} );
-								rowData[cell.field] = opts[0].value;
+								//rowData[cell.field] = opts[0].value;
+								newCell.list.value = rowData[cell.field];
+
 							}
 						}
 						if( newCell.list )
@@ -3086,6 +3089,9 @@ class DataGrid {
 		} );
 	}
 
+	remove() {
+		this.#tableContainer.remove();
+	}
 }
 
 
