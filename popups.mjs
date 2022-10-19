@@ -2969,6 +2969,7 @@ class DataGrid {
 								opts.forEach( op=>{
 									const opt = { el:document.createElement( "option" ),
 										val:op };
+									opt.el.className = op.className;
 									opt.el.textContent = op.name;
 									opt.el.value = op.value;
 
