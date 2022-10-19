@@ -549,7 +549,8 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 }
 
 function handleButtonEvents( button, onClick ) {
-
+	let pressed = false;
+	let pressed_ = false;
 	button.addEventListener( "keydown", (evt)=>{
 		if( evt.key === "Enter" || evt.key === " " ) {
 			evt.preventDefault();
@@ -566,24 +567,45 @@ function handleButtonEvents( button, onClick ) {
 	})
 	button.addEventListener( "touchstart", (evt)=>{
 		evt.preventDefault();
+		pressed = true;
+		pressed_ = true;
 		setClass( button, "pressed" );
 		
 	}, { passive:true })
 	button.addEventListener( "touchend", (evt)=>{
 		evt.preventDefault();
+		pressed = false;
+		pressed_ = false;
 		clearClass( button, "pressed" );
 		onClick();
 		
 	}, { passive:true })
 	button.addEventListener( "mousedown", (evt)=>{
 		evt.preventDefault();
+		pressed = true;
+		pressed_ = true;
 		setClass( button, "pressed" );
 		
 	})
 	button.addEventListener( "mouseup", (evt)=>{
 		evt.preventDefault();
+		pressed = false;
+		pressed_ = false;
 		clearClass( button, "pressed" );
 		
+	})
+	button.addEventListener( "mouseout", (evt)=>{
+		pressed_ = pressed;
+		pressed = false;
+		clearClass( button, "pressed" );
+	})
+	button.addEventListener( "mousemove", (evt)=>{
+		if( pressed_ && !pressed){
+			if( evt.buttons ) {
+				setClass( button, "pressed" );
+				pressed = true;
+			} else pressed_ = false;
+		}
 	})
 }
 
