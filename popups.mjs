@@ -583,16 +583,12 @@ function handleButtonEvents( button, onClick ) {
 	button.addEventListener( "mousedown", (evt)=>{
 		evt.preventDefault();
 		pressed = true;
-		pressed_ = true;
 		setClass( button, "pressed" );
-		
 	})
 	button.addEventListener( "mouseup", (evt)=>{
 		evt.preventDefault();
 		pressed = false;
-		pressed_ = false;
 		clearClass( button, "pressed" );
-		
 	})
 	button.addEventListener( "mouseout", (evt)=>{
 		pressed_ = pressed;
