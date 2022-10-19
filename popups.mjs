@@ -2537,6 +2537,13 @@ class DataGridCell {
 			this.el.textContent = this.#cell.type.toString( rowData );
 		else if( this.#cell.type.options ) {
 			this.list.value = rowData[this.cell.field];
+
+			const i = this.list.selectedIndex; if( i >= 0 ) {
+				if( this.options[i].val.className )
+					this.list.className = this.options[i].val.className;
+			}
+
+//				this.list.className = this.list.selected#cell.type.className;
 		} else if( this.#cell.type.money )
 			this.el.textContent = popups.utils.to$( rowData[this.cell.field] );
 		else if( this.#cell.type.percent )
@@ -3005,8 +3012,10 @@ class DataGrid {
 						}
 						if( newCell.list )
 							newCell.list.addEventListener( "change", (evt)=>{ 
-								const i = evt.target.selectedIndex; if( i > 0 ) {
+								const i = evt.target.selectedIndex; if( i >= 0 ) {
 									rowData[cell.field] = newCell.options[i].val.value;
+									if( newCell.options[i].val.className )
+										newCell.list.className = newCell.options[i].val.className;
 								}
 							} );
 					}
