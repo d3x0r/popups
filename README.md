@@ -235,6 +235,12 @@ Constructor options
 
 ## Changelog
 - 1.0.109 (in progress)
+  - allow data grids in datagrids.
+  - Improve choice list selection in datagrids, and as a independant control.
+  - Add option to datagrids to disable sorting.
+  - Add option to datagrid columns to disable editing.
+  - Support longer object field names for datagrids (object["field.sub.val"] converts to object.field.sub.val).
+  - Nest alert form text in another div to allow increasing the size of the covering div, while centering the content.  
 - 1.0.108
   - fix negative currency formatting.
   - allow 'id' option to allow recovering saved window positions.

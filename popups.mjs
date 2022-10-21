@@ -2273,12 +2273,14 @@ function makeApp() {
 //-----------------------------------------------------------------
 
 export class AlertForm extends Popup {
-
+	MsgDiv = document.createElement( "div" );
 	constructor(parent) {
 		super( null, parent, {suffix:"-alert"} );
-		const this_ = this;
+		const this_ = this;		
+		this.MsgDiv.className = "alert-message";
 		this.divContent.setAttribute( "tabIndex", 0 )
 		this.divContent.className += " alert-content";
+		this.appendChild( this.MsgDiv );
 		this.divFrame.addEventListener( "click", ()=>{
 			this_.hide();
 		})
@@ -2295,8 +2297,9 @@ export class AlertForm extends Popup {
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
-		//console.log( "This should be caption set:", val );
-		this.divContent.innerHTML = val;
+		// super sets caption to (well null in this case)
+		if( this.MsgDiv )
+			this.MsgDiv.innerHTML = val;
 	}
 
 }
@@ -2307,6 +2310,7 @@ var alertForm = null;//initAlertForm();
 function Alert(msg) {
 	if( !alertForm ) alertForm = new AlertForm();
 	alertForm.caption = msg;
+	
 	alertForm.show();
 }
 
@@ -2533,12 +2537,16 @@ class DataGridCell {
 	refresh() {
 		const rowData = this.#row.rowData;
 		if( !rowData ) return;
+		if( this.#cell.type.grid ) {
+			return this.list.refresh();
+		}
 		if( this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
 		else if( this.#cell.type.options ) {
-			this.list.value = rowData[this.cell.field];
+			this.list.value = getValue( rowData, this.cell.field );
 
-			const i = this.list.selectedIndex; if( i >= 0 ) {
+			const i = this.list.selectedIndex; 
+			if( i >= 0 ) {
 				if( this.options[i].val.className )
 					this.list.className = this.options[i].val.className;
 			}
@@ -2592,10 +2600,60 @@ class DataGridRow {
 	remove() {
 		this.el.remove();
 	}
-
+	refresh() {
+		// update this row....
+		this.cells.forEach( cell=>{
+			if( !cell.canEdit )
+				cell.refresh();
+		} );
+	
+	}
 }
 
-class DataGrid {
+function setValue( dgr, rowData, pathName, val, type ){
+
+	if( type.money ) {
+		val = popups.utils.toD( val );
+	} else if( type.percent ) {
+		val = popups.utils.fromP( val );
+	} else if( type.number ) {
+		val = Number( val );
+	} 
+
+	if( type.toValue )
+		type.toValue(dgr, rowData, val);
+	else {
+		const path = pathName.split('.' );
+		let obj = rowData;
+		let p = 0;
+		while( p < path.length-1 ) {
+			if( !(path[p] in obj)){
+				obj[path[p]] = {};
+			}
+			obj = obj[path[p]];
+			p++;
+		}
+		obj[path[p]]=val;
+	}
+}
+
+function getValue( rowData, pathName ) {
+	const path = pathName.split('.' );
+	let obj = rowData;
+	let p = 0;
+	while( p < path.length-1 ) {
+		obj = obj[path[p]];
+		p++;
+	}
+	return obj[path[p]];
+}
+
+
+function convertValue( value, type ) {
+	return value;
+}
+
+class DataGrid extends Events {
 
 	#initialValue = undefined;
 	#initialValues = undefined;
@@ -2616,22 +2674,10 @@ class DataGrid {
 	get el() {
 		return this.#tableContainer;
 	}
-/*
-
-	const dg = new DataGrid(form, {rows:[]}, "rows", { columns : [{name: "Threshold Value", field:"threshold", className:"threshold-value" }  );
-								    .{name:"Primary Percent", field:"primary", className:"threshold-primary" } ] 
-							} );
-	dg.addColumn( name, field, classname );
-
-	input.thresholds.forEach( t=>{
-		addRow( thresholdTable, thresholdRows, t );
-	} );
-	addRow( thresholdTable, thresholdRows, null );
-
-*/
 
 	constructor( form, o, field, opts ) 
 	{
+		super();
 		this.#field= field;
 		this.#opts = opts || {};
 		this.#subFields = (opts?.columns) || [];
@@ -2640,12 +2686,15 @@ class DataGrid {
 		
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
-		this.#initialValue = o[field].map(o=>o);
+		this.#initialValue = getValue( o, field ).map(o=>o);
 
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
-		this.#initialValues = o[field].map(o=>{
+		this.#initialValues = getValue( o,field ).map(o=>{
 			const obj = {};
-			this.#subFields.forEach( col=>obj[col.field] = o[col.field] );
+			this.#subFields.forEach( col=>{
+				if( col.field )
+					setValue( null, obj, col.field, getValue(o,col.field), {} )
+			} );
 			return obj;
 		});
 		
@@ -2654,7 +2703,6 @@ class DataGrid {
 		
 		if( opts?.onNewRow ) this.#newRowCallback = opts.onNewRow;
 		
-		const thresholdRows = ()=>this.#obj[this.#field];
 		
 		if( form instanceof Popup ) {
 			form.on( "apply", function() {
@@ -2686,6 +2734,7 @@ class DataGrid {
 		this.#tableContainer.appendChild( this.#table );
 		
 		this.#subFields.forEach( col=>{
+			if( col.type.grid ) col.type.noSort = true;
 			this.addColumn( col.name, col.field, col.className, col.type );
 		} );
 
@@ -2701,11 +2750,14 @@ class DataGrid {
 		const field = this.#field;
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
-		this.#initialValue = o[field].map(o=>o);
+		this.#initialValue = getValue( o,field).map(o=>o);
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
-		this.#initialValues = o[field].map(o=>{
+		this.#initialValues = getValue( o,field).map(o=>{
 			const obj = {};
-			this.#subFields.forEach( col=>obj[col.field] = o[col.field] );
+			this.#subFields.forEach( col=>{
+				if( col.field ) 
+					setValue( null, obj,col.field, getValue(o,col.field), col.type ) 
+			} );
 			return obj;
 		});
 		this.fill();
@@ -2728,7 +2780,7 @@ class DataGrid {
 
 	refresh() {
 
-		const rows = this.#obj[this.#field];
+		const rows = getValue( this.#obj, this.#field );
 		for( let v=0; v < rows.length; v++  ) {
 			const row = rows[v];
 			const dataRow = this.#rows[v];
@@ -2760,59 +2812,83 @@ class DataGrid {
 	addColumn( name, subField, className, type ) {
 		const cell = this.#header.insertCell();
 		const cellText = document.createElement( 'span' );
-		const sortText = document.createElement( 'span' );
+		const sortText = ( !this.#opts.noSort && !type.noSort ) ?document.createElement( 'span' ):null;
 		cell.appendChild( cellText );
-		cell.appendChild( sortText );
+		if( sortText )
+			cell.appendChild( sortText );
 		
 		cellText.textContent = name;
 		cellText.className = "data-grid-header-text" + this.#suffix;
-
-		sortText.textContent = "";//"Threshold Value";
-		sortText.className = "data-grid-header-sort" + this.#suffix;
-		sortText.textContent = '▬';
+		if( sortText ) {
+			sortText.textContent = "";//"Threshold Value";
+			sortText.className = "data-grid-header-sort" + this.#suffix;
+			sortText.textContent = '▬';
 		//sortText.style.float="right";
+		}
 
 
 		const cellDef = {el:cell, cellText,sortText, sort:false, idx:this.#cells.length, name:name, field:subField, className, type } ;
 		const this_ = this;
 
-		if( this.#cells.length )
-			sortText.style.visibility= "hidden";
-		else
+		if( this.#cells.length ) {
+			if( sortText )
+				sortText.style.visibility= "hidden";
+		} else
 			this.#sort.prior = cellDef;
 
 		this.#cells.push( cellDef );
 		
-		
-		onClick( cellDef );
+		if( sortText )
+			onClick( cellDef );
 
 		function onClick( header ) {
 			header.el.addEventListener( "click", click );
 			function click( evt ) {
 				//console.log( "Cell clicked?", header.el );
-				if( this_.#sort.prior ) {
-					if( this_.#sort.prior === cellDef ) {
-						this_.#sort.prior.sort = !this_.#sort.prior.sort;
-						if( this_.#sort.prior.sort )
+				if( this_.#sort.prior.sortText ){
+					if( this_.#sort.prior ) {
+						if( this_.#sort.prior === cellDef ) {
+							this_.#sort.prior.sort = !this_.#sort.prior.sort;
+							if( this_.#sort.prior.sort )
+								this_.#sort.prior.sortText.textContent = '▼';
+							else
+								this_.#sort.prior.sortText.textContent = '▲';
+						} else {
 							this_.#sort.prior.sortText.textContent = '▼';
-						else
-							this_.#sort.prior.sortText.textContent = '▲';
+							this_.#sort.prior.sortText.style.visibility= "hidden";
+							this_.#sort.prior = cellDef;
+							cellDef.sort = true;
+							this_.#sort.prior.sortText.textContent = '▼';
+						}
+						
 					} else {
-						this_.#sort.prior.sortText.textContent = '▼';
-						this_.#sort.prior.sortText.style.visibility= "hidden";
 						this_.#sort.prior = cellDef;
 						cellDef.sort = true;
 						this_.#sort.prior.sortText.textContent = '▼';
 					}
-					
-				} else {
-					this_.#sort.prior = cellDef;
-					cellDef.sort = true;
-					this_.#sort.prior.sortText.textContent = '▼';
+					this_.#sort.prior.sortText.style.visibility = '';
 				}
-				this_.#sort.prior.sortText.style.visibility = '';
-
-				if( header.type.list ) {
+				if( header.type.grid ) {
+					// should have been marked nosort anyway?
+				}else if( header.type.options ) {
+					this_.#rows.sort( (a,b)=>{
+						if( !a.rowData ) return 1;
+						if( !b.rowData ) return -1;
+						const opts = header.type.options;
+						const aval = getValue( a.rowData, a.cells[header.idx].cell.field);
+						const bval = getValue( b.rowData, b.cells[header.idx].cell.field);
+						const aopt = opts.find( opt=>opt.value == aval ).name
+						const bopt = opts.find( opt=>opt.value == bval ).name
+						if( aopt > bopt )
+							return cellDef.sort?1:-1;
+						if(  aopt < bopt )
+							return cellDef.sort?-1:1;
+						return 0;
+					} )
+					for( let row of this_.#rows )
+						row.el.remove();
+					for( let row of this_.#rows )
+						this_.#table.appendChild( row.el )
 					
 				}else {
 					//sortText.textContent = "▼";//"Threshold Value";
@@ -2939,7 +3015,11 @@ class DataGrid {
 				if( cell.type.click ) {
 					newCell.canEdit = false;
 					if( row.rowData ) {
-						const text = cell.field?rowData[cell.field]:(cell.type?.text?cell.type?.text:"X");
+
+
+						const text = cell.field
+							?getValue( rowData,cell.field)
+							:(cell.type?.text?cell.type?.text:"X");
 						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
 					}
 				} else if( cell.type.hasOwnProperty( "toString" ) ) {
@@ -2947,7 +3027,17 @@ class DataGrid {
 				} else if( cell.type.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
+					if( !newCell.canEdit ){
+						newCell.list.disabled = true;
+					}
 					cell.newInput = onEdit( cell, newCell, newRow, row );
+				} else if( cell.type.grid ) {
+					if( newRow )
+						newCell.list = new DataGrid( newCell.el, newRow, cell.field, {
+							columns:cell.type.grid.columns
+						});
+					//newCell.el.appendChild( newCell.list );
+					//cell.newInput = onEdit( cell, newCell, newRow, row );
 				}else {
 					newCell.el.textContent = "";//cell.;
 					newCell.el.setAttribute("contenteditable",newCell.canEdit );
@@ -2965,17 +3055,20 @@ class DataGrid {
 				const c = newCell.el;
 
 			    	function newInput(evt) {
-			    		if( !row.rowData ) {
+			    		if( !newCell.options.length ) {
 			    		    // if( cell.type.money )
 						//evt.target.textContent += "00";
 						if( newCell.list ) {
 							fillOptions( newCell );
 
 						}
-					    row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
-		
-					    addUpdate( cell, newCell );
-					    this_.addRow( null );
+						 
+						if( !rowData ) {
+							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
+			
+							addUpdate( cell, newCell );
+							this_.addRow( null );
+						}
 						//evt.target.
 						
 					    setCaret( evt.target, newCell, cell.type.percent?-1:0 );
@@ -2989,7 +3082,7 @@ class DataGrid {
 					if( !newCell.filled )  {
 						if( cell.type.options ) {
 							const opts = cell.type.options;
-							if( rowData ) {
+							{
 								newCell.filled = true;
 								opts.forEach( op=>{
 									const opt = { el:document.createElement( "option" ),
@@ -2997,25 +3090,28 @@ class DataGrid {
 									opt.el.className = op.className;
 									opt.el.textContent = op.name;
 									opt.el.value = op.value;
-
+console.log( "Adding option:", op.name, op.value );
 									opt.el.addEventListener( "select", ()=>{
-										rowData[cell.field] = op.value;
+										setValue( row, rowData, cell.field, op.value, col.type );
 										console.log( "Option selected in context is for:", op );
 									} );
 									newCell.list.appendChild( opt.el );
 									newCell.options.push( opt );
 								} );
 								//rowData[cell.field] = opts[0].value;
-								newCell.list.value = rowData[cell.field];
+								if( rowData ) 
+									newCell.list.value = ''+getValue( rowData, cell.field);
 
 							}
 						}
 						if( newCell.list )
 							newCell.list.addEventListener( "change", (evt)=>{ 
 								const i = evt.target.selectedIndex; if( i >= 0 ) {
-									rowData[cell.field] = newCell.options[i].val.value;
+									const val = convertValue( newCell.options[i].val.value, cell.type );
+									setValue( row, rowData, cell.field, val, cell.type );
 									if( newCell.options[i].val.className )
 										newCell.list.className = newCell.options[i].val.className;
+									this_.on( "change", {row, rowData} );
 								}
 							} );
 					}
@@ -3036,12 +3132,12 @@ class DataGrid {
 					    	const upd = this.#cells[id].upd;
 		
 					    	// update current value.
-					    	if( upd.money )
-							c.textContent = popups.utils.to$( rowData[upd.field] );
-						else if( upd.percent )
-							c.textContent = popups.utils.toP( rowData[upd.field] );
-						else
-							c.textContent = rowData[upd.field];
+							if( upd.money )
+								c.textContent = popups.utils.to$( getValue( rowData,upd.field) );
+							else if( upd.percent )
+								c.textContent = popups.utils.toP( getValue( rowData,upd.field) );
+							else
+								c.textContent = getValue( rowData, upd.field );
 						} );
 					};
 
@@ -3055,20 +3151,20 @@ class DataGrid {
 						const c = newCell.el;
 						const field = cell_header.field;
 						const type = cell_header.type;
-		
-						if( newCell.list ) {
+						if( type.grid ){
+							newCell.list = new DataGrid( newCell.el, row.rowData	
+										, type.grid.field, {
+									columns:type.grid.columns
+								});
+	
+						}
+						else if( newCell.list ) {
 							fillOptions( newCell );
 						} else {
 
 					     	// update current value.
 							if( c.canEdit && c.textContent  !== "" ) {
-								if( type.money ) {
-									rowData[field] = popups.utils.toD( c.textContent );
-								} else if( type.percent ) {
-									rowData[field] = popups.utils.fromP( c.textContent );
-								} else {
-									rowData[field] = c.textContent;
-								}
+								setValue( row, rowData,field, c.textContent, type );								
 							} 
 							newCell.refresh();
 							
@@ -3084,19 +3180,17 @@ class DataGrid {
 								selAll( evt.target, newCell );
 						} );
 						c.addEventListener( "blur", (evt)=>{
+							setValue( row, rowData, field, c.textContent, type );
 					    	if( type.money ) {
-								rowData[field] = popups.utils.toD( c.textContent );
-								c.textContent = popups.utils.to$( rowData[cell_header.field] );
+								c.textContent = popups.utils.to$( getValue( rowData,cell_header.field) );
 							}
 					    	else if( type.percent ) {
-						    		rowData[field] = popups.utils.fromP( c.textContent );
-						    		c.textContent = popups.utils.toP( rowData[cell_header.field] );
+					    		c.textContent = popups.utils.toP( getValue( rowData,cell_header.field) );
 							}
 							else if( type.hasOwnProperty( "toString" ) ) {
 									// procedural output fields do not accept input.
-							} else 
-						    		rowData[field] = c.textContent;
-					    	} );
+							} 
+						});
 					}
 				//}
 			}

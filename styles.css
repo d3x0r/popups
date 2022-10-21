@@ -422,8 +422,7 @@ div.mouseCatcher{
 }
 
 
-
-.frameContent-alert{
+.alert-message{
 	/* default frameContent */
 	margin:5px;
 	padding:0.5em;
@@ -433,6 +432,13 @@ div.mouseCatcher{
  	width:75vw;
  	height:5em;
  	color:#FFF;
+ 	/* line-height: 2.5em; */
+}
+
+.frameContent-alert{
+	/* default frameContent */
+	width:100%;
+	height:100%;
  	/* line-height: 2.5em; */
 }
 
