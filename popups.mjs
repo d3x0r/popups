@@ -2642,9 +2642,11 @@ function getValue( rowData, pathName ) {
 	let obj = rowData;
 	let p = 0;
 	while( p < path.length-1 ) {
+		if( !obj )  return null;
 		obj = obj[path[p]];
 		p++;
 	}
+	if( !obj )  return null;
 	return obj[path[p]];
 }
 
