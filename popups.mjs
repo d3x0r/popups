@@ -2375,12 +2375,13 @@ function makeLoginForm( doLogin, opts  ) {
 	
 	let wsClient = opts?.wsLoginClient;
 
-       	loginForm.connect = function() {
-	    	loginForm.caption = "Login Ready...";
+	
+	loginForm.connect = function() {
+		loginForm.caption = "Login Ready...";
 	}
 
-       	loginForm.disconnect = function() {
-	    	loginForm.caption = "Connecting...";
+	loginForm.disconnect = function() {
+		loginForm.caption = "Connecting...";
 		loginForm.show();
 	}
 	loginForm.login = function() {     	
@@ -2407,20 +2408,14 @@ function makeLoginForm( doLogin, opts  ) {
 	loginForm.Alert = Alert;
 	loginForm.setClient = function(wsClient_) {
 		wsClient = wsClient_;
+		// on reconnect, bind controls re-binds...
+		//wsClient.bindControls( loginForm );
 	};
 	loginForm.hide();
 
 	fillFromURL( loginForm, form ).then( ()=>{
-		if( wsClient ) {
-			wsClient.loginForm = loginForm;
-			if( wsClient.connected ) {
-				// already connected; connect event would not have fired
-				loginForm.caption = "Login Ready";
-				// sometimes it is already connected...
-			}
-			wsClient.bindControls( loginForm );
-			loginForm.center();
-		}
+		loginForm.center();
+		if( opts.ready ) opts.ready();
 	} );
 
 	if( !wsClient )
