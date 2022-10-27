@@ -2384,8 +2384,8 @@ function makeLoginForm( doLogin, opts  ) {
 		loginForm.caption = "Connecting...";
 		loginForm.show();
 	}
-	loginForm.login = function() {     	
-		if( doLogin ) doLogin( wsClient );
+	loginForm.login = function( a ) {     	
+		if( doLogin ) doLogin( a );
 	};
 
 	loginForm.pickSash = function(choices) {
@@ -2409,18 +2409,21 @@ function makeLoginForm( doLogin, opts  ) {
 	loginForm.setClient = function(wsClient_) {
 		wsClient = wsClient_;
 		// on reconnect, bind controls re-binds...
-		//wsClient.bindControls( loginForm );
+		
 	};
 	loginForm.hide();
 
 	fillFromURL( loginForm, form ).then( ()=>{
+		if( wsClient ) wsClient.bindControls( loginForm );
+
 		loginForm.center();
 		if( opts.ready ) opts.ready();
 	} );
 
-	if( !wsClient )
+	if( !wsClient ){
 		loginForm.show();
-	
+	}
+
 
 	return loginForm;
 }
