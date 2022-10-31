@@ -611,7 +611,7 @@ function makeButton( form, caption, onClick, options ) {
 
 	var button = document.createElement( "div" );
 	button.className = suffix?"button-"+suffix:"button";
-	button.style.width = "max-content";
+	//button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
 	buttonInner.className = suffix?"buttonInner-"+suffix:"buttonInner";
 	//buttonInner.style.width = "max-content";
@@ -3090,7 +3090,7 @@ class DataGrid extends Events {
 									opt.el.className = op.className;
 									opt.el.textContent = op.name;
 									opt.el.value = op.value;
-console.log( "Adding option:", op.name, op.value );
+									//console.log( "Adding option:", op.name, op.value );
 									opt.el.addEventListener( "select", ()=>{
 										setValue( row, rowData, cell.field, op.value, col.type );
 										console.log( "Option selected in context is for:", op );

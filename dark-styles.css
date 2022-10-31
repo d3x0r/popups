@@ -317,8 +317,23 @@ span {
     color:white;
     text-align:center;
 }
-[class^="button"]{
+
+
+.button{
     /* font-size: 100%; */
+	width:max-content;
+    border-radius: 10px;
+	border-width:3px;
+    background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
+    /* padding: 0px; */
+     border-style: outset; 
+    padding-right: 2px;
+    padding-bottom: 2px;
+}
+
+[class^="button-"]{
+    /* font-size: 100%; */
+	width:max-content;
     border-radius: 10px;
     background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
     /* padding: 0px; */
@@ -326,6 +341,14 @@ span {
     padding-right: 2px;
     padding-bottom: 2px;
 }
+
+
+.button.pressed {
+/*     border-style: inset; */
+    background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );
+	
+}
+
 .info {
     color: #5bc0de;
 }
