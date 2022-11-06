@@ -437,6 +437,9 @@ class Popup {
 	reset() {
 		this.on( "reset", true );
 	}
+	refresh() {
+		this.on( "refresh", true );
+	}
 	reject() {
 		this.on( "reject", true );
 	}
@@ -747,7 +750,7 @@ class List {
 		 selected = null;
 		 groups = [];
 		 itemOpens = false;
-    constructor( parentDiv, parentList, toString )
+    constructor( parentDiv, parentList, toString, opens )
 	{
 	    console.log( "List constructor could use the popup to get suffix..." );
 		this.toString = toString
@@ -756,7 +759,7 @@ class List {
 	}
 
 		push(group, toString_, opens) {
-			var itemList = this.divTable.childNodes;
+			var itemList = this.parentList.childNodes;
 			var nextItem = null;
 			for( nextItem of itemList) {
 				if( nextItem.textContent > this.toString(group) )
@@ -885,11 +888,18 @@ class List {
 function createList( parent, parentList, toString, opens ) {
      return new List( parent, parentList, toString, opens );
 }
+function makeList( parent, toString, opts ) {
+	var newSubList = document.createElement( "UL");
+	newSubList.className = "list" + (opts?.suffix?'-':'') + (opts?.suffix||"");
+	parent.appendChild( newSubList );
+	return new List( newSubList, newSubList, toString, opts?.opens );
+}
 
 function makeCheckbox( form, o, field, text ) 
 {
 	let initialValue = o[field];
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const parentPopup = ( form instanceof Popup );
+	const suffix = ( parentPopup )?form.suffix:'';
 	var textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.className = "field-unit-span";
 	textCountIncrement.textContent = text;
@@ -909,7 +919,13 @@ function makeCheckbox( form, o, field, text )
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
-	if( form instanceof Popup ) {
+	if( parentPopup ) {
+		form.on( "refresh", ()=>{
+			initialValue = inputCountIncrement.checked = o[field];
+		})
+		form.on( "reset", ()=>{			
+			o[field] = inputCountIncrement.checked = initialValue;
+		})
 		form.on( "accept", ()=>{
 			initialValue = inputCountIncrement.checked;
 		} );
@@ -1137,8 +1153,10 @@ function makeSlider( form, o, field, text, f, g )
 }
 
 function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
-	const initialValue = input[value];
-	const suffix = ( form instanceof Popup )?form.suffix:(suffix_||'');
+	// initial might be re-set on a form re-show...
+	let initialValue = input[value];
+	const parentPopup =  form instanceof Popup;
+	const suffix = ( parentPopup)?form.suffix:(suffix_||'');
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1148,18 +1166,34 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 	inputControl.addEventListener( "click", (evt)=>inputControl.select() );
 	//textDefault.
 
-	if( form instanceof Popup ) {
+	if( parentPopup ) {
+		form.on ( "refresh", ()=>{
+			initialValue = inputControl.value = input[value];
+		})
+		form.on ( "reset", ()=>{
+			inputControl.value = initialValue;
+		})
 		form.on( "accept", ()=>{
-			initialValue = inputCountIncrement.value;
+			initialValue = inputControl.value;
 		} );
 		form.on( "reject", ()=>{
-			inputCountIncrement.value = initialValue;
+			inputControl.value = initialValue;
 		} );
 	}
 
 	function setValue() {
 		if( money ) {
 			inputControl.value = utils.to$(input[value]);
+		} else if( percent ) {
+			inputControl.value = utils.toP(input[value]);
+		} else if( number ) {
+			inputControl.value = Number(input[value]);
+		}else {
+			inputControl.value = input[value];
+		}
+	}
+	function addValueEvents() {
+		if( money ) {
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.toD(inputControl.value);
 				input[value] = val;
@@ -1167,7 +1201,6 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 				result.on( "change", result );
 			})
 		} else if( percent ) {
-			inputControl.value = utils.toP(input[value]);
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.fromP(inputControl.value);
 				input[value] = val;
@@ -1175,7 +1208,6 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 				result.on( "change", result );
 			})
 		} else if( number ) {
-			inputControl.value = input[value];
 			inputControl.addEventListener( "change", (e)=>{
 				var val = Number(inputControl.value);
 				input[value] = val;
@@ -1183,7 +1215,6 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 				result.on( "change", result );
 			})
 		}else {
-			inputControl.value = input[value];
 			inputControl.addEventListener( "input", (e)=>{
 			} );
 			inputControl.addEventListener( "input", (e)=>{
@@ -1194,6 +1225,7 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 		}
 	}
 	setValue();
+	addValueEvents();
 
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
@@ -1252,6 +1284,10 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 			else
 				inputControl.value = val;			
 		},
+		refresh() {
+		    initialValue = input[value];
+		    setValue();
+		},
 		reset(){
 		    input[value] = initialValue;
 		    setValue();
@@ -1274,7 +1310,8 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 function makeTextField( form, input, value, text, money, percent ){
 	let initialValue = input[value];
 
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const parentPopup =  form instanceof Popup;
+	const suffix = ( parentPopup )?form.suffix:'';
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
@@ -1310,7 +1347,12 @@ function makeTextField( form, input, value, text, money, percent ){
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
 
-	if( form instanceof Popup ) {
+	if( parentPopup ) {
+		form.on( "refresh", ()=>{
+			initialValue = input[value];
+			setValue();
+
+		})
 		form.on( "accept", ()=>{
 			initialValue = inputControl.textContent;
 		} );
@@ -1360,8 +1402,9 @@ function makeTextField( form, input, value, text, money, percent ){
 }
 
 function makeNameInput( form, input, value, text ){
-	const initialValue = input[value];
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const parentPopup =  form instanceof Popup;
+	let initialValue = input[value];
+	const suffix = ( parentPopup )?form.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
 	textLabel.textContent = text;
@@ -1393,7 +1436,13 @@ function makeNameInput( form, input, value, text ){
 	binder.appendChild( textOutput );
 	binder.appendChild( buttonRename );
 
-	if( form instanceof Popup ) {
+	if( parentPopup ) {
+		form.on( "refresh", ()=>{
+			initialValue = textOutput.textContent = input[value];
+		})
+		form.on( "reset", ()=>{
+			textOutput.textContent = input[value] = initialValue;
+		})
 		form.on( "accept", ()=>{
 			initialValue = textOutput.textContent;
 		} );
@@ -1617,8 +1666,9 @@ function makeSSNInput( form, input, value ){
 
 // --------------- Dropdown choice list ---------------------------
 function makeChoiceInput( form, input, value, choices, text, opts ){
-	const suffix = ( form instanceof Popup )?form.suffix:'';
-	const initialValue = input[value];
+	const parentPopup =  form instanceof Popup;
+	const suffix = ( parentPopup )?form.suffix:'';
+	let initialValue = input[value];
 
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
@@ -1659,7 +1709,13 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	binder.appendChild( textMinmum );
 	binder.appendChild( inputControl );
 
-	if( form instanceof Popup ) {
+	if( parentPopup ) {
+		form.on( "refresh", ()=>{
+			initialValue = inputControl.value = input[value];
+		})
+		form.on( "reset", ()=>{
+			input[value] = inputControl.value = initialValue;
+		})
 		form.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
@@ -2946,14 +3002,16 @@ class DataGrid extends Events {
 				    }
 				  }
 				  if (lastKnownIndex === -1) {
-				    throw new Error('Could not find valid text content');
-				  }
+					// is just this cell...
+				    //throw new Error('Could not find valid text content');
+				  }else {
 				  let row = el.childNodes[lastKnownIndex],
 				      col = row.textContent.length;
 				  range.setStart(row, col+ofs);
 				  range.collapse(true);
 				  sel.removeAllRanges();
 				  sel.addRange(range);
+				  }
 			}
 			  //el.focus();
 		}
@@ -2977,8 +3035,8 @@ class DataGrid extends Events {
 				}
 			}
 			if (lastKnownIndex === -1) {
-				throw new Error('Could not find valid text content');
-			}
+				//throw new Error('Could not find valid text content');
+			}else {
 			let row = el.childNodes[lastKnownIndex],
 			    col = row.textContent.length;
 			range.setStart(row, 0);
@@ -2986,6 +3044,7 @@ class DataGrid extends Events {
 			//range.collapse(true);
 			sel.removeAllRanges();
 			sel.addRange(range);
+			}
 			//el.focus();
 		}
 	
@@ -3471,7 +3530,8 @@ const popups = {
 	create : createPopup,
 	simpleForm : createSimpleForm,
 	simpleNotice : createSimpleNotice,
-	makeList : createList,
+	createList : createList,
+	makeList : makeList,
 	makeCheckbox : makeCheckbox,
 	makeRadioChoice : makeRadioChoice,
 	makeLeftRadioChoice : makeLeftRadioChoice,

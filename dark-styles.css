@@ -340,8 +340,13 @@ span {
     /* border-style: outset; */
     padding-right: 2px;
     padding-bottom: 2px;
+	color:white;
 }
 
+[class^="button-"].pressed{
+    /* font-size: 100%; */
+    background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );
+}
 
 .button.pressed {
 /*     border-style: inset; */
