@@ -2243,9 +2243,9 @@ var GraphicFrame = /*#__PURE__*/function (_Popup2) {
               ty,
               farx = false,
               fary = false;
-          ty = y - this.y;
+          ty = y;// - this.y;
 
-          if ((tx = x - this.x) > leftWidth && ty > topWidth) {
+          if ((tx = x/* - this.x*/) > leftWidth && ty > topWidth) {
             sx = tx - leftWidth;
             sy = ty - topWidth;
 
@@ -2276,10 +2276,10 @@ var GraphicFrame = /*#__PURE__*/function (_Popup2) {
               farx = false,
               fary = false;
 
-          if (x > this.x && y > this.y && x < this.x + this.w && y < this.y + this.h) {
-            ty = y - this.y;
+          if (x > 0 && y > 0 && x < this.w && y < this.h) {
+            ty = y;
 
-            if ((tx = x - this.x) > leftWidth && ty > topWidth) {
+            if ((tx = x) > leftWidth && ty > topWidth) {
               sx = tx - leftWidth;
               sy = ty - topWidth;
 

@@ -1938,6 +1938,7 @@ export class GraphicFrame extends Popup {
 
 	constructor (opts) {
     	super(null,null);
+		this.useMouse = false;
 
 		const appCanvas = this.divFrame;
 
@@ -1971,6 +1972,7 @@ export class GraphicFrame extends Popup {
 		this.canvas.style.position = "relative";
 		
 		this.ctx = this.canvas.getContext( "2d" );
+		this.divFrame.style.position = "relative"
 		//this.
 		appCanvas.appendChild( this.canvas );
 		//this.divContent.remove();
@@ -2008,8 +2010,9 @@ export class GraphicFrame extends Popup {
 			var onFrame;
 			if( appDragging ) {
 				var m = appDragging.getMouse( cx, cy );
-				appDragging.x += m.x - appDragging.startX;
-				appDragging.y += m.y - appDragging.startY;
+				//console.log( "Drag:", m );
+				this_.divFrame.style.left = (appDragging.x += m.x - appDragging.startX);
+				this_.divFrame.style.top = (appDragging.y += m.y - appDragging.startY);
 			}
 
 			if( ( onFrame = appSizing && ( ( wasMouse = appSizing.getMouse( cx, cy ) ), wasMouse.section = usingSection, appSizing ) ) 
@@ -2038,7 +2041,7 @@ export class GraphicFrame extends Popup {
 						appSizing = null;
 					} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 							onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
-							onFrame.x += wasMouse.x - onFrame.startX;
+							onFrame.divFrame.style.left = (onFrame.x += wasMouse.x - onFrame.startX);
 					}
 					break;
 				case 2: // right side, center
@@ -2065,7 +2068,9 @@ export class GraphicFrame extends Popup {
 						appSizing = null;
 					} else if( appSizing && ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
 						onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY) );
-						onFrame.y += wasMouse.y - onFrame.startY;
+						onFrame.divFrame.style.top = (onFrame.y += wasMouse.y - onFrame.startY);
+					} else if( appDragging && !( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
+						appDragging = null;
 					}
 					break;
 				case 8:
@@ -2094,8 +2099,8 @@ export class GraphicFrame extends Popup {
 						// last left.
 						onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
 						onFrame.setHeight( onFrame.h - (wasMouse.y - onFrame.startY ) );
-						onFrame.x += wasMouse.x - onFrame.startX;
-						onFrame.y += wasMouse.y - onFrame.startY;
+						onFrame.divFrame.style.left = (onFrame.x += wasMouse.x - onFrame.startX);
+						onFrame.divFrame.style.top = (onFrame.y += wasMouse.y - onFrame.startY);
 					}
 					break;
 				case 2 + 4: // right side, upper corner
@@ -2111,7 +2116,7 @@ export class GraphicFrame extends Popup {
 						onFrame.startX = wasMouse.x;
 
 						onFrame.setHeight( onFrame.h - ( wasMouse.y - onFrame.startY ) );
-						onFrame.y += wasMouse.y - onFrame.startY;
+						onFrame.divFrame.style.top = (onFrame.y += wasMouse.y - onFrame.startY);
 					}
 					break;
 
@@ -2127,7 +2132,7 @@ export class GraphicFrame extends Popup {
 						// last left.
 						onFrame.setWidth( onFrame.w - ( wasMouse.x - onFrame.startX ) );
 						onFrame.setHeight( onFrame.h + wasMouse.y - onFrame.startY );
-						onFrame.x += wasMouse.x - onFrame.startX;
+						onFrame.divFrame.style.left = (onFrame.x += wasMouse.x - onFrame.startX);
 						onFrame.startY = wasMouse.y;
 					}
 					break;
@@ -2255,14 +2260,18 @@ export class GraphicFrame extends Popup {
 		}
 	}
 	setWidth( w ) {
-		this.w = w;
+		this.divFrame.style.width = this.w = w;
 		this.sw = this.w - (this.leftWidth+this.rightWidth);
-		this.divContent.style.width = ( this.canvas.style.width = this.canvas.width = this.w ) - (this.leftWidth+this.rightWidth+ 16+10);
+		const cs = window.getComputedStyle( this.divContent, null );
+
+		const p = parseInt(cs.padding, 10);
+		const m = parseInt(cs.margin, 10);
+		this.divContent.style.width = ( this.canvas.style.width = this.canvas.width = this.w ) - (this.leftWidth+this.rightWidth+ 2*(p+m));
 		
 		this.drawFrame();
 	}
 	setHeight( h ) {
-		this.h = h;
+		this.divFrame.style.height = this.h = h;
 		this.sh = this.h - (this.topWidth+this.bottomWidth);
 		this.divContent.style.height = (this.canvas.style.height = this.canvas.height = this.h)  - (this.topWidth+this.bottomWidth+ 16+10);
 		this.drawFrame();
@@ -2272,8 +2281,8 @@ export class GraphicFrame extends Popup {
 		var sx, sy, tx, ty, farx = false, fary = false;
 		const {leftWidth,topWidth,rightWidth,bottomWidth} = this;
 	
-		ty=y-this.y;
-		if( (tx=x-this.x) > leftWidth && (ty) > topWidth ) {
+		ty=y;
+		if( (tx=x) > leftWidth && (ty) > topWidth ) {
 			sx=tx-leftWidth;
 			sy=ty-topWidth;
 			if( (true,tx) < ( this.w - (leftWidth+rightWidth) )  && (true,ty) < ( this.h - (topWidth+bottomWidth) ) ) {
@@ -2298,9 +2307,9 @@ export class GraphicFrame extends Popup {
 		const {leftWidth,topWidth,rightWidth,bottomWidth} = this;
 		
 
-		if( x > this.x && y > this.y && x < (this.x+this.w) && y < (this.y+this.h) ) {
-			ty=y-this.y;
-			if( (tx=x-this.x) > leftWidth && (ty) > topWidth ) {
+		if( x > 0 && y > 0 && x < (0+this.w) && y < (this.h) ) {
+			ty=y;
+			if( (tx=x) > leftWidth && (ty) > topWidth ) {
 				sx=tx-leftWidth;
 				sy=ty-topWidth;
 				if( (true,tx) < ( this.w - (leftWidth+rightWidth) )  && (true,ty) < ( this.h - (topWidth+bottomWidth) ) ) {
