@@ -1,0 +1,36 @@
+<HTML>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<title>Test Graphic Frame Background</title></head>
+
+<body>
+</body>
+<script type="module">
+import {popups} from "../popups.mjs"
+
+const form2 = new popups.GraphicFrame( { width:1250, height:600, image:{
+			url:"./toonframe.png"
+			, left:85
+			, right:85
+			, top:95
+			, bottom:95
+			}	} );
+
+
+//form.setFrame( "./WindowFrame-LightWoodFilled.png" );
+                                                               if(0) {
+const form = new popups.GraphicFrame( { width:800, height:300, image:{
+			url:"./WindowFrame-LightWoodFilled.png"
+			, left:54
+			, right:58
+			, top:54
+			, bottom:55
+			}	} );
+
+
+popups.makeButton( form, "ClickMe", ()=>{
+	popups.Alert( "Ok ok!" );
+} );
+}
+</script>
+</html>
