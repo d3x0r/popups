@@ -1962,6 +1962,7 @@ export class GraphicFrame extends Popup {
 		this.sy = opts.image.top;//this.topWidth;
 		this.setWidth( opts.width );
 		this.setHeight( opts.height );
+		this.setFrame( opts.image.url );
 		this.divFrame.className = "graphic-frame-container";
 
 		//GraphicFrame.frames.push( this );
