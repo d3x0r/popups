@@ -2154,12 +2154,18 @@ export class GraphicFrame extends Popup {
 				}
 			}
 
+			if( !appSizing && !appDragging ) {
+					document.body.removeEventListener( "mousemove", mouseMove );
+			}
+
 			if( wasMouse && !wasMouse.section && onFrame ) {
 				//onFrame.mouse(
 			}
 
 			{ // LEFT BTUTTON
 				if( ( b & _MK_LBUTTON ) && !(prior_buttons & _MK_LBUTTON ) ) {
+					document.body.addEventListener( "mousemove", mouseMove );
+
 					// start left.
 				}
 				else if( ( b & _MK_LBUTTON ) && (prior_buttons & _MK_LBUTTON ) ) {
@@ -2176,6 +2182,7 @@ export class GraphicFrame extends Popup {
 
 		var _buttons = 0;
 		function mouseMove( evt ) {
+			console.log( "Event at:", evt.target );
 			evt.preventDefault();
 			mouse( evt.clientX, evt.clientY, _buttons );
 		}
