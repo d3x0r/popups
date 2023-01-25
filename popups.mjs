@@ -348,7 +348,7 @@ class Popup {
 	suffix = '';
 
 	constructor(caption_,parent,opts) {
-	    	this.suffix = opts?.suffix ||'';
+	    this.suffix = opts?.suffix ||'';
 		const closeButton = opts?.enableClose || false;
 		
 		// make popup from control.
@@ -750,20 +750,33 @@ class List {
 		 selected = null;
 		 groups = [];
 		 itemOpens = false;
-    constructor( parentDiv, parentList, toString, opens )
+		 opts = null;
+		 compare = (a,b)=>1;
+		 
+    constructor( parentDiv, parentList, toString, opens, opts )
 	{
 	    console.log( "List constructor could use the popup to get suffix..." );
-		this.toString = toString
+		this.opts = opts;
+		this.toString = toString;
+		this.itemOpens = opens;
 		this.divTable = parentDiv;
 		this.parentList = parentList;
+		if( opts && opts.setsContent ) {
+			this.compare = opts.compare;
+		}
 	}
 
 		push(group, toString_, opens) {
 			var itemList = this.parentList.childNodes;
 			var nextItem = null;
 			for( nextItem of itemList) {
-				if( nextItem.textContent > this.toString(group) )
-					break;
+				if( !this.opts.setsContent ) {
+					if( nextItem.textContent > this.toString(group) )
+						break;
+				} else {
+					if( this.compare( nextItem.group, group ) )
+						break;
+				}
 				nextItem = null;
 			}
 			
@@ -788,13 +801,18 @@ class List {
 			}
 
 			var treeLabel = document.createElement( "span" );
-			treeLabel.textContent = this.toString(group);
-			treeLabel.className = "listItemLabel";
+			if( this.opts.setsContent ) {
+				for( let child of treeLabel.childNodes ) child.remove();
+				this.toString( treeLabel, group );
+			} else
+				treeLabel.textContent = this.toString(group);
+			treeLabel.className = "listItemLabel" + (this.opts.suffix?"-"+this.opts.suffix:"");
 			newLi.appendChild( treeLabel );
 
 			//var newSubDiv = document.createElement( "DIV");
 			newLi.appendChild( newSubList );
 			//newSubList.appendChild( newSubDiv);
+			newLi.group = group;
 			var newRow;
 			var subItems = createList( this, newSubList, toString_, true );
 			this.groups.push( newRow={ opens : false, group:group, item: newLi, subItems:subItems
@@ -874,7 +892,11 @@ class List {
 		}
 		update(group) {
 			var item = this.groups.find( group_=>group_.group === group );
-			item.textContent = this.toString( group );
+			if( this.opts.setsContent ) {
+				for( let child of item.item.childNodes ) child.remove();
+				this.toString( item, group );
+			} else
+				item.textContent = this.toString( group );
 		}
 		get items() {
 			return this.groups;
@@ -892,7 +914,7 @@ function makeList( parent, toString, opts ) {
 	var newSubList = document.createElement( "UL");
 	newSubList.className = "list" + (opts?.suffix?'-':'') + (opts?.suffix||"");
 	parent.appendChild( newSubList );
-	return new List( newSubList, newSubList, toString, opts?.opens );
+	return new List( newSubList, newSubList, toString, opts?.opens, opts );
 }
 
 function makeCheckbox( form, o, field, text ) 
@@ -2365,8 +2387,8 @@ function makeApp() {
 
 export class AlertForm extends Popup {
 	MsgDiv = document.createElement( "div" );
-	constructor(parent) {
-		super( null, parent, {suffix:"-alert"} );
+	constructor(parent, opts) {
+		super( null, parent, { suffix:(opts?.suffix?opts?.suffix:"") + "-alert"} );
 		const this_ = this;		
 		this.MsgDiv.className = "alert-message";
 		this.divContent.setAttribute( "tabIndex", 0 )

@@ -344,13 +344,13 @@ span {
 }
 
 [class^="button-"].pressed{
+	border-style: inset; 
     /* font-size: 100%; */
-    background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );
+    /*background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );*/
 }
 
 .button.pressed {
-/*     border-style: inset; */
-    background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );
+    /*background: linear-gradient(rgb(53, 53, 53), rgb(176, 176, 176), #444 );*/
 	
 }
 
