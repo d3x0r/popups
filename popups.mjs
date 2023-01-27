@@ -612,7 +612,7 @@ function makeButton( form, caption, onClick, options ) {
 
     const suffix = options?.suffix || (( form instanceof Popup )?form.suffix:'');
 
-	var button = document.createElement( "div" );
+	var button = document.createElement( "button" );
 	button.className = suffix?"button-"+suffix:"button";
 	//button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
@@ -801,13 +801,14 @@ class List {
 			}
 
 			var treeLabel = document.createElement( "span" );
+			treeLabel.className = "listItemLabel" + (this.opts.suffix?"-"+this.opts.suffix:"");
+			newLi.appendChild( treeLabel );
+
 			if( this.opts.setsContent ) {
 				for( let child of treeLabel.childNodes ) child.remove();
 				this.toString( treeLabel, group );
 			} else
 				treeLabel.textContent = this.toString(group);
-			treeLabel.className = "listItemLabel" + (this.opts.suffix?"-"+this.opts.suffix:"");
-			newLi.appendChild( treeLabel );
 
 			//var newSubDiv = document.createElement( "DIV");
 			newLi.appendChild( newSubList );
