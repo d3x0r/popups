@@ -781,7 +781,7 @@ class List {
 			}
 			
 			var newLi = document.createElement( "LI" );
-			newLi.className = "listItem"
+			newLi.className = "listItem" + (this.opts.suffix?"-"+this.opts.suffix:"")
 			
 			this.divTable.insertBefore( newLi, nextItem );//) appendChild( newLi );
 			newLi.addEventListener( "click", (e)=>{
@@ -1692,7 +1692,7 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup )?form.suffix:'';
 	let initialValue = input[value];
-
+	const options = [];
 	var textMinmum = document.createElement( "SPAN" );
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SELECT" );
@@ -1702,12 +1702,14 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	for( let choice of choices ) {
 	    	const option = document.createElement( "option" );
 			if( "string" === typeof choice) {
+				choice= {text:choice,value:choice};
 				option.text = choice;
-				option.value = choice.value;
+				option.value = choice;
 			} else{
 				option.text = choice.text;
 				option.value = choice.value;
 			}
+			options.push( {option,choice});
 		if( choice === input[value] ) {
 		   inputControl.selectedIndex = inputControl.options.length-1;
 		}
@@ -1716,16 +1718,20 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	//textDefault.
 	inputControl.value = input[value];
 	inputControl.addEventListener( "change",(evt)=>{
-		const idx = inputControl.selectedIndex;
-		if( idx >= 0 ) {
-			console.log( "Value in select is :", inputControl.options[idx].text );
-			if( opts?.useIndex )
-				input[value] = idx;
-			else
-				input[value] = inputControl.options[idx].value;
-		}
+		input[value] = getValue();
 	} );
 
+	function getValue() {
+		const idx = inputControl.selectedIndex;
+		if( idx >= 0 ) {
+			console.log( "Value in select is :", options[idx].choice.text );
+			if( opts?.useIndex )
+				return idx;
+			else
+				return options[idx].choice.value;
+		}
+
+	}
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
@@ -1749,8 +1755,11 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 
 
 	return {
+		remove() {
+			inputControl.remove();
+		},
 		get value () {
-			return inputControl.value;
+			return getValue();
 		},
 		set value (val) {
 			inputControl.value = val;
