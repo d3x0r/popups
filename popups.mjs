@@ -1755,6 +1755,9 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 
 
 	return {
+		addEventListener( evt,cb) {
+			return inputControl.addEventListener(evt,cb);
+		},
 		remove() {
 			inputControl.remove();
 		},
