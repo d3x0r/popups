@@ -746,7 +746,7 @@ class SimpleNotice extends Popup {
 
 
 
-class List {
+class List extends Events{
 		 selected = null;
 		 groups = [];
 		 itemOpens = false;
@@ -755,6 +755,7 @@ class List {
 		 
     constructor( parentDiv, parentList, toString, opens, opts )
 	{
+		super();
 	    console.log( "List constructor could use the popup to get suffix..." );
 		this.opts = opts;
 		this.toString = toString;
@@ -790,6 +791,7 @@ class List {
 					this.selected.classList.remove("selected");
 				newLi.classList.add( "selected" );
 				this.selected = newLi;
+				this.on( "select", group );
 			})
 
 			var newSubList = document.createElement( "UL");
@@ -923,10 +925,13 @@ function makeCheckbox( form, o, field, text )
 	let initialValue = o[field];
 	const parentPopup = ( form instanceof Popup );
 	const suffix = ( parentPopup )?form.suffix:'';
-	var textCountIncrement = document.createElement( "SPAN" );
+	const id = "checkbox_"+Math.random();
+	var textCountIncrement = document.createElement( "label" );
+	textCountIncrement.htmlFor  = id;
 	textCountIncrement.className = "field-unit-span";
 	textCountIncrement.textContent = text;
 	var inputCountIncrement = document.createElement( "INPUT" );
+	inputCountIncrement.id = id;
 	inputCountIncrement.setAttribute( "type", "checkbox");
 	inputCountIncrement.className = "checkOption"+suffix + " rightJustify";
 	inputCountIncrement.checked = o[field];
@@ -934,8 +939,8 @@ function makeCheckbox( form, o, field, text )
 	var onChange = [];
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
-	binder.addEventListener( "click", (e)=>{ 
-		if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
+	//binder.addEventListener( "click", (e)=>{ 
+	//	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
 		 o[field] = inputCountIncrement.checked; })
 	form.appendChild(binder );
@@ -978,10 +983,16 @@ function makeCheckbox( form, o, field, text )
 			onChange.forEach( cb=>cb());
 		 }
 		,
+		refresh(){
+		    initialValue = o[field];
+		    inputCountIncrement.checked = initialValue;
+		},
 		reset(){
 		    o[field] = initialValue;
 		    inputCountIncrement.checked = initialValue;
 		},
+		get disabled() { return inputCountIncrement.disabled },
+		set disabled(val) { inputCountIncrement.disabled=val },
 		changes() {
 		    if( o[field] !== initialValue ) {
 			return text
@@ -1691,26 +1702,29 @@ function makeSSNInput( form, input, value ){
 function makeChoiceInput( form, input, value, choices, text, opts ){
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup )?form.suffix:'';
-	let initialValue = input[value];
+	let initialValue = getInputValue( input, value );
 	const options = [];
-	var textMinmum = document.createElement( "SPAN" );
+	var textMinmum = document.createElement( "label" );
+	const id = "choicebox_"+Math.random();
+	textMinmum.htmlFor  = id;
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "SELECT" );
+	inputControl.id=id;
 	inputControl.className = "selectInput"+suffix+" rightJustify";
 	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 
 	for( let choice of choices ) {
 	    	const option = document.createElement( "option" );
 			if( "string" === typeof choice) {
-				choice= {text:choice,value:choice};
 				option.text = choice;
 				option.value = choice;
+				choice= {text:choice,value:choice, type:{} };
 			} else{
 				option.text = choice.text;
 				option.value = choice.value;
 			}
 			options.push( {option,choice});
-		if( choice === input[value] ) {
+		if( choice.value === input[value] ) {
 		   inputControl.selectedIndex = inputControl.options.length-1;
 		}
 		inputControl.add( option );
@@ -1718,7 +1732,9 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	//textDefault.
 	inputControl.value = input[value];
 	inputControl.addEventListener( "change",(evt)=>{
-		input[value] = getValue();
+		const opt = options[inputControl.selectedIndex];
+		setValue( null, input, value, getValue(), opt.type );
+		if(opts.change) opts.change(inputControl.selectedIndex);
 	} );
 
 	function getValue() {
@@ -1767,8 +1783,14 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 		set value (val) {
 			inputControl.value = val;
 		},
+		get disabled() { return inputControl.disabled },
+		set disabled(val) { inputControl.disabled=val },
+		refresh() {
+			initialValue = getInputValue( input, value );
+			inputControl.value = initialValue;
+		},
 		reset(){
-		    input[value] = initialValue;
+		    setValue( null, input, value, initialValue, {number:true} );
 		    inputControl.value = initialValue;
 		},
 		changes() {
@@ -2667,7 +2689,7 @@ class DataGridCell {
 		if( this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
 		else if( this.#cell.type.options ) {
-			this.list.value = getValue( rowData, this.cell.field );
+			this.list.value = getInputValue( rowData, this.cell.field );
 
 			const i = this.list.selectedIndex; 
 			if( i >= 0 ) {
@@ -2735,16 +2757,16 @@ class DataGridRow {
 }
 
 function setValue( dgr, rowData, pathName, val, type ){
+	if( type )
+		if( type.money ) {
+			val = popups.utils.toD( val );
+		} else if( type.percent ) {
+			val = popups.utils.fromP( val );
+		} else if( type.number ) {
+			val = Number( val );
+		} 
 
-	if( type.money ) {
-		val = popups.utils.toD( val );
-	} else if( type.percent ) {
-		val = popups.utils.fromP( val );
-	} else if( type.number ) {
-		val = Number( val );
-	} 
-
-	if( type.toValue )
+	if( dgr && type.toValue ) // data grid ...
 		type.toValue(dgr, rowData, val);
 	else {
 		const path = pathName.split('.' );
@@ -2761,7 +2783,7 @@ function setValue( dgr, rowData, pathName, val, type ){
 	}
 }
 
-function getValue( rowData, pathName ) {
+function getInputValue( rowData, pathName ) {
 	const path = pathName.split('.' );
 	let obj = rowData;
 	let p = 0;
@@ -2812,14 +2834,14 @@ class DataGrid extends Events {
 		
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
-		this.#initialValue = getValue( o, field ).map(o=>o);
+		this.#initialValue = getInputValue( o, field ).map(o=>o);
 
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
-		this.#initialValues = getValue( o,field ).map(o=>{
+		this.#initialValues = getInputValue( o,field ).map(o=>{
 			const obj = {};
 			this.#subFields.forEach( col=>{
 				if( col.field )
-					setValue( null, obj, col.field, getValue(o,col.field), {} )
+					setValue( null, obj, col.field, getInputValue(o,col.field), {} )
 			} );
 			return obj;
 		});
@@ -2876,13 +2898,13 @@ class DataGrid extends Events {
 		const field = this.#field;
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
-		this.#initialValue = getValue( o,field).map(o=>o);
+		this.#initialValue = getInputValue( o,field).map(o=>o);
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
-		this.#initialValues = getValue( o,field).map(o=>{
+		this.#initialValues = getInputValue( o,field).map(o=>{
 			const obj = {};
 			this.#subFields.forEach( col=>{
 				if( col.field ) 
-					setValue( null, obj,col.field, getValue(o,col.field), col.type ) 
+					setValue( null, obj,col.field, getInputValue(o,col.field), col.type ) 
 			} );
 			return obj;
 		});
@@ -2906,7 +2928,7 @@ class DataGrid extends Events {
 
 	refresh() {
 
-		const rows = getValue( this.#obj, this.#field );
+		const rows = getInputValue( this.#obj, this.#field );
 		for( let v=0; v < rows.length; v++  ) {
 			const row = rows[v];
 			const dataRow = this.#rows[v];
@@ -3001,8 +3023,8 @@ class DataGrid extends Events {
 						if( !a.rowData ) return 1;
 						if( !b.rowData ) return -1;
 						const opts = header.type.options;
-						const aval = getValue( a.rowData, a.cells[header.idx].cell.field);
-						const bval = getValue( b.rowData, b.cells[header.idx].cell.field);
+						const aval = getInputValue( a.rowData, a.cells[header.idx].cell.field);
+						const bval = getInputValue( b.rowData, b.cells[header.idx].cell.field);
 						const aopt = opts.find( opt=>opt.value == aval ).name
 						const bopt = opts.find( opt=>opt.value == bval ).name
 						if( aopt > bopt )
@@ -3147,7 +3169,7 @@ class DataGrid extends Events {
 
 
 						const text = cell.field
-							?getValue( rowData,cell.field)
+							?getInputValue( rowData,cell.field)
 							:(cell.type?.text?cell.type?.text:"X");
 						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
 					}
@@ -3161,10 +3183,23 @@ class DataGrid extends Events {
 					}
 					cell.newInput = onEdit( cell, newCell, newRow, row );
 				} else if( cell.type.grid ) {
-					if( newRow )
+					if( newRow ) {
 						newCell.list = new DataGrid( newCell.el, newRow, cell.field, {
-							columns:cell.type.grid.columns
+							columns:cell.type.grid.columns,
+							onNewRow(initialValue) {
+								if( cell.type.grid.onNewRow )
+									return cell.type.grid.onNewRow( initialValue );
+								return row;
+							}
 						});
+						newCell.list.on("newRow", (row)=>{
+							cell.type.grid.newRow( row );
+						})
+						if( cell.type.grid.change )
+						newCell.list.on("change", (row)=>{
+							cell.type.grid.change( row );
+						})
+					}
 					//newCell.el.appendChild( newCell.list );
 					//cell.newInput = onEdit( cell, newCell, newRow, row );
 				}else {
@@ -3194,10 +3229,12 @@ class DataGrid extends Events {
 						 
 						if( !rowData ) {
 							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
-			
+							this_.#obj[this_.#obj].push( rowData );
 							addUpdate( cell, newCell );
 							this_.addRow( null );
 						}
+						this_.on( "newRow", {row,rowData} )
+
 						//evt.target.
 						
 					    setCaret( evt.target, newCell, cell.type.percent?-1:0 );
@@ -3217,7 +3254,7 @@ class DataGrid extends Events {
 									const opt = { el:document.createElement( "option" ),
 										val:op };
 									opt.el.className = op.className;
-									opt.el.textContent = op.name;
+									opt.el.textContent = op.text;
 									opt.el.value = op.value;
 									//console.log( "Adding option:", op.name, op.value );
 									opt.el.addEventListener( "select", ()=>{
@@ -3229,7 +3266,7 @@ class DataGrid extends Events {
 								} );
 								//rowData[cell.field] = opts[0].value;
 								if( rowData ) 
-									newCell.list.value = ''+getValue( rowData, cell.field);
+									newCell.list.value = ''+getInputValue( rowData, cell.field);
 
 							}
 						}
@@ -3262,11 +3299,11 @@ class DataGrid extends Events {
 		
 					    	// update current value.
 							if( upd.money )
-								c.textContent = popups.utils.to$( getValue( rowData,upd.field) );
+								c.textContent = popups.utils.to$( getInputValue( rowData,upd.field) );
 							else if( upd.percent )
-								c.textContent = popups.utils.toP( getValue( rowData,upd.field) );
+								c.textContent = popups.utils.toP( getInputValue( rowData,upd.field) );
 							else
-								c.textContent = getValue( rowData, upd.field );
+								c.textContent = getInputValue( rowData, upd.field );
 						} );
 					};
 
@@ -3311,13 +3348,13 @@ class DataGrid extends Events {
 						c.addEventListener( "blur", (evt)=>{
 							setValue( row, rowData, field, c.textContent, type );
 					    	if( type.money ) {
-								c.textContent = popups.utils.to$( getValue( rowData,cell_header.field) );
+								c.textContent = popups.utils.to$( getInputValue( rowData,cell_header.field) );
 							}
 					    	else if( type.percent ) {
-					    		c.textContent = popups.utils.toP( getValue( rowData,cell_header.field) );
+					    		c.textContent = popups.utils.toP( getInputValue( rowData,cell_header.field) );
 							}
 							else if( type.hasOwnProperty( "toString" ) ) {
-									// procedural output fields do not accept input.
+								// procedural output fields do not accept input.
 							} 
 						});
 					}
@@ -3618,15 +3655,15 @@ const popups = {
 	toggleClass: toggleClass,
 	clearClass:clearClass,
 	createMenu : createPopupMenu,
-		GraphicFrame,
-	makeLoginForm: makeLoginForm,
-	makeWindowManager : makeWindowManager,
-	fillFromURL : fillFromURL,
-	utils : utils, // expose formatting utility functions.
+	GraphicFrame,
+	makeLoginForm,
+	makeWindowManager,
+	fillFromURL,
+	utils, // expose formatting utility functions.
 	DataGrid,
 	PagedFrame,
 	ValueOfType,  // carry formatting information with value
-	AlertForm:AlertForm,
+	AlertForm,
 	Alert,
 	getParentPopup( id ) {
 		return filledControls.get( id );
