@@ -2605,8 +2605,8 @@ function makeWindowManager() {
 const filledControls = new Map();
 
 function fillFromURL(popup, url) {
-	//const urlPath =  url.split( "/");
     const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
+
     return fetch(url).then(response => {
 	return response.text().then( (text)=>{
 		control.innerHTML = text;
@@ -3076,7 +3076,7 @@ class DataGrid extends Events {
 		
 
 		function setCaret(el,cell,ofs) {
-			if( cell.cell.type.options ) {
+			if( cell.cell.type?.options ) {
 				//const select = cell.list.selectedIndex;
 				cell.list.selectedIndex = 0;
 			} else {
@@ -3111,7 +3111,7 @@ class DataGrid extends Events {
 		
 		function selAll(el, cell) {
 			if( !cell.canEdit ) return;
-			if( cell.cell.type.options ) {
+			if( cell.cell?.type.options ) {
 				return;
 			}
 			function isTextNodeAndContentNoEmpty(node) {
@@ -3175,7 +3175,7 @@ class DataGrid extends Events {
 					}
 				} else if( cell.type.hasOwnProperty( "toString" ) ) {
 					newCell.canEdit = false;				
-				} else if( cell.type.options ) {
+				} else if( cell.type?.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
 					if( !newCell.canEdit ){
@@ -3246,7 +3246,7 @@ class DataGrid extends Events {
 					const cell = newCell.cell;
 					
 					if( !newCell.filled )  {
-						if( cell.type.options ) {
+						if( cell.type?.options ) {
 							const opts = cell.type.options;
 							{
 								newCell.filled = true;
@@ -3282,6 +3282,7 @@ class DataGrid extends Events {
 							} );
 					}
 				}
+
 				if( !rowData ) {
 					c.addEventListener( "input", newInput );
 					c.addEventListener( "click", newInput );
@@ -3395,6 +3396,7 @@ class PageFramePage {
 	pages = null;
 	#frame = null;
 	#page = null;
+	#pageEvents = {};
 	constructor(frame ) {
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
@@ -3489,6 +3491,21 @@ class PageFramePage {
 			this.pages.lastPage.deactivate();
 		this.pages.lastPage = page.activate();
 	}
+
+	on(event,cb) {
+		if( cb && "function" === typeof cb )
+			if( this.#pageEvents[event] )
+				this.#pageEvents[event].push(cb);
+			else
+				this.#pageEvents[event] = [cb];
+		else {
+			var cbList;
+			if( cbList = this.#pageEvents[event]  ) {
+				cbList.forEach( cbEvent=>cbEvent( cb ));
+			}
+		}
+	}
+
 
 	activate() {
 		this.handle.classList.add( "pressed" );
@@ -3604,7 +3621,7 @@ class  PagedFrame extends Events{
 				this.addPage( pageDef.title, pageDef.url );
 			}
 		if( this.pages.length)
-		this.activate( this.pages[0] );
+			this.activate( this.pages[0] );
 		parent.appendChild( this.frame );
 	}
 
