@@ -1,3 +1,4 @@
+//tsc popups.mjs --declaration --allowJs --emitDeclarationOnly --outDir .
 export class GraphicFrame extends Popup {
     static frames: any[];
     constructor(opts: any);

@@ -18,6 +18,7 @@ popup.divContent  // insert frame content here
 
 //import {JSOX} from "jsox";
 //import {JSOX} from "../../jsox/lib/jsox.mjs";
+
 const utils = globalThis.utils || {
 	ROUND_DOWN:1,
 	ROUND_UP :2,
@@ -413,8 +414,8 @@ class Popup {
 	center() {
 		var myRect = this.divFrame.getBoundingClientRect();
 		var pageRect = this.divFrame.parentElement.getBoundingClientRect();
-		this.divFrame.style.left = (pageRect.width-myRect.width)/2;
-		this.divFrame.style.top = (pageRect.height-myRect.height)/2;
+		this.divFrame.style.left = ((pageRect.width-myRect.width)/2)+"px";
+		this.divFrame.style.top = ((pageRect.height-myRect.height)/2)+"px";
 	}
 	over( e ){
 		var target = e.getBoundingClientRect();
@@ -449,7 +450,7 @@ class Popup {
 	hide() {
 		this.divFrame.style.display = "none";
 	}
-	show() {
+	show(...args) {
 		this.raise();
 		this.divFrame.style.display = "";
 		//popupTracker.raise( this );
@@ -664,17 +665,6 @@ class SimpleNotice extends Popup {
 		const popup = this;
 	const form = document.createElement( "form" );
 	{
-		const	show_ = this.show.bind(this);
-
-	this.show = function( caption, content ) {
-		if( caption && content ) {
-			this.divCaption.textContent = caption;
-			this.textOutput.textContent = content;
-		}
-		else if( caption )
-			this.textContent = caption;
-		show_();
-	}
 
 	this.on( "show", ()=>{
 		this.okay.button.focus();
@@ -739,6 +729,18 @@ class SimpleNotice extends Popup {
 	//return this;
 		}
 	}
+
+
+	show( caption, content ) {
+		if( caption && content ) {
+			this.divCaption.textContent = caption;
+			this.textOutput.textContent = content;
+		}
+		else if( caption )
+			this.textContent = caption;
+		super.show();
+	}
+
 	appendChild( e ) {
 		this.form.insertChild( e, this.okay );
 	}
