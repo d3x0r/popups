@@ -582,6 +582,11 @@ div.mouseCatcher{
 	float:right;
 }
 
+select:disabled {
+	color:#113;
+	background:rgba(50, 50, 50);
+}
+
 td, th {
   padding: 0 .4em;
   text-align: center;
