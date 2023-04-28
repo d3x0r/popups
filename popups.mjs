@@ -107,7 +107,14 @@ const utils = globalThis.utils || {
 	fromP(p){
 		p = p.split('%').join('');
 		return Number(p);		
-	}
+	},
+	preAddPopupStyles() {
+		const style = document.createElement( "link" );
+		style.rel = "stylesheet";
+		//style.href = "/node_modules/@d3x0r/popups/styles.css";
+		style.href = "/node_modules/@d3x0r/popups/dark-styles.css";
+		document.head.insertBefore( style, document.head.childNodes[0] || null );
+	},
 }
 
 
@@ -651,8 +658,8 @@ function makeButton( form, caption, onClick, options ) {
 
 }
 
-function createSimpleNotice( title, question, ok, cancel ) {
-    return new SimpleNotice( title, question, ok, cancel );
+function createSimpleNotice( title, question, ok, cancel, opts ) {
+    return new SimpleNotice( title, question, ok, cancel, opts );
 }
 
 class SimpleNotice extends Popup {
@@ -660,73 +667,70 @@ class SimpleNotice extends Popup {
 
 	textOutput = document.createElement( "SPAN" );
 
-	constructor( title, question, ok, cancel ) {
-		super( title, null, {suffix:"-notice"} );
+	constructor( title, question, ok, cancel, opts ) {
+		super( title, null, {suffix:(opts?.suffix?opts.suffix:"")+"-notice"} );
 		const popup = this;
-	const form = document.createElement( "form" );
-	{
+		const form = document.createElement( "form" );
+		{
 
-	this.on( "show", ()=>{
-		this.okay.button.focus();
-	})
-	this.on( "close", ()=>{
-		// aborted...
-		cancel && cancel();
-	});
-
-	form.className = "frameForm";
-	form.setAttribute( "action", "none" );
-	form.addEventListener( "submit", (evt)=>{
-		evt.preventDefault();
-		this.hide();
-		//console.log( "SUBMIT?", input.value );
-	} );	
-	form.addEventListener( "reset", (evt)=>{
-		evt.preventDefault();
-		this.hide();
-	} );	
-
-	this.textOutput.className = "noticeText";
-	this.textOutput.textContent = question;
-
-	this.setMessage = (msg)=>{
-		this.textOutput.textContent = msg;
-	}
-	
-
-
-
-	this.divFrame.addEventListener( "keydown", (e)=>{
-		if(e.keyCode==27){
-			e.preventDefault();
+			this.on( "show", ()=>{
+	      	this.okay.button.focus();
+			})
+			this.on( "close", ()=>{
+				// aborted...
+				cancel && cancel();
+			});
+			
+			form.className = "frameForm"+(opts?.suffix?opts.suffix:"")+"-notice";
+	      form.setAttribute( "action", "none" );
+			form.addEventListener( "submit", (evt)=>{
+				evt.preventDefault();
+				this.hide();
+				//console.log( "SUBMIT?", input.value );
+			} );	
+			form.addEventListener( "reset", (evt)=>{
+				evt.preventDefault();
+				this.hide();
+			} );	
+			
+			this.textOutput.className = "noticeText"+(opts?.suffix?opts.suffix:"")+"-notice";
+	      this.textOutput.textContent = question;
+			
+			this.setMessage = (msg)=>{
+	      	this.textOutput.textContent = msg;
+			}
+			
+	      this.divFrame.addEventListener( "keydown", (e)=>{
+	      	if(e.keyCode==27){
+					e.preventDefault();
+					this.hide();
+					ok && ok( );
+				}
+			})
+			this.divContent.appendChild( form );
+			form.appendChild( this.textOutput );
+			form.appendChild( document.createElement( "br" ) );
+			form.appendChild( document.createElement( "br" ) );
+			//form.appendChild( this.okay.button );
+			this.okay = makeButton( form, "Okay", ()=>{
+				this.hide();
+				ok && ok( );
+			})
+			
+			this.okay.className += (opts?.suffix?opts.suffix:"")+" notice";
+			this.okay.button.children[0].className += (opts?.suffix?opts.suffix:"")+" notice";
+			
+			if( cancel )  {
+	      	let cbut = makeButton( form, "Cancel", ()=>{
+					this.hide();
+					cancel && cancel( );
+				})
+				cbut.className += (opts?.suffix?opts.suffix:"")+" notice";
+				cbut.button.children[0].className += (opts?.suffix?opts.suffix:"")+" notice";
+			}
+			this.center();
 			this.hide();
-			ok && ok( );
-		}
-	})
-	this.divContent.appendChild( form );
-	form.appendChild( this.textOutput );
-	form.appendChild( document.createElement( "br" ) );
-	form.appendChild( document.createElement( "br" ) );
-	//form.appendChild( this.okay.button );
-	this.okay = makeButton( form, "Okay", ()=>{
-		this.hide();
-		ok && ok( );
-	})
-	
-	this.okay.className += " notice";
-	this.okay.button.children[0].className += " notice";
-
-	if( cancel )  {
-		let cbut = makeButton( form, "Cancel", ()=>{
-			this.hide();
-			cancel && cancel( );
-		})
-		cbut.className += " notice";
-		cbut.button.children[0].className += " notice";
-	}
-	this.center();
-	this.hide();
-	//return this;
+			//return this;
 		}
 	}
 
@@ -3683,6 +3687,7 @@ const popups = {
 	PagedFrame,
 	ValueOfType,  // carry formatting information with value
 	AlertForm,
+	SimpleNotice,
 	Alert,
 	getParentPopup( id ) {
 		return filledControls.get( id );
