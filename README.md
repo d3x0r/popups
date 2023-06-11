@@ -234,7 +234,9 @@ Constructor options
 
 
 ## Changelog
-- 1.0.109 (in progress)
+- 1.0.110 (in progress)
+- 1.0.109
+  - include styles.css in files list.
   - allow data grids in datagrids.
   - Improve choice list selection in datagrids, and as a independant control.
   - Add option to datagrids to disable sorting.

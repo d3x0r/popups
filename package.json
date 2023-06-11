@@ -1,12 +1,14 @@
 {
   "name": "@d3x0r/popups",
-  "version": "1.0.108",
+  "version": "1.0.109",
   "description": "Simple popup windows using HTML controls.",
   "main": "popups.mjs",
   "types": "popups.d.mts",
-"files": [
+  "files": [
     "popups.mjs",
-    "popups.d.mts"
+    "popups.d.mts",
+    "styles.css",
+    "dark-styles.css"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
