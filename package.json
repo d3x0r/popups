@@ -8,7 +8,11 @@
     "popups.mjs",
     "popups.d.mts",
     "styles.css",
-    "dark-styles.css"
+    "dark-styles.css",
+    "images/stop_button-glow.png",
+    "images/stop_button.png",
+    "images/stop_button_pressed.png",
+    "images/taskManagerButton.png"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
