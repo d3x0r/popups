@@ -582,7 +582,7 @@ function handleButtonEvents( button, onClick ) {
 		pressed_ = true;
 		setClass( button, "pressed" );
 		
-	}, { passive:true })
+	}, { passive:false })
 	button.addEventListener( "touchend", (evt)=>{
 		evt.preventDefault();
 		pressed = false;
@@ -590,7 +590,7 @@ function handleButtonEvents( button, onClick ) {
 		clearClass( button, "pressed" );
 		onClick();
 		
-	}, { passive:true })
+	}, { passive:false })
 	button.addEventListener( "mousedown", (evt)=>{
 		evt.preventDefault();
 		pressed = true;
