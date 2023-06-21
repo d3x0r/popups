@@ -234,7 +234,10 @@ Constructor options
 
 
 ## Changelog
-- 1.0.110 (in progress)
+- 1.0.111 (in progress)
+- 1.0.110
+  - remove passive from touchevents on buttons; otherwise preventDefault can't be used and touch-through happens.
+  - updated package to include css and images.
 - 1.0.109
   - include styles.css in files list.
   - allow data grids in datagrids.
