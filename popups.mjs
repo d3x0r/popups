@@ -2775,7 +2775,7 @@ function setValue( dgr, rowData, pathName, val, type ){
 	if( dgr && type.toValue ) // data grid ...
 		type.toValue(dgr, rowData, val);
 	else {
-		const path = pathName.split('.' );
+		const path = ("string"===typeof pathName)?pathName.split('.' ):pathName;
 		let obj = rowData;
 		let p = 0;
 		while( p < path.length-1 ) {
@@ -2790,7 +2790,8 @@ function setValue( dgr, rowData, pathName, val, type ){
 }
 
 function getInputValue( rowData, pathName ) {
-	const path = pathName.split('.' );
+	const path = ("string"===typeof pathName)?pathName.split('.' ):pathName;
+	//const path = pathName.split('.' );
 	let obj = rowData;
 	let p = 0;
 	while( p < path.length-1 ) {
@@ -3235,7 +3236,7 @@ class DataGrid extends Events {
 						 
 						if( !rowData ) {
 							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
-							this_.#obj[this_.#obj].push( rowData );
+							this_.#obj[this_.#field].push( rowData );
 							addUpdate( cell, newCell );
 							this_.addRow( null );
 						}
