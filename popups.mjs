@@ -1352,8 +1352,9 @@ function makeTextField( form, input, value, text, money, percent ){
 
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup )?form.suffix:'';
-	var textMinmum = document.createElement( "SPAN" );
-	textMinmum.textContent = text;
+	var textLabel = document.createElement( "SPAN" );
+	textLabel.className = "text-label"+suffix;
+	textLabel.textContent = text;
 	var inputControl = document.createElement( "SPAN" );
 	inputControl.className = "text-field"+suffix+" rightJustify";
 	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
@@ -1384,7 +1385,7 @@ function makeTextField( form, input, value, text, money, percent ){
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
-	binder.appendChild( textMinmum );
+	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
 	if( parentPopup ) {
@@ -1447,6 +1448,7 @@ function makeNameInput( form, input, value, text ){
 	const suffix = ( parentPopup )?form.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
+	textLabel.className = "text-label"+suffix;
 	textLabel.textContent = text;
 
 	const textOutput = document.createElement( "SPAN" );
@@ -1539,8 +1541,9 @@ function makeNameInput( form, input, value, text ){
 function makeDateInput( form, input, value, text ){
 	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
-	var textMinmum = document.createElement( "SPAN" );
-	textMinmum.textContent = text;
+	var textLabel = document.createElement( "SPAN" );
+	textLabel.className = "text-label"+suffix;
+	textLabel.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
 	inputControl.type = "date"; // returns date at midnight UTC not local.
@@ -1563,7 +1566,7 @@ function makeDateInput( form, input, value, text ){
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
-	binder.appendChild( textMinmum );
+	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
 	if( form instanceof Popup ) {
@@ -1611,8 +1614,9 @@ function makeZipInput( form, input, value ){
 
 	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
-	var textMinmum = document.createElement( "SPAN" );
-	textMinmum.textContent = text;
+	var textLabel = document.createElement( "SPAN" );
+	textLabel.className = "text-label"+suffix;
+	textLabel.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
 	inputControl.type = "date";
@@ -1627,7 +1631,7 @@ function makeZipInput( form, input, value ){
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
-	binder.appendChild( textMinmum );
+	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
 	if( form instanceof Popup ) {
@@ -1653,8 +1657,9 @@ function makeSSNInput( form, input, value ){
 
 	const suffix = ( form instanceof Popup )?form.suffix:'';
 	const initialValue = input[value];
-	var textMinmum = document.createElement( "SPAN" );
-	textMinmum.textContent = text;
+	var textLabel = document.createElement( "SPAN" );
+	textLabel.className = "text-label"+suffix;
+	textLabel.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix+" rightJustify";
 	inputControl.type = "date";
@@ -1668,7 +1673,7 @@ function makeSSNInput( form, input, value ){
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
-	binder.appendChild( textMinmum );
+	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
 	if( form instanceof Popup ) {
@@ -1710,10 +1715,11 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	const suffix = ( parentPopup )?form.suffix:'';
 	let initialValue = getInputValue( input, value );
 	const options = [];
-	var textMinmum = document.createElement( "label" );
+	var textLabel = document.createElement( "label" );
 	const id = "choicebox_"+Math.random();
-	textMinmum.htmlFor  = id;
-	textMinmum.textContent = text;
+	textLabel.htmlFor  = id;
+	textLabel.className = "choice-label"+suffix;
+	textLabel.textContent = text;
 	var inputControl = document.createElement( "SELECT" );
 	inputControl.id=id;
 	inputControl.className = "selectInput"+suffix+" rightJustify";
@@ -1757,7 +1763,7 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
 	form.appendChild(binder );
-	binder.appendChild( textMinmum );
+	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
 	if( parentPopup ) {
