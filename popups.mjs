@@ -108,12 +108,20 @@ const utils = globalThis.utils || {
 		p = p.split('%').join('');
 		return Number(p);		
 	},
-	preAddPopupStyles() {
+	preAddPopupStyles( container ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
-		//style.href = "/node_modules/@d3x0r/popups/styles.css";
-		style.href = "/node_modules/@d3x0r/popups/dark-styles.css";
-		document.head.insertBefore( style, document.head.childNodes[0] || null );
+		style.href = defaultStyle;
+		container.insertBefore( style, container.childNodes[0] || null );
+	},
+	preAddPopupStyleSheet( container, sheet ) {
+		container.insertBefore( sheet, container.childNodes[0] || null );
+	},
+	preAddPopupStyleSrc( container, src ) {
+		const style = document.createElement( "link" );
+		style.rel = "stylesheet";
+		style.href = src;
+		container.insertBefore( sheet, container.childNodes[0] || null );
 	},
 }
 
@@ -126,6 +134,7 @@ const globalMouseState = {
 		activeFrame : null
 	}
 var popupTracker;
+let defaultStyle = "/node_modules/@d3x0r/popups/dark-styles.css";
 
 function addCaptionHandler( c, popup_ ) {
 	var popup = popup_;
@@ -2621,21 +2630,24 @@ function makeWindowManager() {
 
 const filledControls = new Map();
 
-function fillFromURL(popup, url) {
-    const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
+function fillFromURL(popup, url, opts) {
+	opts = opts || {};
+	const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
 	const shadow = control.attachShadow( {mode:"open"});
-
 	if( popup instanceof Popup ) {
 		popup.divContentParent_ = popup.divContent_;
 		popup.divContent_ = shadow;
 	}
 	
 	//control.appendChild( shadow );
-    return fetch(url).then(response => {
+	return fetch(url).then(response => {
 		return response.text().then( (text)=>{
 			shadow.innerHTML = text;
-			nodeScriptReplace(control);
-			return popup;
+			if( !opts.noDefaultStyle ){
+				utils.preAddPopupStyles( shadow );
+			}
+			nodeScriptReplace(shadow);
+			return shadow;
 		} );
 	})
 
