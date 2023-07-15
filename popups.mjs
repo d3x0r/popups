@@ -114,14 +114,31 @@ const utils = globalThis.utils || {
 		style.href = defaultStyle;
 		container.insertBefore( style, container.childNodes[0] || null );
 	},
-	preAddPopupStyleSheet( container, sheet ) {
+	preAddStyleStyleSheet( container, sheet ) {
 		container.insertBefore( sheet, container.childNodes[0] || null );
 	},
-	preAddPopupStyleSrc( container, src ) {
+	preAddStyleStyleSrc( container, src ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
 		style.href = src;
-		container.insertBefore( sheet, container.childNodes[0] || null );
+		container.insertBefore( style, container.childNodes[0] || null );
+	},
+	addStyleSheet( container, src ) {
+		let lastOwner;
+		for( let style of container.styleSheets ){
+			lastOwner = style.ownerNode
+		}
+		lastOwner.parentNode.insertBefore(src, lastOwner.nextSibling);
+	},
+	addStyleSheetSrc( container, src ) {
+		const style = document.createElement( "link" );
+		style.rel = "stylesheet";
+		style.href = src;
+		let lastOwner;
+		for( let style of container.styleSheets ){
+			lastOwner = style.ownerNode
+		}
+		lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
 	},
 }
 
