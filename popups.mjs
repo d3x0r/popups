@@ -348,12 +348,17 @@ class Popup {
 	divFrame = document.createElement( "div" );
 	divCaption = document.createElement( "div" );
 	divTitle = document.createElement( "span" );
-	divContent = document.createElement( "div" );
+	divContentParent_ = document.createElement( "div" );
+	divContent_ = null;
 	divClose = document.createElement( "div" );
 	popup = this;
 	// per frame mouse disable...
 	useMouse = true;
 	suffix = '';
+
+	get divContent() {
+		return this.divContent_ || this.divContentParent_;
+	}
 
 	constructor(caption_,parent,opts) {
 	    this.suffix = opts?.suffix ||'';
@@ -420,9 +425,9 @@ class Popup {
 	}
 	center() {
 		var myRect = this.divFrame.getBoundingClientRect();
-		var pageRect = this.divFrame.parentElement.getBoundingClientRect();
-		this.divFrame.style.left = ((pageRect.width-myRect.width)/2)+"px";
-		this.divFrame.style.top = ((pageRect.height-myRect.height)/2)+"px";
+		//var pageRect = this.divFrame.parentElement.getBoundingClientRect();
+		this.divFrame.style.left = ((window.innerWidth-myRect.width)/2)+"px";
+		this.divFrame.style.top = ((window.innerHeight-myRect.height)/2)+"px";
 	}
 	over( e ){
 		var target = e.getBoundingClientRect();
@@ -2618,15 +2623,21 @@ const filledControls = new Map();
 
 function fillFromURL(popup, url) {
     const control = (((popup instanceof Popup)&&(popup.divContent||popup.divFrame))||popup);
+	const shadow = control.attachShadow( {mode:"open"});
 
+	if( popup instanceof Popup ) {
+		popup.divContentParent_ = popup.divContent_;
+		popup.divContent_ = shadow;
+	}
+	
+	//control.appendChild( shadow );
     return fetch(url).then(response => {
-	return response.text().then( (text)=>{
-		control.innerHTML = text;
-		nodeScriptReplace(control);
-		return popup;
-	} );
-       })
-
+		return response.text().then( (text)=>{
+			shadow.innerHTML = text;
+			nodeScriptReplace(control);
+			return popup;
+		} );
+	})
 
 	function nodeScriptReplace(node) {
 		if ( nodeScriptIs(node) === true ) {
