@@ -2698,7 +2698,7 @@ function fillFromURL(popup, url, opts) {
 		}
 		*/
 		script.id = "Unique"+(unique++);
-		filledControls.set( script.id, popup );
+		filledControls.set( script.id, shadow );
 		if( script.textContent && script.textContent.length ) {
 			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
 		}
