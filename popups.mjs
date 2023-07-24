@@ -3741,7 +3741,7 @@ const popups = {
 	getParentPopup( id ) {
 		console.log( "getParentPopup is better called getFilledParent, and the former is deprecated" );
 		return filledControls.get( id );
-	}
+	},
 	getFilledParent( id ) {
 		return filledControls.get( id );
 	}
