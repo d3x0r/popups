@@ -206,10 +206,12 @@ function addCaptionHandler( c, popup_ ) {
 			}
 		}
 		function mouseDown(evt){
-			if( evt.target !== c && evt.target.parentNode !=  c ) return;
+			if( evt.target !== c && evt.target.parentNode !== c ) return;
+			const realTarget = evt.composedPath()[0];
+			if( realTarget !== c && realTarget.parentNode !== c ) return;
 			//evt.preventDefault();
 				if( !popup_.useMouse ) return;
-
+				                       
 			if( globalMouseState.activeFrame ) {
 				return;
 			}
