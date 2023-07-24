@@ -396,7 +396,7 @@ class Popup {
 		const forContent = opts?.from;
 		if( forContent ) {
 		    this.divFrame = forContent;
-		    this.divContent = null;
+		    this.divContentParent_ = null;
 		    this.divCaption = null;
 		    this.divClose = null;
 		    this.divTitle = null;
