@@ -252,6 +252,9 @@ body {
 }
 .buttonOption{
 	border-radius:10px;
+	color:#93c9da;
+	background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
+
 }
 
 .knobClosed{
@@ -318,6 +321,9 @@ span {
     text-align:center;
 }
 
+button {
+	color:#5bc0de;
+}
 
 .button{
     /* font-size: 100%; */

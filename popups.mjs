@@ -796,7 +796,7 @@ class List extends Events{
 	{
 		super();
 	    console.log( "List constructor could use the popup to get suffix..." );
-		this.opts = opts;
+		this.opts = opts || {};
 		this.toString = toString;
 		this.itemOpens = opens;
 		this.divTable = parentDiv;
@@ -805,7 +805,11 @@ class List extends Events{
 			this.compare = opts.compare;
 		}
 	}
-
+	/*
+	insertBefore( a, b ) {
+		return this.parentList.insertBefore( a, b );
+	}
+*/
 		push(group, toString_, opens) {
 			var itemList = this.parentList.childNodes;
 			var nextItem = null;
@@ -821,7 +825,7 @@ class List extends Events{
 			}
 			
 			var newLi = document.createElement( "LI" );
-			newLi.className = "listItem" + (this.opts.suffix?"-"+this.opts.suffix:"")
+			newLi.className = "listItem" + (this.opts && this.opts.suffix?"-"+this.opts.suffix:"")
 			
 			this.divTable.insertBefore( newLi, nextItem );//) appendChild( newLi );
 			newLi.addEventListener( "click", (e)=>{
@@ -855,10 +859,10 @@ class List extends Events{
 			newLi.appendChild( newSubList );
 			//newSubList.appendChild( newSubDiv);
 			newLi.group = group;
-			var newRow;
-			var subItems = createList( this, newSubList, toString_, true );
-			this.groups.push( newRow={ opens : false, group:group, item: newLi, subItems:subItems
+			const subItems = createList( this, newSubList, toString_, true );
+			const newRow = { opens : false, group:group, item: newLi, subItems:subItems
 				, parent:this.parentList
+				//, push: subItems.push.bind( subItems ) 
 				, set text(s) {
 					treeLabel.textContent = s;
 			       	}
@@ -868,7 +872,8 @@ class List extends Events{
 				, show() {
 					this.item.style.display = "";
 				}
-			} );
+			}
+			this.groups.push( newRow );
 			return newRow;
 		}
 		enableOpen(item) {
@@ -1227,7 +1232,7 @@ function makeSlider( form, o, field, text, f, g )
 
 function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
 	// initial might be re-set on a form re-show...
-	let initialValue = input[value];
+	let initialValue = getInputValue( input, value );
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup)?form.suffix:(suffix_||'');
 
@@ -1241,7 +1246,7 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 	if( parentPopup ) {
 		form.on ( "refresh", ()=>{
-			initialValue = inputControl.value = input[value];
+			initialValue = inputControl.value = getInputValue( input, value );
 		})
 		form.on ( "reset", ()=>{
 			inputControl.value = initialValue;
@@ -1254,36 +1259,37 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 		} );
 	}
 
-	function setValue() {
+	function setFieldValue() {
+		const val = getInputValue( input, value );
 		if( money ) {
-			inputControl.value = utils.to$(input[value]);
+			inputControl.value = utils.to$(val);
 		} else if( percent ) {
-			inputControl.value = utils.toP(input[value]);
+			inputControl.value = utils.toP(val);
 		} else if( number ) {
-			inputControl.value = Number(input[value]);
+			inputControl.value = Number(val);
 		}else {
-			inputControl.value = input[value];
+			inputControl.value = val;
 		}
 	}
 	function addValueEvents() {
 		if( money ) {
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.toD(inputControl.value);
-				input[value] = val;
+				setValue( null, input, value, val, null );
 				inputControl.value = utils.to$(val);
 				result.on( "change", result );
 			})
 		} else if( percent ) {
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.fromP(inputControl.value);
-				input[value] = val;
+				setValue( null, input, value, val, null );
 				inputControl.value = utils.toP(val);
 				result.on( "change", result );
 			})
 		} else if( number ) {
 			inputControl.addEventListener( "change", (e)=>{
 				var val = Number(inputControl.value);
-				input[value] = val;
+				setValue( null, input, value, val, null );
 				inputControl.textContent = val;
 				result.on( "change", result );
 			})
@@ -1292,12 +1298,12 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 			} );
 			inputControl.addEventListener( "input", (e)=>{
 				var val = inputControl.value;
-				input[value] = val;
+				setValue( null, input, value, val, null );
 				result.on( "change", result );
 			})
 		}
 	}
-	setValue();
+	setFieldValue();
 	addValueEvents();
 
 	var binder = document.createElement( "div" );
@@ -1358,20 +1364,21 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 				inputControl.value = val;			
 		},
 		refresh() {
-		    initialValue = input[value];
-		    setValue();
+		    initialValue = getInputValue( input, value );
+		    setFieldValue();
 		},
 		reset(){
-		    input[value] = initialValue;
-		    setValue();
+		    setValue( null, input, value, initialValue, null );
+		    setFieldValue();
 		},
 		changes() {
-		    if( input[value] !== initialValue ) {
+			const newVal = getInputValue( input, value );
+		    if( newVal !== initialValue ) {
 			return text
 			    + popups.strings.get( " changed from " )
 			    + initialValue
 			    + popups.strings.get( " to " )
-			    + input[value];
+			    + newVal;
 		    }
 		    return '';
 		}
@@ -1381,7 +1388,7 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 
 function makeTextField( form, input, value, text, money, percent ){
-	let initialValue = input[value];
+	let initialValue = getInputValue( input, value );
 
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup )?form.suffix:'';
@@ -1392,28 +1399,29 @@ function makeTextField( form, input, value, text, money, percent ){
 	inputControl.className = "text-field"+suffix+" rightJustify";
 	inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	//textDefault.
-	function setValue() {
+	function setFieldValue() {
+		const val = getInputValue( input, value );
 		if( money ) {
-			inputControl.textContent = utils.to$(input[value]);
+			inputControl.textContent = utils.to$(val);
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.toD(inputControl.value);
 				input[value] = inputControl.textContent = utils.to$(val);
 			})
 		} else if( percent ) {
-			inputControl.textContent = utils.toP(input[value]);
+			inputControl.textContent = utils.toP(val);
 			inputControl.addEventListener( "change", (e)=>{
 				var val = utils.fromP(inputControl.value);
-				input[value] = inputControl.textContent = utils.toP(val);
+				setValue( null, input, value, inputControl.textContent = utils.toP(val), null );
 			})
 		}else {
-			inputControl.textContent = input[value];
+			inputControl.textContent = getInputValue( input, value );
 			inputControl.addEventListener( "input", (e)=>{
 				var val = inputControl.value;
-							input[value] = val;
+				setValue( null, input, value, val, null );
 			})
 		}
 	}
-	setValue();
+	setFieldValue();
 
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
@@ -1423,9 +1431,8 @@ function makeTextField( form, input, value, text, money, percent ){
 
 	if( parentPopup ) {
 		form.on( "refresh", ()=>{
-			initialValue = input[value];
-			setValue();
-
+			initialValue = getInputValue( input, value );
+			setFieldValue();
 		})
 		form.on( "accept", ()=>{
 			initialValue = inputControl.textContent;
@@ -1436,10 +1443,10 @@ function makeTextField( form, input, value, text, money, percent ){
 	}
 
 	return {
-	    	addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+	    addEventListener(a,b) { return inputControl.addEventListener(a,b) },
 		refresh() {
-			 initialValue = input[value];
-			 setValue();
+			 initialValue = getInputValue( input, value );
+			 setFieldValue();
 			
 		},
 		get value () {
@@ -1458,17 +1465,18 @@ function makeTextField( form, input, value, text, money, percent ){
 				inputControl.textContent = val;			
 		},
 		reset(){
-		    input[value] = initialValue;
-		    setValue();
+			setValue( null, input, value, initialValue, { money, percent } )
+		    setFieldValue();
 		},
 		divFrame : binder,
 		changes() {
-		    if( input[value] !== initialValue ) {
+			const val = getInputValue( input, value );
+		    if( val !== initialValue ) {
 			return text
 			    + popups.strings.get( " changed from " )
 			    + initialValue
 			    + popups.strings.get( " to " )
-			    + input[value];
+			    + val;
 		    }
 		    return '';
 		}
@@ -1477,7 +1485,7 @@ function makeTextField( form, input, value, text, money, percent ){
 
 function makeNameInput( form, input, value, text ){
 	const parentPopup =  form instanceof Popup;
-	let initialValue = input[value];
+	let initialValue = getInputValue( input, value );
 	const suffix = ( parentPopup )?form.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
@@ -2657,7 +2665,15 @@ function fillFromURL(popup, url, opts) {
 		popup.divContentParent_ = popup.divContent_;
 		popup.divContent_ = shadow;
 	}
+	const base = new URL( url );
+	const pathIndex = base.pathname.lastIndexOf( "/" );
+	base.pathname = base.pathname.substring( 0, pathIndex );
+	const here = new URL( location );
+	const herePathIndex = here.pathname.lastIndexOf( "/" );
+	here.pathname = here.pathname.substring( 0, herePathIndex+1 );
+	const hereHref = here.href;
 	
+	console.log( "Base:", base );
 	//control.appendChild( shadow );
 	return fetch(url).then(response => {
 		return response.text().then( (text)=>{
@@ -2671,7 +2687,13 @@ function fillFromURL(popup, url, opts) {
 	})
 
 	function nodeScriptReplace(node) {
-		if ( nodeScriptIs(node) === true ) {
+		if( node.tagName === "LINK" ){
+			if( node.href.includes( hereHref ) )
+			{
+				node.href = base.href+node.href.substring( hereHref.length );
+			}
+		}
+		else if ( nodeScriptIs(node) === true ) {
 			node.parentNode.replaceChild( nodeScriptClone(node) , node );
 		}
 		else {
