@@ -249,7 +249,13 @@ body {
 }
 .textInputOption{
 	vertical-align: middle;
+	text-align:right;
 }
+.text-value {
+	/*text-align:right;&*/
+	margin-left:auto;
+}
+
 .buttonOption{
 	border-radius:10px;
 }

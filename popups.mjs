@@ -1227,7 +1227,7 @@ function makeSlider( form, o, field, text, f, g )
 
 function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
 	// initial might be re-set on a form re-show...
-	let initialValue = input[value];
+	let initialValue = getInputValue( input, value );
 	const parentPopup =  form instanceof Popup;
 	const suffix = ( parentPopup)?form.suffix:(suffix_||'');
 
@@ -1241,7 +1241,7 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 	if( parentPopup ) {
 		form.on ( "refresh", ()=>{
-			initialValue = inputControl.value = input[value];
+			initialValue = inputControl.value = getInputValue( input, value );
 		})
 		form.on ( "reset", ()=>{
 			inputControl.value = initialValue;
@@ -1255,14 +1255,15 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 	}
 
 	function setValue() {
+		const curVal = getInputValue( input, value )
 		if( money ) {
-			inputControl.value = utils.to$(input[value]);
+			inputControl.value = utils.to$(curVal);
 		} else if( percent ) {
-			inputControl.value = utils.toP(input[value]);
+			inputControl.value = utils.toP(curVal);
 		} else if( number ) {
-			inputControl.value = Number(input[value]);
+			inputControl.value = Number(curVal);
 		}else {
-			inputControl.value = input[value];
+			inputControl.value = curVal;
 		}
 	}
 	function addValueEvents() {
@@ -1485,6 +1486,7 @@ function makeNameInput( form, input, value, text ){
 	textLabel.textContent = text;
 
 	const textOutput = document.createElement( "SPAN" );
+	textOutput.className = "text-value"+suffix;
 	textOutput.textContent = input[value];
 
 	const buttonRename = document.createElement( "Button" );
@@ -1495,9 +1497,9 @@ function makeNameInput( form, input, value, text ){
 		//title, question, defaultValue, ok, cancelCb
 		const newName = createSimpleForm( popups.strings.get("Change Name")
 						 , popups.strings.get("Enter new name")
-						 , input[value]
+						 , getInputValue( input, value )
 						 , (v)=>{
-						 	input[value] = v;
+						 	setValue( null, input, value,  v, null );
 							textOutput.textContent = v;
 						 }
 						 );
@@ -1513,7 +1515,7 @@ function makeNameInput( form, input, value, text ){
 
 	if( parentPopup ) {
 		form.on( "refresh", ()=>{
-			initialValue = textOutput.textContent = input[value];
+			initialValue = textOutput.textContent = getInputValue( input, value );
 		})
 		form.on( "reset", ()=>{
 			textOutput.textContent = input[value] = initialValue;
@@ -2848,7 +2850,9 @@ function getInputValue( rowData, pathName ) {
 		p++;
 	}
 	if( !obj )  return null;
-	return obj[path[p]];
+	const val = obj[path[p]];
+	if( val === undefined ) return "";
+	return val;
 }
 
 
