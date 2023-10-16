@@ -576,7 +576,7 @@ div.mouseCatcher{
 
 }
 
-[class^="data-grid-table"], [class^="data-grid-riw"], td, th {
+[class^="data-grid-table"], [class^="data-grid-row"], td, th {
   color: #FFF;
   border: 1px solid #fff;
   border-collapse: collapse;
