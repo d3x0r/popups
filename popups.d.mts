@@ -64,7 +64,8 @@ export class Popup {
         close: any[];
         show: any[];
     };
-    divFrame: HTMLDivElement;
+    divFrame_: HTMLDivElement;
+    get divFrame(): HTMLDivElement;
     divCaption: HTMLDivElement;
     divTitle: HTMLSpanElement;
     divContent: HTMLDivElement;

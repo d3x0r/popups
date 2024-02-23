@@ -108,19 +108,40 @@ const utils = globalThis.utils || {
 		p = p.split('%').join('');
 		return Number(p);		
 	},
-	preAddPopupStyles( container ) {
+	preAddPopupStyles( container, baseUrl ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
-		style.href = defaultStyle;
-		container.insertBefore( style, container.childNodes[0] || null );
+		if(baseUrl && baseUrl.startsWith( "file://" ) ) {
+
+		} else {
+			style.href = new URL( defaultStyle, baseUrl || location.href ).href;
+			container.insertBefore( style, container.childNodes[0] || null );
+		}
 	},
+	addPopupStyles( container, styleUrl, baseUrl ) {
+		if( container instanceof Popup ) {
+			if( container.divShadow ) container = container.divShadow;
+			else container = container.divFrame;
+		}
+		if( container.shadowRoot ) container = container.shadowRoot;
+		const style = document.createElement( "link" );
+		style.rel = "stylesheet";
+		style.href = new URL( styleUrl, baseUrl || null ).href;
+		let before = container.firstChild;
+		while( before && before.tagName === "LINK" ) before = before.nextSibling;
+		container.insertBefore( style, before );
+	},
+	// alias this badly named function
+	preAddStyleSheet : null,
 	preAddStyleStyleSheet( container, sheet ) {
 		container.insertBefore( sheet, container.childNodes[0] || null );
 	},
-	preAddStyleStyleSrc( container, src ) {
+	// alias this badly named function
+	preAddStyleSrc : null,
+	preAddStyleStyleSrc( container, src, baseUrl ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
-		style.href = src;
+		style.href = baseUrl?new URL( src, baseUrl):src;
 		container.insertBefore( style, container.childNodes[0] || null );
 	},
 	addStyleSheet( container, src ) {
@@ -130,17 +151,32 @@ const utils = globalThis.utils || {
 		}
 		lastOwner.parentNode.insertBefore(src, lastOwner.nextSibling);
 	},
-	addStyleSheetSrc( container, src ) {
+	addStyleSheetSrc( container, src, baseUrl ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
-		style.href = src;
+		style.href = baseUrl?new URL( src, baseUrl):src;
 		let lastOwner;
+		if( container instanceof Popup){
+			if( container.divShadow ) container = container.divShadow.shadowRoot;
+		}
 		for( let style of container.styleSheets ){
 			lastOwner = style.ownerNode
 		}
-		lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
+		if( lastOwner )
+			lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
+		else
+			container.insertBefore( style, container.firstChild );
 	},
+	get defaultStyle() {
+		return defaultStyle;
+	},
+	set defaultStyle(val) {
+		defaultStyle = val;
+	}
 }
+
+utils.preAddStyleSheet = utils.preAddStyleStyleSheet;
+utils.preAddStyleSrc = utils.preAddStyleStyleSrc;
 
 
 const localStorage = globalThis.localStorage;
@@ -373,7 +409,9 @@ class Popup {
 		close : [],
 		show : [],
 	};
-	divFrame = document.createElement( "div" );
+	divContentParent_ = null;
+	divShadow = null;
+	divFrame_ = document.createElement( "div" );
 	divCaption = document.createElement( "div" );
 	divTitle = document.createElement( "span" );
 	divContentParent_ = document.createElement( "div" );
@@ -388,6 +426,10 @@ class Popup {
 		return this.divContent_ || this.divContentParent_;
 	}
 
+	get divFrame() {
+		return this.divFrameParent_ || this.divFrame_;
+	}
+
 	constructor(caption_,parent,opts) {
 	    this.suffix = opts?.suffix ||'';
 		const closeButton = opts?.enableClose || false;
@@ -395,26 +437,41 @@ class Popup {
 		// make popup from control.
 		const forContent = opts?.from;
 		if( forContent ) {
-		    this.divFrame = forContent;
+		    this.divFrame_ = forContent;
 		    this.divContentParent_ = null;
 		    this.divCaption = null;
 		    this.divClose = null;
 		    this.divTitle = null;
 		}else  {
-			this.divFrame.className = (parent?"formContainer":"frameContainer")+this.suffix;
+			this.divFrame_.className = (parent?"formContainer":"frameContainer")+this.suffix;
 		}
-		if( opts?.id ) this.divFrame.id = opts.id;
-		if( this.divFrame.id ) {
-			this.divFrame.style.left = localStorage.getItem( this.divFrame.id + "/x" );
-			this.divFrame.style.top = localStorage.getItem( this.divFrame.id + "/y" );						
+		let useFrame = this.divFrame_;
+		let fillFrame = this.divFrame_;
+		if( opts && opts.shadowFrame ) {
+			this.divShadow = document.createElement( "div" );
+			this.divShadow.style.position = "absolute";
+			this.divShadow.style.left = "0px";
+			this.divShadow.style.top = "0px";
+			const shadow = this.divShadow.attachShadow( {mode:"open"});
+
+			utils.preAddPopupStyles( shadow, import.meta.url );
+			shadow.appendChild( this.divFrame );
+			fillFrame = this.divFrame;
+		
+		}
+		if( opts?.id ) useFrame.id = opts.id;
+
+		if( useFrame.id ) {
+			useFrame.style.left = localStorage.getItem( useFrame.id + "/x" );
+			useFrame.style.top = localStorage.getItem( useFrame.id + "/y" );						
 		}
 		else {
-			this.divFrame.style.left= 0;
-			this.divFrame.style.top= 0;
+			useFrame.style.left= 0;
+			useFrame.style.top= 0;
 		}
 		if( this.divCaption ) {
 			if( caption_ && caption_ != "" ) {
-				this.divFrame.appendChild( this.divCaption );
+				fillFrame.appendChild( this.divCaption );
 				this.divCaption.appendChild( this.divTitle );
 				if( closeButton && this.divClose )
 					this.divCaption.appendChild( this.divClose );
@@ -426,7 +483,7 @@ class Popup {
 		}
 		if( this.divContent ){
 			this.divContent.className = "frameContent"+this.suffix;
-			this.divFrame.appendChild( this.divContent );
+			fillFrame.appendChild( this.divContent );
 		}
 
 		if( this.divClose ) {
@@ -443,7 +500,8 @@ class Popup {
 		parent = (parent&&parent.divContent) || parent || document.body;
 
 		if( !forContent )
-			parent.appendChild( this.divFrame );
+			if( this.divShadow ) parent.appendChild( this.divShadow )
+			else parent.appendChild( useFrame );
 
 	}
 
@@ -1242,6 +1300,11 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 	inputControl.className = "textInputOption"+suffix +" rightJustify";
 	//inputControl.addEventListener( "mousedown", (evt)=>evt.stopPropagation() );
 	inputControl.addEventListener( "click", (evt)=>inputControl.select() );
+	if( number ) {
+		inputControl.setAttribute( "pattern", "[0-9]*" );
+		inputControl.setAttribute( "inputmode","numeric" );
+		inputControl.setAttribute( "size","10" );
+	}
 	//textDefault.
 
 	if( parentPopup ) {
@@ -1856,6 +1919,28 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 			    + input[value];
 		    }
 		    return '';
+		},
+		setChoices( choices ) {
+			options.length = 0;
+			inputControl.innerHTML = "";
+
+			for( let choice of choices ) {
+				const option = document.createElement( "option" );
+				if( "string" === typeof choice) {
+					option.text = choice;
+					option.value = choice;
+					choice= {text:choice,value:choice, type:{} };
+				} else{
+					option.text = choice.text;
+					option.value = choice.value;
+				}
+				options.push( {option,choice});
+				if( choice.value === input[value] ) {
+					inputControl.selectedIndex = inputControl.options.length-1;
+				}
+				inputControl.add( option );
+			}
+	
 		}
 	}
 }
@@ -2657,6 +2742,17 @@ function makeWindowManager() {
 }
 
 const filledControls = new Map();
+
+function makeURL( url ) {
+	try {
+		const base = new URL( url )
+		return base;
+	}catch( err ) {
+		const base = new URL( url, location );
+		return base;
+	}
+	
+}
 
 function fillFromURL(popup, url, opts) {
 	opts = opts || {};
