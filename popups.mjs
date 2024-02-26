@@ -2701,7 +2701,7 @@ function makeLoginForm( doLogin, opts  ) {
 	loginForm.hide();
 
 	fillFromURL( loginForm, form ).then( (root)=>{
-		if( wsClient ) wsClient.bindControls( loginForm );
+		if( wsClient ) wsClient.bindControls( loginForm, root );
 
 		loginForm.center();
 		if( opts.ready ) opts.ready(root);
