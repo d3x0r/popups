@@ -2634,7 +2634,7 @@ class SashPicker extends Popup{
 
 		this.hide();
 
-		fillFromURL( this, form ).then( ()=>{
+		fillFromURL( this, form ).then( (root)=>{
 			this.center();
 			this.on( "load", this );
 		} ).catch( (err)=>{
@@ -2717,11 +2717,11 @@ function makeLoginForm( doLogin, opts  ) {
 	};
 	loginForm.hide();
 
-	fillFromURL( loginForm, form ).then( ()=>{
+	fillFromURL( loginForm, form ).then( (root)=>{
 		if( wsClient ) wsClient.bindControls( loginForm );
 
 		loginForm.center();
-		if( opts.ready ) opts.ready();
+		if( opts.ready ) opts.ready(root);
 	} );
 
 	if( !wsClient ){
