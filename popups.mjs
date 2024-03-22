@@ -1022,11 +1022,13 @@ function makeList( parent, toString, opts ) {
 	return new List( newSubList, newSubList, toString, opts?.opens, opts );
 }
 
-function makeCheckbox( form, o, field, text ) 
+function makeCheckbox( form, o, field, text, opts ) 
 {
+	opts = opts || {};
 	let initialValue = o[field];
-	const parentPopup = ( form instanceof Popup );
-	const suffix = ( parentPopup )?form.suffix:'';
+	const parentPopup =  ( opts.form ||form instanceof Popup );
+	const popupForm = parentPopup?opts.form:form;
+	const suffix = opts.suffix || (( parentPopup && popupForm )?popupForm.suffix:'');
 	const id = "checkbox_"+Math.random();
 	var textCountIncrement = document.createElement( "label" );
 	textCountIncrement.htmlFor  = id;
@@ -1041,25 +1043,29 @@ function makeCheckbox( form, o, field, text )
 	var onChange = [];
 	var binder = document.createElement( "div" );
 	binder.className = "fieldUnit"+suffix;
-	//binder.addEventListener( "click", (e)=>{ 
-	//	if( e.target===inputCountIncrement) return; e.preventDefault(); inputCountIncrement.checked = !inputCountIncrement.checked; })
+	binder.addEventListener( "click", (e)=>{ 
+		if( e.target === inputCountIncrement ) return;
+		e.preventDefault(); o[field] = inputCountIncrement.checked = !inputCountIncrement.checked; })
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
 		 o[field] = inputCountIncrement.checked; })
+	textCountIncrement.addEventListener( "click", (e)=>{ 
+		if( e.target === inputCountIncrement ) return;
+		e.preventDefault(); o[field] = !inputCountIncrement.checked; })
 	form.appendChild(binder );
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
-	if( parentPopup ) {
-		form.on( "refresh", ()=>{
+	if( parentPopup && popupForm) {
+		popupForm.on( "refresh", ()=>{
 			initialValue = inputCountIncrement.checked = o[field];
 		})
-		form.on( "reset", ()=>{			
+		popupForm.on( "reset", ()=>{			
 			o[field] = inputCountIncrement.checked = initialValue;
 		})
-		form.on( "accept", ()=>{
+		popupForm.on( "accept", ()=>{
 			initialValue = inputCountIncrement.checked;
 		} );
-		form.on( "reject", ()=>{
+		popupForm.on( "reject", ()=>{
 			inputCountIncrement.checked = initialValue;
 		} );
 	}
@@ -2562,15 +2568,26 @@ function makeApp() {
 export class AlertForm extends Popup {
 	MsgDiv = document.createElement( "div" );
 	constructor(parent, opts) {
-		super( null, parent, { suffix:(opts?.suffix?opts?.suffix:"") + "-alert"} );
+		const catcher = document.createElement("div" );
+		catcher.classList.add(  "alert-catcher");
+		const placer = document.createElement("div" );
+		placer.classList.add( "frameContainer-alert", "alert-form" );
+		const content = document.createElement("div" );
+		content.classList.add( "frameContent-alert","alert-content" );
+		catcher.appendChild(placer);
+		placer.appendChild(content);
+		super( null, parent, { from: placer, suffix:(opts?.suffix?opts?.suffix:"") + "-alert"} );
 		const this_ = this;		
 		this.MsgDiv.className = "alert-message";
-		this.divContent.setAttribute( "tabIndex", 0 )
-		this.divContent.className += " alert-content";
-		this.appendChild( this.MsgDiv );
+		this.MsgDiv.setAttribute( "tabIndex", 0 )
+		content.appendChild( this.MsgDiv );
 		this.divFrame.addEventListener( "click", ()=>{
 			this_.hide();
 		})
+		catcher.addEventListener( "click", ()=>{
+			this_.hide();
+		})
+		document.body.appendChild( catcher );
 	}
 
 	show(caption) {
@@ -3577,8 +3594,8 @@ class PageFramePage {
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
 
-			this.content.className = 'page-frame-page-container'+frame.suffix;
-			this.handle.className = 'page-frame-page-handle'+frame.suffix;
+			this.content.className = 'page-frame-page-container'+(frame.suffix?frame.suffix:'');
+			this.handle.className = 'page-frame-page-handle'+(frame.suffix?frame.suffix:'');
 			frame.pages.handleContainer.appendChild( this.handle );
 			frame.pages.pageContainer.appendChild( this.content );
 			this.handle.addEventListener( "click", (evt)=>{
@@ -3590,8 +3607,8 @@ class PageFramePage {
 		} else {
 			this.#page = frame;
 
-			this.content.className = 'page-frame-page-page-container'+frame.suffix;
-			this.handle.className = 'page-frame-page-page-handle'+frame.suffix;
+			this.content.className = 'page-frame-page-page-container'+(frame.suffix?frame.suffix:'');
+			this.handle.className = 'page-frame-page-page-handle'+(frame.suffix?frame.suffix:'');
 
 			frame.pages.handleContainer.appendChild( this.handle );
 			frame.pages.pageContainer.appendChild( this.content );
@@ -3686,13 +3703,14 @@ class PageFramePage {
 	activate() {
 		this.handle.classList.add( "pressed" );
 		this.content.style.display="";
-		if( this.#page && this.#page.pages ) {
-			this.#page.pages.lastPage = this;
-		}
 		if( this.pages ) {
 			this.pages.handleContainer.style.display = "";
 		}
-		this.frame.on( "activate", this );
+		if( this.#page && this.#page.pages ) {
+			// optimize already activated.
+			this.#page.pages.lastPage = this;
+			this.frame.on( "activate", this );
+		}
 		return this;
 	}
 
@@ -3719,6 +3737,7 @@ class PageFramePage {
 		this.content.appendChild( el );
 	}
 	removePage( pf ) {
+		this.
 		pf.remove();
 
 	}
