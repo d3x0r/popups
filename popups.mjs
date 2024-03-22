@@ -2567,6 +2567,8 @@ function makeApp() {
 
 export class AlertForm extends Popup {
 	MsgDiv = document.createElement( "div" );
+	catcher = document.createElement("div" );
+
 	constructor(parent, opts) {
 		const catcher = document.createElement("div" );
 		catcher.classList.add(  "alert-catcher");
@@ -2581,23 +2583,26 @@ export class AlertForm extends Popup {
 		this.MsgDiv.className = "alert-message";
 		this.MsgDiv.setAttribute( "tabIndex", 0 )
 		content.appendChild( this.MsgDiv );
+		this.catcher = catcher;
 		this.divFrame.addEventListener( "click", ()=>{
 			this_.hide();
 		})
-		catcher.addEventListener( "click", ()=>{
+		this.catcher.addEventListener( "click", ()=>{
 			this_.hide();
 		})
-		document.body.appendChild( catcher );
+		document.body.appendChild( this.catcher );
 	}
 
 	show(caption) {
 		if( "string" === typeof caption  ) this.caption = caption;
+		this.catcher.style.display = "";
 		this.raise();
 		super.show();
 		this.divFrame.focus();
 		this.center();
 	}
 	hide() {	   
+		this.catcher.style.display = "none";
 		this.divFrame.style.display = "none";
 	}
 	set caption( val ) {
