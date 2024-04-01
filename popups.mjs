@@ -2722,8 +2722,15 @@ function makeLoginForm( doLogin, opts  ) {
 	};
 	loginForm.hide();
 
-	fillFromURL( loginForm, form ).then( (root)=>{
-		if( wsClient ) wsClient.bindControls( loginForm, root );
+	fillFromURL( loginForm, form ).then( async (root)=>{
+		if( wsClient ) {
+			// really this point the URL has been set in innerHTML, and scripts have been pushed to the page.
+			//console.log( "At this point, the form should be entirely This is only once the top level has loaded (still pending children)" );
+			//wsClient.ws.clearUiLoader();
+			
+
+			wsClient.bindControls( loginForm, root );
+		}
 
 		loginForm.center();
 		if( opts.ready ) opts.ready(root);
@@ -2809,7 +2816,8 @@ function fillFromURL(popup, url, opts) {
 		if( node.tagName === "LINK" ){
 			if( node.href.includes( hereHref ) )
 			{
-				node.href = base.href+node.href.substring( hereHref.length );
+				const url = new URL( node.href.substring( hereHref.length ), base.href );
+				node.href = url.href;
 			}
 		}
 		else if ( nodeScriptIs(node) === true ) {
