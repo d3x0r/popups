@@ -144,13 +144,20 @@ const utils = globalThis.utils || {
 		style.href = baseUrl?new URL( src, baseUrl):src;
 		container.insertBefore( style, container.childNodes[0] || null );
 	},
+	/**
+	 * This expects a loaded style sheet node
+	 */
 	addStyleSheet( container, src ) {
 		let lastOwner;
 		for( let style of container.styleSheets ){
 			lastOwner = style.ownerNode
 		}
-		lastOwner.parentNode.insertBefore(src, lastOwner.nextSibling);
+		if( lastOwner )
+			lastOwner.parentNode.insertBefore(src, lastOwner.nextSibling);
 	},
+	/**
+	 * This takes a URL - it might pre-add...
+	 */
 	addStyleSheetSrc( container, src, baseUrl ) {
 		const style = document.createElement( "link" );
 		style.rel = "stylesheet";
@@ -164,8 +171,14 @@ const utils = globalThis.utils || {
 		}
 		if( lastOwner )
 			lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
-		else
-			container.insertBefore( style, container.firstChild );
+		else{
+			let child = container.firstChild;
+			while( child && child.nodeName === "LINK" ) child = child.nextSibling;
+			if( !child )
+				container.appendChild( style);
+			else
+				container.insertBefore( style, child );
+		}
 	},
 	get defaultStyle() {
 		return defaultStyle;
@@ -490,6 +503,7 @@ class Popup {
 			this.divClose.className = "captionButton"+this.suffix +" closeButton"+this.suffix;
 			this.divClose.addEventListener( "click", (evt)=>{
 				this.hide();
+				this.on("captionClose", true);
 			} );
 		}
 
@@ -671,36 +685,36 @@ function handleButtonEvents( button, onClick ) {
 		evt.preventDefault();
 		pressed = true;
 		pressed_ = true;
-		setClass( button, "pressed" );
+		button.classList.add( "pressed")
 		
 	}, { passive:false })
 	button.addEventListener( "touchend", (evt)=>{
 		evt.preventDefault();
 		pressed = false;
 		pressed_ = false;
-		clearClass( button, "pressed" );
+		button.classList.remove("pressed")
 		onClick();
 		
 	}, { passive:false })
 	button.addEventListener( "mousedown", (evt)=>{
 		evt.preventDefault();
 		pressed = true;
-		setClass( button, "pressed" );
+		button.classList.add( "pressed")
 	})
 	button.addEventListener( "mouseup", (evt)=>{
 		evt.preventDefault();
 		pressed = false;
-		clearClass( button, "pressed" );
+		button.classList.remove( "pressed")
 	})
 	button.addEventListener( "mouseout", (evt)=>{
 		pressed_ = pressed;
 		pressed = false;
-		clearClass( button, "pressed" );
+		button.classList.remove( "pressed")
 	})
 	button.addEventListener( "mousemove", (evt)=>{
 		if( pressed_ && !pressed){
 			if( evt.buttons ) {
-				setClass( button, "pressed" );
+				button.classList.add( "pressed")
 				pressed = true;
 			} else pressed_ = false;
 		}
@@ -743,7 +757,15 @@ function makeButton( form, caption, onClick, options ) {
 		},
 		get style() {
 			return button.style;
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			button.appendChild( tooltip );
+			button.classList.add( "has-tooltip");
 		}
+
 	}
       //  return button;
 
@@ -1045,12 +1067,17 @@ function makeCheckbox( form, o, field, text, opts )
 	binder.className = "fieldUnit"+suffix;
 	binder.addEventListener( "click", (e)=>{ 
 		if( e.target === inputCountIncrement ) return;
-		e.preventDefault(); o[field] = inputCountIncrement.checked = !inputCountIncrement.checked; })
+		e.preventDefault(); o[field] = inputCountIncrement.checked = !inputCountIncrement.checked; 
+		onChange.forEach( cb=>cb()); 
+	})
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
-		 o[field] = inputCountIncrement.checked; })
+		 o[field] = inputCountIncrement.checked; 
+	})
 	textCountIncrement.addEventListener( "click", (e)=>{ 
 		if( e.target === inputCountIncrement ) return;
-		e.preventDefault(); o[field] = !inputCountIncrement.checked; })
+		e.preventDefault(); o[field] = !inputCountIncrement.checked; 
+		onChange.forEach( cb=>cb()); 
+	})
 	form.appendChild(binder );
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
@@ -1113,6 +1140,13 @@ function makeCheckbox( form, o, field, text, opts )
 				},
 		get style() {
 			return binder.style;
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			binder.appendChild( tooltip );
+			binder.classList.add( "has-tooltip");
 		}
 	}
 }
@@ -1196,6 +1230,13 @@ function makeRadioChoice( form, o, field, text, groupName, left )
 				},
 		get style() {
 			return binder.style;
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			binder.appendChild( tooltip );
+			binder.classList.add( "has-tooltip");
 		}
 	}
 }
@@ -1450,6 +1491,13 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 			    + newVal;
 		    }
 		    return '';
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			binder.appendChild( tooltip );
+			binder.classList.add( "has-tooltip");
 		}
 	}
 	return result;
@@ -1548,6 +1596,13 @@ function makeTextField( form, input, value, text, money, percent ){
 			    + val;
 		    }
 		    return '';
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			binder.appendChild( tooltip );
+			binder.classList.add( "has-tooltip");
 		}
 	}
 }
@@ -1625,29 +1680,17 @@ function makeNameInput( form, input, value, text ){
 			    + input[value];
 		    }
 		    return '';
+		},
+		set tooltip(val) {
+			const tooltip = document.createElement( "span" );
+			tooltip.className = "tooltip-text";
+			tooltip.textContent = val;
+			binder.appendChild( tooltip );
+			binder.classList.add( "has-tooltip");
 		}
 	}
 }
 
-	function toggleClass( el, cn )  {
-		if( el.className.includes(cn) )  {
-			el.className = el.className.split( " " ).reduce( (a,el)=> ( el !== cn )?(a.push(el),a):a, [] ).join(' ');
-		}else {
-			el.className += " " + cn;
-		}
-	}
-	function clearClass( el, cn )  {
-		if( el.className.includes(cn) )  {
-			el.className = el.className.split( " " ).reduce( (a,el)=> ( el !== cn )?(a.push(el),a):a, [] ).join(' ');
-		}else {
-		}
-	}
-	function setClass( el, cn )  {
-		if( el.className.includes(cn) )  {
-		}else {
-			el.className += " " + cn;
-		}
-	}
 
 function makeDateInput( form, input, value, text ){
 	const suffix = ( form instanceof Popup )?form.suffix:'';
@@ -3021,6 +3064,14 @@ class DataGrid extends Events {
 		return this.#tableContainer;
 	}
 
+	set tooltip(val) {
+		const tooltip = document.createElement( "span" );
+		tooltip.className = "tooltip-text";
+		tooltip.textContent = val;
+		this.#tableContainer.appendChild( tooltip );
+		this.#tableContainer.classList.add( "has-tooltip");
+	}
+
 	constructor( form, o, field, opts ) 
 	{
 		super();
@@ -3868,9 +3919,9 @@ const popups = {
 	makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
 	makeDateInput : makeDateInput,  // form, object, field, text
 	strings : { get(s) { return s } },
-	setClass: setClass,
-	toggleClass: toggleClass,
-	clearClass:clearClass,
+	setClass(){ console.trace( "Set class no longer supported."); },
+	toggleClass(){ console.trace( "toggle class no longer supported."); },
+	clearClass(){ console.trace( "Clear class no longer supported."); },
 	createMenu : createPopupMenu,
 	GraphicFrame,
 	makeLoginForm,

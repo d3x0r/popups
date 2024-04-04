@@ -48,7 +48,7 @@ canned sort of common higher level controls that have a label and a value associ
 |        list | (parentList,toString) | Creates a list with a specified tostring method for elements.   |
 |        makeCheckbox | (form, o, text, field )  |  make a checkmark button, which is bound to object 'o' and member 'field'.  The title is shown next to the checkbox.  |
 |        makeNameInput | (form, o, text, field ) | make a static text display, with a button to click to edit the text   |
- |       makeTextInput |(form,o,field,text, money, percent) |  make a text input with a lable next to it   |
+ |       makeTextInput |(form,o,field,text, money, percent, number, suffix_) |  make a text input with a lable next to it   |
 |        makeTextField |(form,o,field,text, money, percent)  | make a text display with a label next to it (like input but readonly)   |
  |       makeButton | (parentElement,text, callback) | adds a button; is 2 divs nested and styled.  Callback is called when the button is clicked/touched. |
 |	setClass| (element.class) | Set a class in className |
@@ -90,6 +90,7 @@ This popup class is a standard high level contain that is the general abstractio
 |suffix| string | "" | Specifies a suffix to apply to elements created in this form.  The `popups` utility methods use this when created on a Popup form instead of just an HTML element. |
 |enableClose | boolean | false | Enables showing a close button in the title bar frame.  Clicking the button automatically `hide()`s the popup an dissues a `close` event. |
 | from | HTML Element | null | if from is specified, then the specified element is used for the popup `divFrame`, and all other `div*` elements are set to null. |
+| shadowFrame | creates a shadow DOM element to fill the form content into - the outer (top) frame is a div that contains the shadowRoot |
 
 ### Popup Registered Events 
 
@@ -235,6 +236,11 @@ Constructor options
 
 ## Changelog
 - 1.0.111 (in progress)
+  - add tooltip support.  (most controls may have missed some)
+  - update document, misc fixes.
+  - Add `shadowFrame` option to `Popup()` so the content is more protected and encapsulated.
+  - Improve style shee addition functions.
+  - Deprecate/remove toggle/set/clear class functions that classList can provide.
 - 1.0.110
   - remove passive from touchevents on buttons; otherwise preventDefault can't be used and touch-through happens.
   - updated package to include css and images.
