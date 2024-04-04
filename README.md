@@ -50,7 +50,7 @@ canned sort of common higher level controls that have a label and a value associ
 |        makeNameInput | (form, o, text, field ) | make a static text display, with a button to click to edit the text   |
  |       makeTextInput |(form,o,field,text, money, percent, number, suffix_) |  make a text input with a lable next to it   |
 |        makeTextField |(form,o,field,text, money, percent)  | make a text display with a label next to it (like input but readonly)   |
- |       makeButton | (parentElement,text, callback) | adds a button; is 2 divs nested and styled.  Callback is called when the button is clicked/touched. |
+ |       makeButton | (parentElement,text, callback, options) | adds a button; is 2 divs nested and styled.  Callback is called when the button is clicked/touched. see button options below... |
 |	setClass| (element.class) | Set a class in className |
 |	toggleClass| (element,class) | if a class is in a class, remove it, else add it |
 |	clearClass| (element,class) | remove a class from className |
@@ -62,6 +62,14 @@ canned sort of common higher level controls that have a label and a value associ
 | Alert | (string) | Show a generic singleton alert banner; hide() is available, if multiple show(newString) happen, the banner remains up, and just updates the text content |
 | AlertForm | () | This is the form used by Alert, it extends `Popup()`, and just has simple single-touch/any click to clear.  |
 | Popup | (...) | Same as the exported Popup symbol |
+
+### button Options
+
+| option | description |
+|---|---|
+| suffix | appended to class name - if there's a space, it will add a separate class.... it just update className |
+ 
+
 
 ## Popup class
 
@@ -202,6 +210,7 @@ Column Type
 |----|----|----|
 | money | boolean | format value as money using popups currency utilities |
 | percent | boolean | format value as a percentage value |
+| number | boolean | format value as a number value |
 | options | array of options | This specifies that a choice list should be built for this data grid element |
 | click | function | creates a button in the column. |
 | text | string | used for text on buttons separate from header string |
