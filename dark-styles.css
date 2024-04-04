@@ -8,16 +8,16 @@ body {
 }
 */
 
-.closeButton {
+[class*="closeButton"] {
 	background-image:url('./images/stop_button.png');
 	background-size: 100%;
 }
 
-.closeButton:hover {
+[class*="closeButton"]:hover {
 	background-image: url("./images/stop_button-glow.png");
 }
 
-.closeButton:active {
+[class*="closeButton"]:active {
 	background-image: url("./images/stop_button_pressed.png");
 }
 
@@ -615,4 +615,44 @@ td, th {
 	width: 100%;
 	height: 100%;
 	z-index: 100;
+}
+
+
+.has-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.has-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.has-tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.has-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
 }
