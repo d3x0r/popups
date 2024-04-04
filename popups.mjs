@@ -2624,15 +2624,21 @@ export class AlertForm extends Popup {
 		super( null, parent, { from: placer, suffix:(opts?.suffix?opts?.suffix:"") + "-alert"} );
 		const this_ = this;		
 		this.MsgDiv.className = "alert-message";
+
 		this.MsgDiv.setAttribute( "tabIndex", 0 )
 		content.appendChild( this.MsgDiv );
 		this.catcher = catcher;
-		this.divFrame.addEventListener( "click", ()=>{
-			this_.hide();
-		})
-		this.catcher.addEventListener( "click", ()=>{
-			this_.hide();
-		})
+
+		this.divContent.className += " alert-content";
+		this.appendChild( this.MsgDiv );
+		if( !opts || !opts.noClick ) {
+			this.divFrame.addEventListener( "click", ()=>{
+				this_.hide();
+			})
+			this.catcher.addEventListener( "click", ()=>{
+				this_.hide();
+			})
+		}
 		document.body.appendChild( this.catcher );
 	}
 
