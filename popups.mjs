@@ -159,26 +159,32 @@ const utils = globalThis.utils || {
 	 * This takes a URL - it might pre-add...
 	 */
 	addStyleSheetSrc( container, src, baseUrl ) {
-		const style = document.createElement( "link" );
-		style.rel = "stylesheet";
-		style.href = baseUrl?new URL( src, baseUrl):src;
-		let lastOwner;
-		if( container instanceof Popup){
-			if( container.divShadow ) container = container.divShadow.shadowRoot;
-		}
-		for( let style of container.styleSheets ){
-			lastOwner = style.ownerNode
-		}
-		if( lastOwner )
-			lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
-		else{
-			let child = container.firstChild;
-			while( child && child.nodeName === "LINK" ) child = child.nextSibling;
-			if( !child )
-				container.appendChild( style);
-			else
-				container.insertBefore( style, child );
-		}
+		return new Promise( (res,rej)=>{
+
+			const style = document.createElement( "link" );
+			style.rel = "stylesheet";
+			style.href = baseUrl?new URL( src, baseUrl):src;
+			let lastOwner;
+			style.onload = ()=>{
+				res();
+			}
+			if( container instanceof Popup){
+				if( container.divShadow ) container = container.divShadow.shadowRoot;
+			}
+			for( let style of container.styleSheets ){
+				lastOwner = style.ownerNode
+			}
+			if( lastOwner )
+				lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
+			else{
+				let child = container.firstChild;
+				while( child && child.nodeName === "LINK" ) child = child.nextSibling;
+				if( !child )
+					container.appendChild( style);
+				else
+					container.insertBefore( style, child );
+			}
+		})
 	},
 	get defaultStyle() {
 		return defaultStyle;
@@ -200,6 +206,8 @@ const globalMouseState = {
 		activeFrame : null
 	}
 var popupTracker;
+let popupMap = new WeakMap();
+
 let defaultStyle = "/node_modules/@d3x0r/popups/dark-styles.css";
 
 function addCaptionHandler( c, popup_ ) {
@@ -462,15 +470,15 @@ class Popup {
 		let fillFrame = this.divFrame_;
 		if( opts && opts.shadowFrame ) {
 			this.divShadow = document.createElement( "div" );
+			this.divShadow.classRoot = "shadow-frame-container";
 			this.divShadow.style.position = "absolute";
 			this.divShadow.style.left = "0px";
 			this.divShadow.style.top = "0px";
-			const shadow = this.divShadow.attachShadow( {mode:"open"});
+			this.shadow = this.divShadow.attachShadow( {mode:"open"});
 
-			utils.preAddPopupStyles( shadow, import.meta.url );
-			shadow.appendChild( this.divFrame );
+			utils.preAddPopupStyles( this.shadow, import.meta.url );
+			this.shadow.appendChild( this.divFrame );
 			fillFrame = this.divFrame;
-		
 		}
 		if( opts?.id ) useFrame.id = opts.id;
 
@@ -508,7 +516,10 @@ class Popup {
 		}
 
 		popupTracker.addPopup( this );
-
+		if( this.divShadow	)
+			popupMap.set( this.shadow, this );
+		else
+			popupMap.set( this.divFrame, this );
 
 		this.caption = caption_;
 		parent = (parent&&parent.divContent) || parent || document.body;
@@ -524,10 +535,30 @@ class Popup {
 			this.divTitle.textContent = val;
 	}
 	center() {
-		var myRect = this.divFrame.getBoundingClientRect();
-		//var pageRect = this.divFrame.parentElement.getBoundingClientRect();
-		this.divFrame.style.left = ((window.innerWidth-myRect.width)/2)+"px";
-		this.divFrame.style.top = ((window.innerHeight-myRect.height)/2)+"px";
+		const df = this.divFrame;
+		var myRect = df.getBoundingClientRect();
+		if( this.divShadow) {
+			if( window.innerWidth-myRect.width > 0 )
+				this.divShadow.style.left = ((window.innerWidth-myRect.width)/2)+"px";
+			else
+				this.divShadow.style.left = 0;
+			if(window.innerHeight-myRect.height > 0 )
+				this.divShadow.style.top = ((window.innerHeight-myRect.height)/2)+"px";
+			else
+				this.divShadow.style.top = 0;
+
+
+		}else {
+			//var pageRect = this.divFrame.parentElement.getBoundingClientRect();
+			if( window.innerWidth-myRect.width > 0 )
+				this.divFrame.style.left = ((window.innerWidth-myRect.width)/2)+"px";
+			else
+				this.divFrame.style.left = 0;
+			if(window.innerHeight-myRect.height > 0 )
+				this.divFrame.style.top = ((window.innerHeight-myRect.height)/2)+"px";
+			else
+				this.divFrame.style.top = 0;
+		}
 	}
 	over( e ){
 		var target = e.getBoundingClientRect();
@@ -722,14 +753,17 @@ function handleButtonEvents( button, onClick ) {
 }
 
 function makeButton( form, caption, onClick, options ) {
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
-    const suffix = options?.suffix || (( form instanceof Popup )?form.suffix:'');
+    const suffix = (in_popup?in_popup.suffix||"":"")+ (options?.suffix ||"");
 
 	var button = document.createElement( "button" );
-	button.className = suffix?"button-"+suffix:"button";
+	button.className = "button"+suffix;
 	//button.style.width = "max-content";
 	var buttonInner = document.createElement( "div" );
-	buttonInner.className = suffix?"buttonInner-"+suffix:"buttonInner";
+	buttonInner.className = "buttonInner"+suffix;
 	//buttonInner.style.width = "max-content";
 	buttonInner.textContent = caption;
 	button.buttonInner = buttonInner;
@@ -874,9 +908,15 @@ class List extends Events{
 		 
     constructor( parentDiv, parentList, toString, opens, opts )
 	{
+
+		let in_form = form;
+		let in_popup = null;
+		while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+	
 		super();
 	    console.log( "List constructor could use the popup to get suffix..." );
 		this.opts = opts || {};
+		this.opts.suffix = (in_popup?in_popup.suffix:"") +  ( this.opts.suffix?this.opts.suffix:"");
 		this.toString = toString;
 		this.itemOpens = opens;
 		this.divTable = parentDiv;
@@ -905,7 +945,7 @@ class List extends Events{
 			}
 			
 			var newLi = document.createElement( "LI" );
-			newLi.className = "listItem" + (this.opts && this.opts.suffix?"-"+this.opts.suffix:"")
+			newLi.className = "listItem" + (this.opts.suffix)
 			
 			this.divTable.insertBefore( newLi, nextItem );//) appendChild( newLi );
 			newLi.addEventListener( "click", (e)=>{
@@ -918,7 +958,7 @@ class List extends Events{
 			})
 
 			var newSubList = document.createElement( "UL");
-			newSubList.className = "listSubList";
+			newSubList.className = "listSubList" + this.opts.suffix;
 			if( this.parentList && this.parentList.parentItem )
 				this.parentList.parentItem.enableOpen( this.parentList.thisItem );
 			if( opens ) {
@@ -926,7 +966,7 @@ class List extends Events{
 			}
 
 			var treeLabel = document.createElement( "span" );
-			treeLabel.className = "listItemLabel" + (this.opts.suffix?"-"+this.opts.suffix:"");
+			treeLabel.className = "listItemLabel" + this.opts.suffix;
 			newLi.appendChild( treeLabel );
 
 			if( this.opts.setsContent ) {
@@ -961,18 +1001,20 @@ class List extends Events{
 			item.opens = true;
 				var treeKnob = document.createElement( "span" );
 				treeKnob.textContent = "-";
-				treeKnob.className = "knobOpen";
+				treeKnob.className = "list-item-knob"+this.opts.suffix+" knobOpen";
 				item.item.insertBefore( treeKnob, item.item.childNodes[0] );
 				treeKnob.addEventListener( "click", (e)=>{
 					e.preventDefault();
-					if( treeKnob.className === "knobClosed"){
-						treeKnob.className = "knobOpen";
+					if( treeKnob.classList.contains(  "knobClosed" ) ){
+						treeKnob.classList.remove( "knobClosed" );
+						treeKnob.classList.add( "knobOpen" );
 						treeKnob.textContent = "-";
 						item.subItems.items.forEach( sub=>{
 							sub.item.style.display="";
 						})
 					}else{
-						treeKnob.className = "knobClosed";
+						treeKnob.classList.add( "knobClosed" );
+						treeKnob.classList.remove( "knobOpen" );
 						treeKnob.textContent = "+";
 						item.subItems.items.forEach( sub=>{
 							sub.item.style.display="none";
@@ -1046,11 +1088,14 @@ function makeList( parent, toString, opts ) {
 
 function makeCheckbox( form, o, field, text, opts ) 
 {
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
 	opts = opts || {};
 	let initialValue = o[field];
-	const parentPopup =  ( opts.form ||form instanceof Popup );
-	const popupForm = parentPopup?opts.form:form;
-	const suffix = opts.suffix || (( parentPopup && popupForm )?popupForm.suffix:'');
+	const popupForm = opts.form || in_popup;
+	const suffix = (( popupForm )?popupForm.suffix:'') + (opts.suffix?opts.suffix:"");
 	const id = "checkbox_"+Math.random();
 	var textCountIncrement = document.createElement( "label" );
 	textCountIncrement.htmlFor  = id;
@@ -1082,7 +1127,7 @@ function makeCheckbox( form, o, field, text, opts )
 	binder.appendChild( textCountIncrement );
 	binder.appendChild( inputCountIncrement );
 	//form.appendChild( document.createElement( "br" ) );
-	if( parentPopup && popupForm) {
+	if( popupForm) {
 		popupForm.on( "refresh", ()=>{
 			initialValue = inputCountIncrement.checked = o[field];
 		})
@@ -1158,6 +1203,10 @@ function makeLeftRadioChoice( form, o, field, text, groupName )
 
 function makeRadioChoice( form, o, field, text, groupName, left ) 
 {
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
 	let initialValue = o[field];
 	const suffix = ( form instanceof Popup )?form.suffix:'';
 	var textOption = document.createElement( "SPAN" );
@@ -1243,6 +1292,10 @@ function makeRadioChoice( form, o, field, text, groupName, left )
 
 function makeSlider( form, o, field, text, f, g ) 
 {
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
 	if( f && "function" !== typeof f ) {
 		console.log( "makeSlider: Function to transform value is not a function:", f  );
 		f = null;
@@ -1251,7 +1304,7 @@ function makeSlider( form, o, field, text, f, g )
 		console.log( "makeSlider: Function to transform from value to slider is not a function:", f  );
 		g = null;
 	}
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( in_popup instanceof Popup )?in_popup.suffix:'';
 	let initialValue = o[field];
 	const textCountIncrement = document.createElement( "SPAN" );
 	textCountIncrement.textContent = text;
@@ -1288,11 +1341,11 @@ function makeSlider( form, o, field, text, f, g )
 		evt.stopPropagation();
 	})
 
-	if( form instanceof Popup ) {
-		form.on( "accept", ()=>{
+	if( in_popup instanceof Popup ) {
+		in_popup.on( "accept", ()=>{
 			initialValue = inputCountIncrement.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputCountIncrement.value = initialValue;
 		} );
 	}
@@ -1337,11 +1390,16 @@ function makeSlider( form, o, field, text, f, g )
 
 function makeTextInput( form, input, value, text, money, percent, number, suffix_ ){
 	// initial might be re-set on a form re-show...
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
 	let initialValue = getInputValue( input, value );
-	const parentPopup =  form instanceof Popup;
-	const suffix = ( parentPopup)?form.suffix:(suffix_||'');
+	const parentPopup =  in_popup instanceof Popup;
+	const suffix = ( parentPopup?in_popup.suffix:"" ) +(suffix_||'');
 
 	var textMinmum = document.createElement( "SPAN" );
+	textMinmum.className = "text-label"+suffix;
 	textMinmum.textContent = text;
 	var inputControl = document.createElement( "INPUT" );
 	inputControl.className = "textInputOption"+suffix +" rightJustify";
@@ -1355,16 +1413,16 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 	//textDefault.
 
 	if( parentPopup ) {
-		form.on ( "refresh", ()=>{
+		in_popup.on ( "refresh", ()=>{
 			initialValue = inputControl.value = getInputValue( input, value );
 		})
-		form.on ( "reset", ()=>{
+		in_popup.on ( "reset", ()=>{
 			inputControl.value = initialValue;
 		})
-		form.on( "accept", ()=>{
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -1426,11 +1484,11 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 		evt.stopPropagation();
 	})
 
-	if( form instanceof Popup ) {
-		form.on( "accept", ()=>{
+	if( in_popup instanceof Popup ) {
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -1506,9 +1564,12 @@ function makeTextInput( form, input, value, text, money, percent, number, suffix
 
 function makeTextField( form, input, value, text, money, percent ){
 	let initialValue = getInputValue( input, value );
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
-	const parentPopup =  form instanceof Popup;
-	const suffix = ( parentPopup )?form.suffix:'';
+	const parentPopup =  in_popup instanceof Popup;
+	const suffix = ( parentPopup )?in_popup.suffix:'';
 	var textLabel = document.createElement( "SPAN" );
 	textLabel.className = "text-label"+suffix;
 	textLabel.textContent = text;
@@ -1547,14 +1608,14 @@ function makeTextField( form, input, value, text, money, percent ){
 	binder.appendChild( inputControl );
 
 	if( parentPopup ) {
-		form.on( "refresh", ()=>{
+		in_popup.on( "refresh", ()=>{
 			initialValue = getInputValue( input, value );
 			setFieldValue();
 		})
-		form.on( "accept", ()=>{
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.textContent;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.textContent = initialValue;
 		} );
 	}
@@ -1608,9 +1669,13 @@ function makeTextField( form, input, value, text, money, percent ){
 }
 
 function makeNameInput( form, input, value, text ){
-	const parentPopup =  form instanceof Popup;
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
+	const parentPopup =  in_popup instanceof Popup;
 	let initialValue = getInputValue( input, value );
-	const suffix = ( parentPopup )?form.suffix:'';
+	const suffix = ( parentPopup )?in_popup.suffix:'';
 	var binder;
 	const textLabel = document.createElement( "SPAN" );
 	textLabel.className = "text-label"+suffix;
@@ -1645,16 +1710,16 @@ function makeNameInput( form, input, value, text ){
 	binder.appendChild( buttonRename );
 
 	if( parentPopup ) {
-		form.on( "refresh", ()=>{
+		in_popup.on( "refresh", ()=>{
 			initialValue = textOutput.textContent = getInputValue( input, value );
 		})
-		form.on( "reset", ()=>{
+		in_popup.on( "reset", ()=>{
 			textOutput.textContent = input[value] = initialValue;
 		})
-		form.on( "accept", ()=>{
+		in_popup.on( "accept", ()=>{
 			initialValue = textOutput.textContent;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			textOutput.textContent = initialValue;
 		} );
 	}
@@ -1693,8 +1758,13 @@ function makeNameInput( form, input, value, text ){
 
 
 function makeDateInput( form, input, value, text ){
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+	
+	const suffix = ( in_popup instanceof Popup )?in_popup.suffix:'';
 	const initialValue = input[value];
+
 	var textLabel = document.createElement( "SPAN" );
 	textLabel.className = "text-label"+suffix;
 	textLabel.textContent = text;
@@ -1723,11 +1793,11 @@ function makeDateInput( form, input, value, text ){
 	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
-	if( form instanceof Popup ) {
-		form.on( "accept", ()=>{
+	if( in_popup instanceof Popup ) {
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -1765,8 +1835,11 @@ function makeDateInput( form, input, value, text ){
 }
 
 function makeZipInput( form, input, value ){
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( in_popup instanceof Popup )?in_popup.suffix:'';
 	const initialValue = input[value];
 	var textLabel = document.createElement( "SPAN" );
 	textLabel.className = "text-label"+suffix;
@@ -1789,10 +1862,10 @@ function makeZipInput( form, input, value ){
 	binder.appendChild( inputControl );
 
 	if( form instanceof Popup ) {
-		form.on( "accept", ()=>{
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -1808,8 +1881,11 @@ function makeZipInput( form, input, value ){
 }
 
 function makeSSNInput( form, input, value ){
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
-	const suffix = ( form instanceof Popup )?form.suffix:'';
+	const suffix = ( in_popup instanceof Popup )?in_popup.suffix:'';
 	const initialValue = input[value];
 	var textLabel = document.createElement( "SPAN" );
 	textLabel.className = "text-label"+suffix;
@@ -1830,11 +1906,11 @@ function makeSSNInput( form, input, value ){
 	binder.appendChild( textLabel );
 	binder.appendChild( inputControl );
 
-	if( form instanceof Popup ) {
-		form.on( "accept", ()=>{
+	if( in_popup instanceof Popup ) {
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -1865,8 +1941,12 @@ function makeSSNInput( form, input, value ){
 
 // --------------- Dropdown choice list ---------------------------
 function makeChoiceInput( form, input, value, choices, text, opts ){
-	const parentPopup =  form instanceof Popup;
-	const suffix = ( parentPopup )?form.suffix:'';
+	let in_form = form;
+	let in_popup = null;
+	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
+	const parentPopup =  in_popup instanceof Popup;
+	const suffix = ( parentPopup ?in_popup.suffix:'') + (opts.suffix?opts.suffix:"");
 	let initialValue = getInputValue( input, value );
 	const options = [];
 	var textLabel = document.createElement( "label" );
@@ -1921,16 +2001,16 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	binder.appendChild( inputControl );
 
 	if( parentPopup ) {
-		form.on( "refresh", ()=>{
+		in_popup.on( "refresh", ()=>{
 			initialValue = inputControl.value = input[value];
 		})
-		form.on( "reset", ()=>{
+		in_popup.on( "reset", ()=>{
 			input[value] = inputControl.value = initialValue;
 		})
-		form.on( "accept", ()=>{
+		in_popup.on( "accept", ()=>{
 			initialValue = inputControl.value;
 		} );
-		form.on( "reject", ()=>{
+		in_popup.on( "reject", ()=>{
 			inputControl.value = initialValue;
 		} );
 	}
@@ -3089,6 +3169,10 @@ class DataGrid extends Events {
 	constructor( form, o, field, opts ) 
 	{
 		super();
+		let in_form = form;
+		let in_popup = null;
+		while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
+
 		this.#field= field;
 		this.#opts = opts || {};
 		this.#subFields = (opts?.columns) || [];
@@ -3110,23 +3194,23 @@ class DataGrid extends Events {
 		});
 		
 		
-		this.#suffix = opts?.suffix || (( form instanceof Popup )?form.suffix:'');
+		this.#suffix = (( in_popup instanceof Popup )?in_popup.suffix:'') + (opts?.suffix||'');
 		
 		if( opts?.onNewRow ) this.#newRowCallback = opts.onNewRow;
 		
 		
-		if( form instanceof Popup ) {
-			form.on( "apply", function() {
+		if( in_popup instanceof Popup ) {
+			in_popup.on( "apply", function() {
 			} )
 
-			form.on( "show", ()=>{
+			in_popup.on( "show", ()=>{
 			})
 
-			form.on( "close", ()=>{
+			in_popup.on( "close", ()=>{
 			// aborted...
 				cancel && cancel();
 			});
-			form.on( "cancel", ()=>{
+			in_popup.on( "cancel", ()=>{
 			// aborted...
 				cancel && cancel();
 			});
@@ -3205,18 +3289,17 @@ class DataGrid extends Events {
 
 	fill() {
 		// empty existing table.
-		while( this.#rows.length ) {
-			const row = this.#rows[0];
-			this.#rows.splice( 0, 1 );
+		for( let row of this.#rows ) 
 			row.el.remove();
-		}
+		this.#rows.length = 0;
 		this.#newRowIndex = 0;  // -1 is header... and is a thing actually
 		
 		this.#initialValue.forEach( row=>{
 			this.addRow( row );
 		} );
 		/// plus one blank row to create a new entry.
-		this.addRow( null );
+		if( !("edit" in this.#opts) || this.#opts.edit )
+			this.addRow( null );
 
 	}
 
@@ -3326,17 +3409,91 @@ class DataGrid extends Events {
 
 	swapRows( row1, row2 ) {
 		// somehow swap..
+		let r1 = -1;
+		let r2 = 0;
+		let r = 0;
+		for( ; r1 < 0 && r2 < 0 && r < this.#rows.length; r++ ){
+			const chk = this.#rows[r];
+			if( chk === row1 ) { r1 = r; continue; }
+			if( chk === row2 ) { r2 = r; continue; }
+		}
+		const save = this.#rows[r1];
+		this.#rows[r1] = this.#rows[r2];
+		this.#rows[r2] = save;
+		const p1 = this.#rows[r1].el.priorSibling;
+		const p2 = this.#rows[r2].el.priorSibling;
+		this.#rows[r1].remove();
+		this.#rows[r2].before( this.#rows[r1].el);
+		this.#rows[r2].remove();
+		if( !p1 )
+			this.#rows[r1].parentNode.prepend( this.#rows[r2].el );
+		else
+			p1.after( this.#rows[r2] );
 	}
 
 	moveRowUp( row ) {
+		let prior = null;
+		let after = null;
+		let r = 0;
+		for( ; r < this.#rows.length; r++ ){
+			const chk = this.#rows[r];
+			if( after ) {
+				after = chk;
+				break;
+			}
+			if( chk === row ) {
+				after = chk;
+				continue;
+			}
+			prior = chk;
+		}
+		// r is on after now...
+		r--; // set r to current row index
+		if( r ) {
+			const save = this.#rows[r];
+			this.#rows[r] = this.#rows[r-1];
+			this.#rows[r-1] = save;
+			row.el.remove(); // detach
+			prior.el.before( row.el ); // put back in before the previous
+		} else {
+			//already first
+		}
 	}
 
 	moveRowDown( row ) {
+		let prior = null;
+		let after = null;
+		let r = 0;
+		for( ; r < this.#rows.length; r++ ){
+			const chk = this.#rows[r];
+			if( after ) {
+				after = chk;
+				break;
+			}
+			if( chk === row ) {
+				after = chk;
+				continue;
+			}
+			prior = chk;
+		}
+		if( after ) {
+			// r is on after now...
+			r--; // set r to current row index
+			const save = this.#rows[r];
+			this.#rows[r] = this.#rows[r+1];
+			this.#rows[r+1] = save;
+			row.el.remove();
+			after.el.after( row.el );
+		} else {
+			//already last
+		}
+
 	}
 
 	addRow(newRow) {
-
-		
+		/**
+		 * 
+		 */
 
 		function setCaret(el,cell,ofs) {
 			if( cell.cell.type?.options ) {
@@ -3371,7 +3528,9 @@ class DataGrid extends Events {
 			  //el.focus();
 		}
 		
-		
+		/**
+		 * select all text in a cell
+		 */
 		function selAll(el, cell) {
 			if( !cell.canEdit ) return;
 			if( cell.cell?.type.options ) {
@@ -3392,13 +3551,13 @@ class DataGrid extends Events {
 			if (lastKnownIndex === -1) {
 				//throw new Error('Could not find valid text content');
 			}else {
-			let row = el.childNodes[lastKnownIndex],
-			    col = row.textContent.length;
-			range.setStart(row, 0);
-			range.setEnd(row, col);
-			//range.collapse(true);
-			sel.removeAllRanges();
-			sel.addRange(range);
+				let row = el.childNodes[lastKnownIndex],
+						col = row.textContent.length;
+				range.setStart(row, 0);
+				range.setEnd(row, col);
+				//range.collapse(true);
+				sel.removeAllRanges();
+				sel.addRange(range);
 			}
 			//el.focus();
 		}
@@ -3481,15 +3640,19 @@ class DataGrid extends Events {
 
 				const c = newCell.el;
 
-			    	function newInput(evt) {
-			    		if( !newCell.options.length ) {
-			    		    // if( cell.type.money )
-						//evt.target.textContent += "00";
+				/**
+				 * Triggers creating a new row
+				 * @param {html event} evt 
+				 */
+				function newInput(evt) {
+					if( !newCell.options.length ) {
+						// if the cell is a list
 						if( newCell.list ) {
+							// fill options into the list of choices.
 							fillOptions( newCell );
-
 						}
-						 
+						
+						// if this is a new row that we're just starting to edit... 
 						if( !rowData ) {
 							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
 							this_.#obj[this_.#field].push( rowData );
@@ -3498,13 +3661,11 @@ class DataGrid extends Events {
 						}
 						this_.on( "newRow", {row,rowData} )
 
-						//evt.target.
-						
-					    setCaret( evt.target, newCell, cell.type.percent?-1:0 );
+						setCaret( evt.target, newCell, cell.type.percent?-1:0 );
 						//evt.target.setSelectionRange(evt.target.textContent.length, -1);
-		
 					}
 				}
+
 				function fillOptions(newCell) {
 					const cell = newCell.cell;
 					
@@ -3932,6 +4093,8 @@ const popups = {
 	handleButtonEvents : handleButtonEvents, // expose just the button handler of makeButton
 	makeChoiceInput : makeChoiceInput,// form, object, field, choiceArray, text
 	makeDateInput : makeDateInput,  // form, object, field, text
+	makeSSNInput,
+	makeZipInput,
 	strings : { get(s) { return s } },
 	setClass(){ console.trace( "Set class no longer supported."); },
 	toggleClass(){ console.trace( "toggle class no longer supported."); },
