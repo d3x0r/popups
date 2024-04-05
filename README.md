@@ -236,6 +236,32 @@ Constructor options
 | suffix | string | suffix applied to frame |
 
 
+#### Frame Methods
+
+|Method | args | description |
+|----|----|----|
+| addPage | (title[, url]) | Add a page with a title, optionally filled from a URL specified. |
+| activate | (page) | make a specific page active |
+| on | (event,cb) or (event,data) | supports event framework doesn't implement any at this time. |
+
+#### Page Methods 
+
+|Method | args | description |
+|----|----|----|
+| addPage | (title [, url]) | Adds a sub-page within this page, optional url |
+| appendChild | ( element ) | Add a chld element to this page. |
+| remove | () | remove this page |
+| removePage | (pf ) | remove another page |
+| activatePage | (page) | make a page active |
+| enableDrag | () |   |
+| enableDrop | () |   |
+| reset | () |   |
+| insertBeforePage | () |   |
+| on | (event,cb) | (event,data) | event fraemwork; manually implemented not Events (forwards events to page frame) |
+| activate| () | make this page active |
+| deactivate | () | make this page inactive - then what page IS active? |
+| 
+
 | field | value | description |
 |---|---|---|
 |title| string | text on page selection tab |
