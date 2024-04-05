@@ -3927,6 +3927,10 @@ class PageFramePage {
 			this.#page.pages.lastPage = this;
 			this.frame.on( "activate", this );
 		}
+		if( this.#frame ) {
+			// optimize already activated.
+			this.#frame.on( "activate", this );
+		}
 		return this;
 	}
 
