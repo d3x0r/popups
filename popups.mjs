@@ -3820,7 +3820,6 @@ class PageFramePage {
 	pages = null;
 	#frame = null;
 	#page = null;
-	#pageEvents = {};
 	constructor(frame ) {
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
@@ -3916,20 +3915,6 @@ class PageFramePage {
 		this.pages.lastPage = page.activate();
 	}
 
-	on(event,cb) {
-		if( cb && "function" === typeof cb )
-			if( this.#pageEvents[event] )
-				this.#pageEvents[event].push(cb);
-			else
-				this.#pageEvents[event] = [cb];
-		else {
-			var cbList;
-			if( cbList = this.#pageEvents[event]  ) {
-				cbList.forEach( cbEvent=>cbEvent( cb ));
-			}
-		}
-	}
-
 
 	activate() {
 		this.handle.classList.add( "pressed" );
@@ -3968,7 +3953,6 @@ class PageFramePage {
 		this.content.appendChild( el );
 	}
 	removePage( pf ) {
-		this.
 		pf.remove();
 
 	}
