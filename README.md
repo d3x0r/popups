@@ -260,7 +260,7 @@ Constructor options
 | on | (event,cb) | (event,data) | event fraemwork; manually implemented not Events (forwards events to page frame) |
 | activate| () | make this page active |
 | deactivate | () | make this page inactive - then what page IS active? |
-| 
+
 
 | field | value | description |
 |---|---|---|
