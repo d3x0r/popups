@@ -2994,6 +2994,8 @@ class DataGridCell {
 	
 	#cell = null;
 	#row = null;
+	// callback to clear new event and set data.
+	clearNewRow = null;
 
 	constructor( row, cell ) {
 		this.#cell = cell,
@@ -3004,12 +3006,16 @@ class DataGridCell {
 		this.filled = false,
 		this.options = [],
 
-		this.el.className = cell.className + row.suffix;
+		this.el.className = row.suffix + cell.className;
 	}
-
+	get row() {
+		return this.#row;
+	}
+	set row(val) {
+		this.#row = val;	
+	}
 	get cell() {
 		return this.#cell;
-
 	}
 
 	refresh() {
@@ -3194,7 +3200,7 @@ class DataGrid extends Events {
 		});
 		
 		
-		this.#suffix = (( in_popup instanceof Popup )?in_popup.suffix:'') + (opts?.suffix||'');
+		this.#suffix = (opts?.suffix||'');
 		
 		if( opts?.onNewRow ) this.#newRowCallback = opts.onNewRow;
 		
@@ -3441,7 +3447,7 @@ class DataGrid extends Events {
 				after = chk;
 				break;
 			}
-			if( chk === row ) {
+			if( chk.rowData === row ) {
 				after = chk;
 				continue;
 			}
@@ -3453,8 +3459,11 @@ class DataGrid extends Events {
 			const save = this.#rows[r];
 			this.#rows[r] = this.#rows[r-1];
 			this.#rows[r-1] = save;
-			row.el.remove(); // detach
-			prior.el.before( row.el ); // put back in before the previous
+			const saveData = this.#obj[this.#field][r];
+			this.#obj[this.#field][r] = this.#obj[this.#field][r-1];
+			this.#obj[this.#field][r-1] = saveData
+			save.el.remove(); // detach
+			prior.el.before( save.el ); // put back in before the previous
 		} else {
 			//already first
 		}
@@ -3470,7 +3479,7 @@ class DataGrid extends Events {
 				after = chk;
 				break;
 			}
-			if( chk === row ) {
+			if( chk.rowData === row ) {
 				after = chk;
 				continue;
 			}
@@ -3478,12 +3487,16 @@ class DataGrid extends Events {
 		}
 		if( after ) {
 			// r is on after now...
+			if( r === this.#newRowIndex ) return;
 			r--; // set r to current row index
 			const save = this.#rows[r];
 			this.#rows[r] = this.#rows[r+1];
 			this.#rows[r+1] = save;
-			row.el.remove();
-			after.el.after( row.el );
+			const saveData = this.#obj[this.#field][r];
+			this.#obj[this.#field][r] = this.#obj[this.#field][r+1];
+			this.#obj[this.#field][r+1] = saveData
+			save.el.remove();
+			after.el.after( save.el );
 		} else {
 			//already last
 		}
@@ -3501,6 +3514,7 @@ class DataGrid extends Events {
 				cell.list.selectedIndex = 0;
 			} else {
 
+				el.classList.add( "editing" );
 				function isTextNodeAndContentNoEmpty(node) {
 					return ((node.nodeType == Node.ELEMENT_NODE ) || ( node.nodeType == Node.TEXT_NODE ) )&& node.textContent.trim().length > 0
 				}
@@ -3536,6 +3550,7 @@ class DataGrid extends Events {
 			if( cell.cell?.type.options ) {
 				return;
 			}
+			el.classList.add( "editing" );
 			function isTextNodeAndContentNoEmpty(node) {
 			  return node.nodeType == Node.TEXT_NODE && node.textContent.trim().length > 0
 			}
@@ -3618,9 +3633,9 @@ class DataGrid extends Events {
 							cell.type.grid.newRow( row );
 						})
 						if( cell.type.grid.change )
-						newCell.list.on("change", (row)=>{
-							cell.type.grid.change( row );
-						})
+							newCell.list.on("change", (row)=>{
+								cell.type.grid.change( row );
+							})
 					}
 					//newCell.el.appendChild( newCell.list );
 					//cell.newInput = onEdit( cell, newCell, newRow, row );
@@ -3656,6 +3671,9 @@ class DataGrid extends Events {
 						if( !rowData ) {
 							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
 							this_.#obj[this_.#field].push( rowData );
+							for( let col of row.cells ) {
+								col.clearNewRow( row.rowData );
+							}
 							addUpdate( cell, newCell );
 							this_.addRow( null );
 						}
@@ -3708,6 +3726,12 @@ class DataGrid extends Events {
 				}
 
 				if( !rowData ) {
+					newCell.clearNewRow = (newrow)=>{
+						rowData = newrow;
+						// add update has the remove listener
+						addUpdate( cell, newCell );
+						fillOptions( newCell );
+					}
 					c.addEventListener( "input", newInput );
 					c.addEventListener( "click", newInput );
 				} else {
@@ -3765,12 +3789,14 @@ class DataGrid extends Events {
 						c.removeEventListener( "click", newInput );
 						
 						c.addEventListener( "focus", (evt)=>{
+							c.classList.add( "editing" );
 							if( type.percent ) {
 								selAll( evt.target, newCell );
 							}else
 								selAll( evt.target, newCell );
 						} );
 						c.addEventListener( "blur", (evt)=>{
+							c.classList.remove( "editing" );
 							setValue( row, rowData, field, c.textContent, type );
 					    	if( type.money ) {
 								c.textContent = popups.utils.to$( getInputValue( rowData,cell_header.field) );
@@ -3857,6 +3883,13 @@ class PageFramePage {
 			frame.pages.push( this );
 		}
 	}
+	set tooltip(val) {
+		const tooltip = document.createElement( "span" );
+		tooltip.className = "tooltip-text";
+		tooltip.textContent = val;
+		this.handle.appendChild( tooltip );
+		this.handle.classList.add( "has-tooltip");
+	}
 	reset() {
 		if( this.pages )
 			for( let page of this.pages )
@@ -3865,8 +3898,15 @@ class PageFramePage {
 	remove() {
 		this.content.remove();
 		this.handle.remove();
+		if( this.#page ) {
 		const id = this.#page.pages.find( page=>page===this );
 		if( id >= 0 ) this.#page.pages.splice( id, 1 );
+		} 
+		if( this.#frame ) {
+			const id = this.#frame.pages.find( page=>page===this );
+			if( id >= 0 ) this.#frame.pages.splice( id, 1 );
+		
+		}
 	}
 
 	enableDrag( type, cbData ) {

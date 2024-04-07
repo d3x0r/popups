@@ -241,10 +241,17 @@ Constructor options
 |Method | args | description |
 |----|----|----|
 | addPage | (title[, url]) | Add a page with a title, optionally filled from a URL specified. |
-| activate | (page) | make a specific page active |
+| activate | (page) | make a specific page active; automatically deactivate old pages |
 | on | (event,cb) or (event,data) | supports event framework doesn't implement any at this time. |
 
+|Event | parameters | description |
+|---|---|---|
+|activate| page | A new page is active, can syncrhonize other controls like buttons for next/prior pages |
+
 #### Page Methods 
+
+When page .activate() is called, an event is gnerated to the frame "activate" which has a parameter of the
+page which is being activated.
 
 |Method | args | description |
 |----|----|----|
@@ -253,13 +260,13 @@ Constructor options
 | remove | () | remove this page |
 | removePage | (pf ) | remove another page |
 | activatePage | (page) | make a page active |
-| enableDrag | () |   |
-| enableDrop | () |   |
-| reset | () |   |
-| insertBeforePage | () |   |
+| enableDrag | () |  enable dragging page handles - can be used for reodring for example.  |
+| enableDrop | () | enable receiving drop events  |
+| reset | () |  reset the data content of a page |
+| insertBeforePage | () | adds a new page before the specified page, NULL adds at the end.  |
 | on | (event,cb) | (event,data) | event fraemwork; manually implemented not Events (forwards events to page frame) |
-| activate| () | make this page active |
-| deactivate | () | make this page inactive - then what page IS active? |
+| activate| () | make this page active.  It's better to use the frame.activate() method isntead of activating individual pages. |
+| deactivate | () | make this page inactive; if multiple pages are activated, their content will all be visible, this hides the content of a page. |
 
 
 | field | value | description |

@@ -544,15 +544,18 @@ div.mouseCatcher{
 	border-style:inset;
 	padding: .6vh 0.6vw;
 	margin-bottom: 1vh;
-	background: #999;
-	color: #000;
+	color:white;
+	font-weight:600;
+	background: linear-gradient(0deg, rgba(0,241,255,1) 0%, rgba(1,1,61,1) 19%, rgba(0,0,0,1) 43%, rgba(7,46,145,1) 77%, rgba(0,212,255,1) 100%)
 }
 
 [class^='page-frame-page-handle'] {
 	padding: .6vh 0.6vw;
 	border-style:outset;
 	margin-bottom: 1vh;
-	background: #777;
+	color:white;
+	font-weight:600;
+	background: linear-gradient(0deg, rgb(7 1 112) 0%, rgba(9,9,121,1) 23%, rgb(10 131 156) 56%, rgba(7,46,145,1) 77%);;;
 }
 
 
@@ -655,4 +658,9 @@ td, th {
 .has-tooltip:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
+}
+
+.editing {
+	background-color: #cfc;
+	color: #000;
 }
