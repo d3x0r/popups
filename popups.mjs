@@ -232,7 +232,7 @@ function addCaptionHandler( c, popup_ ) {
 		function mouseMove(evt){
 			const state = globalMouseState.activeFrame;
 			if( state ) {
-   	   	  		if( state.dragging ) {
+   	   	if( state.dragging ) {
 					evt.preventDefault();
 					var pRect = state.frame.getBoundingClientRect();
 					//var x = evt.clientX - pRect.left;
@@ -246,7 +246,7 @@ function addCaptionHandler( c, popup_ ) {
 						localStorage.setItem( state.frame.id + "/y", popup.divFrame.style.top );
 					}
 				}
-   	   	  		if( state.sizing ) {
+   	   	if( state.sizing ) {
 					evt.preventDefault();
 					var pRect = state.frame.getBoundingClientRect();
 					//var x = evt.clientX - pRect.left;
@@ -2312,6 +2312,9 @@ export class GraphicFrame extends Popup {
 		appCanvas.addEventListener( "mousemove", mouseMove );
 		appCanvas.addEventListener( "mouseup", mouseUp );
 		appCanvas.addEventListener( "mousedown", mouseDown );
+		document.body.addEventListener( "mousemove", mouseMove );
+		document.body.addEventListener( "mouseup", mouseUp );
+		document.body.addEventListener( "mousedown", mouseDown );
 
 
 		var prior_buttons;
@@ -3608,7 +3611,16 @@ class DataGrid extends Events {
 						const text = cell.field
 							?getInputValue( rowData,cell.field)
 							:(cell.type?.text?cell.type?.text:"X");
-						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className} );
+						newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row.rowData ), {suffix:newCell.el.className + (cell.type.suffix||"") } );
+					} else {
+						//console.log( "No button in cell... will have to create later..." );						
+							newCell.clearNewRow = (newrow)=>{
+								const text = cell.field
+									?getInputValue( newrow,cell.field)
+									:(cell.type?.text?cell.type?.text:"X");
+								newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( newrow ), {suffix:newCell.el.className + (cell.type.suffix||"") } );
+								// add update has the remove listener
+							}
 					}
 				} else if( cell.type.hasOwnProperty( "toString" ) ) {
 					newCell.canEdit = false;				
@@ -3665,6 +3677,13 @@ class DataGrid extends Events {
 						if( newCell.list ) {
 							// fill options into the list of choices.
 							fillOptions( newCell );
+						}else {
+							newCell.clearNewRow = (newrow)=>{
+								rowData = newrow;
+								// add update has the remove listener
+								addUpdate( cell, newCell );
+								fillOptions( newCell );
+							}
 						}
 						
 						// if this is a new row that we're just starting to edit... 
@@ -3672,7 +3691,9 @@ class DataGrid extends Events {
 							row.rowData = rowData = this_.#newRowCallback(this_.#initialValue);
 							this_.#obj[this_.#field].push( rowData );
 							for( let col of row.cells ) {
-								col.clearNewRow( row.rowData );
+								if( col.clearNewRow )
+									col.clearNewRow( row.rowData );
+								else console.log( "Do we often not have a clear new row?" );
 							}
 							addUpdate( cell, newCell );
 							this_.addRow( null );
