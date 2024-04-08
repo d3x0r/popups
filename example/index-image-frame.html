@@ -18,7 +18,8 @@ const form = new popups.GraphicFrame( { width:800, height:300, image:{
 form.setFrame( "./WindowFrame-LightWoodFilled.png" );
 
 popups.makeButton( form, "ClickMe", ()=>{
-	popups.Alert( "Ok ok!" );
+	const alert = popups.Alert( "Ok ok!" );
+	alert.show();
 } );
 
 </script>
