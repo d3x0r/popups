@@ -1,6 +1,382 @@
 
 import {Popup} from "./popups.mjs"
 
+let uid = 0;
+
+export class SlicedImage  {
+
+	leftWidth = 54;		
+	topWidth = 54;
+	rightWidth = 58;
+	bottomWidth = 55;
+	mouseSection = 0;
+	draw = null;
+	mouse = null;
+	className = "";
+
+	divFrame = document.createElement( "div" );
+	 sheet = document.createElement('style');
+
+	styleTags = {
+	};
+
+	controlGroup = document.createElement( "div" );
+
+	controlGroupRows = [document.createElement( "div" ),document.createElement( "div" ),document.createElement( "div" )];
+
+	controlSet = null;
+
+	sliceImage( image, makeDivs ) {
+
+	let xx = [];
+	if( this.selector )
+		this.sheet.innerHTML = `
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-ul {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-u {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-ur {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-l {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-c {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-r {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-bl {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-b {}
+		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-br {}
+		`;
+	else
+		this.sheet.innerHTML = `
+		.image-slice${this.className}-ul {}
+		.image-slice${this.className}-u  {}
+		.image-slice${this.className}-ur {}
+		.image-slice${this.className}-l  {}
+		.image-slice${this.className}-c  {}
+		.image-slice${this.className}-r  {}
+		.image-slice${this.className}-bl {}
+		.image-slice${this.className}-b  {}
+		.image-slice${this.className}-br {}
+		`;
+
+		document.body.appendChild(this.sheet);
+
+		
+		const canvas = document.createElement( "canvas" );
+		const ctx = canvas.getContext( "2d" );
+		
+		const {leftWidth,topWidth,rightWidth,bottomWidth} = this;
+
+
+		//------------ corners ------------------
+		let s;
+		
+		for( let rule of this.sheet.sheet.cssRules){
+			//console.log( "Rule:", rule );
+			//const selectors = rule.selectorText.split(':');
+			const parts = rule.selectorText.split('-');
+			if( makeDivs )
+				this.controlSet[parts[parts.length-1]].className = "image-slice"+this.className+"-"+parts[parts.length-1];
+			switch( parts[parts.length-1] ) {
+			case "ul":
+
+		//------------ corners ------------------
+		canvas.width = leftWidth;
+		canvas.height =  topWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, 0, 0 );
+		const ul_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+ul_corner+"')";
+		s.position = "absolute";
+		s.left = 0;
+		s.top = 0;
+		s.width = leftWidth;
+		s.height = topWidth;
+				break;
+		case "ur":
+
+		//ctx.drawImage(frameFrame, 0, 0, leftWidth, topWidth, 0, 0, leftWidth, topWidth );
+		
+
+		canvas.width = rightWidth;
+		canvas.height =  topWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -image.width+rightWidth, 0 );
+		const ur_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+ur_corner+"')";
+		s.position = "absolute";
+		s.right = 0;
+		s.top = 0;
+		s.width = rightWidth;
+		s.height = topWidth;
+
+		break;
+		case "bl":
+
+		//ctx.drawImage(frameFrame, frameFrame.width-rightWidth, 0, leftWidth, topWidth, frame.canvas.width-rightWidth, 0, leftWidth, topWidth );
+
+
+		canvas.width = leftWidth;
+		canvas.height =  topWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, 0, -image.height+bottomWidth );
+		const bl_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+bl_corner+"')";
+		s.position = "absolute";
+		s.left = 0;
+		s.bottom = 0;
+		s.width = leftWidth;
+		s.height = bottomWidth;
+
+		break;
+		case "br":
+
+		//ctx.drawImage(frameFrame, 0, src.height-bottomWidth, leftWidth, topWidth, 0, frame.canvas.height - bottomWidth, leftWidth, bottomWidth );
+
+		canvas.width = rightWidth;
+		canvas.height =  bottomWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -image.width+rightWidth, -image.height+bottomWidth );
+		const br_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+br_corner+"')";
+		s.position = "absolute";
+		s.right = 0;
+		s.bottom = 0;
+		s.width = rightWidth;
+		s.height = bottomWidth;
+
+
+		//ctx.drawImage(frameFrame, frameFrame.width-rightWidth, src.height-bottomWidth, rightWidth, bottomWidth
+		//	, frame.canvas.width-rightWidth, frame.canvas.height - bottomWidth, rightWidth, bottomWidth );
+		break;
+		case "u":
+
+		canvas.width = image.width-(leftWidth+rightWidth);
+		canvas.height =  topWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -leftWidth, 0 );
+		const u_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+u_corner+"')";
+		s.backgroundSize="100% 100%";
+		s.position = "absolute";
+		s.left = leftWidth;
+		s.top = 0;
+		s.right = rightWidth;
+		s.height = canvas.height;
+
+
+		// top-bottom
+		//ctx.drawImage(frameFrame, leftWidth, 0
+		//	, src.width-(leftWidth+rightWidth), topWidth
+		//	, leftWidth, 0, frame.canvas.width-(leftWidth+rightWidth), topWidth );
+
+		break;
+		case "b":
+
+		canvas.width = image.width-(leftWidth+rightWidth);
+		canvas.height =  bottomWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -leftWidth, -image.height+bottomWidth );
+		const b_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+b_corner+"')";
+		s.backgroundSize="100% 100%";
+		s.position = "absolute";
+		s.left = leftWidth;
+		s.bottom = 0;
+		s.right = rightWidth;
+		s.height = canvas.height;
+
+		//ctx.drawImage(frameFrame, leftWidth, src.height-bottomWidth
+		//	, src.width-(leftWidth+rightWidth), bottomWidth
+		//	, leftWidth, frame.canvas.height-bottomWidth
+		//	, frame.canvas.width-(leftWidth+rightWidth), bottomWidth );
+		break;
+		case "l":
+
+		canvas.width = leftWidth;
+		canvas.height =  image.height - topWidth - bottomWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, 0, -topWidth );
+		const l_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+l_corner+"')";
+		s.backgroundSize="100% 100%";
+		s.position = "absolute";
+		s.left = 0;
+		s.top = topWidth;
+		s.width = leftWidth;
+		s.bottom = bottomWidth;
+
+		// left-right
+		//ctx.drawImage(frameFrame, 0, topWidth
+		//	, leftWidth, src.height-(topWidth+bottomWidth)
+		//	, 0, topWidth
+		//	, leftWidth, frame.canvas.height-(topWidth+bottomWidth) );
+
+		break;
+		case "r":
+		canvas.width = rightWidth;
+		canvas.height =  image.height - topWidth - bottomWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -image.width+ rightWidth, -topWidth );
+		const r_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+r_corner+"')";
+		s.backgroundSize="100% 100%";
+		s.position = "absolute";
+		s.right = 0;
+		s.top = topWidth;
+		s.bottom = bottomWidth;
+		s.width = canvas.width;
+
+		//ctx.drawImage(frameFrame, src.width - rightWidth, topWidth
+		//	, rightWidth, src.height-(topWidth+bottomWidth)
+		//	, frame.canvas.width - rightWidth, topWidth
+		//	, rightWidth, frame.canvas.height-(topWidth+bottomWidth) );
+
+		break;
+		case "c":
+		canvas.width = image.width - leftWidth - rightWidth;;
+		canvas.height =  image.height - topWidth - bottomWidth;
+		ctx.clearRect( 0, 0, canvas.width, canvas.height );
+		ctx.drawImage( image, -leftWidth, -topWidth );
+		const c_corner = canvas.toDataURL( "png" );
+		s = rule.style;
+		s.backgroundImage = "url('"+c_corner+"')";
+		s.backgroundSize="100% 100%";
+		s.position = "absolute";
+		s.left = leftWidth;
+		s.top = topWidth;
+		s.right = rightWidth;
+		s.bottom = bottomWidth;
+				break;
+
+
+
+		//ctx.drawImage(frameFrame
+		//	, leftWidth, topWidth, src.width-(leftWidth+rightWidth), src.height-(topWidth+bottomWidth)
+		//	, leftWidth, topWidth, frame.canvas.width-(leftWidth+rightWidth), frame.canvas.height-(topWidth+bottomWidth) );
+
+	}
+	
+	xx .push( rule.cssText );
+//	console.log( "Rules:", rule.cssText );
+
+}
+  console.log( xx.join('\n' ) );
+		
+	}
+
+	/**
+	*  opts is an object iwth
+	*   leftWidth
+	*   topWidth
+	*   rightWidth
+	*   bottomWidth
+	*   className
+	*   css State (:disabled, :hover, :active, :focus)
+	*   
+	*/
+
+	constructor( opts ) {
+
+
+		this.className = opts.className || ("-"+uid++);
+		this.selector = opts.selector || (""); // ':hover' for example.
+		this.leftWidth = opts.image.left || 54;
+		this.topWidth = opts.image.top || 54;
+		this.rightWidth = opts.image.right || 58;
+		this.bottomWidth = opts.image.bottom || 55;
+		if( opts.selectors ) this.makeDivs = true;
+		else this.makeDivs = false;
+
+	if( this.makeDivs ) {
+		this.controlGroup.className = "image-slice-group"+this.className;
+		this.controlGroupRows[0].className = "image-slice-group-row"+this.className;
+		this.controlGroupRows[1].className = "image-slice-group-row"+this.className;
+		this.controlGroupRows[2].className = "image-slice-group-row"+this.className;
+
+		//this.divFrame.style.position = "relative";
+		this.divFrame.appendChild( this.controlGroup );
+
+			this.controlSet = {
+				ul : document.createElement( "div" ), 
+				u : document.createElement( "div" ), 
+				ur : document.createElement( "div" ),
+				l : document.createElement( "div" ), 
+				c : document.createElement( "div" ), 
+				r : document.createElement( "div" ),
+				bl : document.createElement( "div" ), 
+				b : document.createElement( "div" ), 
+				br : document.createElement( "div" ),
+			}
+
+
+
+		this.controlGroup.appendChild( this.controlGroupRows[0] )
+		this.controlGroupRows[0].appendChild( this.controlSet.ul );
+		this.controlGroupRows[0].appendChild( this.controlSet.u );
+		this.controlGroupRows[0].appendChild( this.controlSet.ur );
+
+		this.controlGroup.appendChild( this.controlGroupRows[1] );		
+		this.controlGroupRows[1].appendChild( this.controlSet.l );
+		this.controlGroupRows[1].appendChild( this.controlSet.c );
+		this.controlGroupRows[1].appendChild( this.controlSet.r );
+
+		this.controlGroup.appendChild( this.controlGroupRows[2] );		
+		this.controlGroupRows[2].appendChild( this.controlSet.bl );
+		this.controlGroupRows[2].appendChild( this.controlSet.b );
+		this.controlGroupRows[2].appendChild( this.controlSet.br );
+
+
+
+
+		//-----------------------------------------------------------------------
+		if( opts.width )
+		this.setWidth( opts.width );
+		if( opts.height )
+		this.setHeight( opts.height );
+		this.divFrame.className = "graphic-frame-container";
+	}
+		this.setFrame( opts.image.url );
+
+		const selects = opts.selectors
+		for( let sel in selects ) {
+			new SlicedImage( { childOf: this, image:{ url: opts.selectors[sel]
+							, left:this.leftWidth, right:this.rightWidth, top:this.topWidth, bottom:this.bottomWidth }, selector : sel, className : this.className } );
+		}
+	}
+
+	
+
+	setFrame( image ) {
+			var img = document.createElement( "IMG" );
+			img.src=image;
+			const this_ = this;
+			img.onload = function() {
+				this_.frameFrame = img;
+				console.log( "have image loaded?" );
+				this_.setImage( img );
+			}
+			return this;
+	}
+	setImage( image ) {
+		this.sliceImage( image, this.makeDivs );
+	}
+	setWidth( w ) {
+		this.divFrame.style.width = w;
+	}
+	setHeight( h ) {
+		this.divFrame.style.height = h;
+	}
+
+}
+
+
+
+
+
 export class DivGraphicFrame extends Popup {
 	static frames = [];
 
@@ -44,212 +420,18 @@ export class DivGraphicFrame extends Popup {
 	}
 
 
-	sliceImage( image ) {
-		
-		const canvas = document.createElement( "canvas" );
-		const ctx = canvas.getContext( "2d" );
-		
-		const {leftWidth,topWidth,rightWidth,bottomWidth} = this;
-
-
-		//------------ corners ------------------
-		let s;
-		canvas.width = leftWidth;
-		canvas.height =  topWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, 0, 0 );
-		const ul_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.ul.style;
-		s.backgroundImage = "url('"+ul_corner+"')";
-		s.position = "absolute";
-		s.left = 0;
-		s.top = 0;
-		s.width = leftWidth;
-		s.height = topWidth;
-
-
-		//ctx.drawImage(frameFrame, 0, 0, leftWidth, topWidth, 0, 0, leftWidth, topWidth );
-		
-
-		canvas.width = rightWidth;
-		canvas.height =  topWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -image.width+rightWidth, 0 );
-		const ur_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.ur.style;
-		s.backgroundImage = "url('"+ur_corner+"')";
-		s.position = "absolute";
-		s.right = 0;
-		s.top = 0;
-		s.width = rightWidth;
-		s.height = topWidth;
-
-
-		//ctx.drawImage(frameFrame, frameFrame.width-rightWidth, 0, leftWidth, topWidth, frame.canvas.width-rightWidth, 0, leftWidth, topWidth );
-
-
-		canvas.width = leftWidth;
-		canvas.height =  topWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, 0, -image.height+bottomWidth );
-		const bl_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.bl.style;
-		s.backgroundImage = "url('"+bl_corner+"')";
-		s.position = "absolute";
-		s.left = 0;
-		s.bottom = 0;
-		s.width = leftWidth;
-		s.height = bottomWidth;
-
-
-		//ctx.drawImage(frameFrame, 0, src.height-bottomWidth, leftWidth, topWidth, 0, frame.canvas.height - bottomWidth, leftWidth, bottomWidth );
-
-		canvas.width = rightWidth;
-		canvas.height =  bottomWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -image.width+rightWidth, -image.height+bottomWidth );
-		const br_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.br.style;
-		s.backgroundImage = "url('"+br_corner+"')";
-		s.position = "absolute";
-		s.right = 0;
-		s.bottom = 0;
-		s.width = rightWidth;
-		s.height = bottomWidth;
-
-
-		//ctx.drawImage(frameFrame, frameFrame.width-rightWidth, src.height-bottomWidth, rightWidth, bottomWidth
-		//	, frame.canvas.width-rightWidth, frame.canvas.height - bottomWidth, rightWidth, bottomWidth );
-
-		canvas.width = image.width-(leftWidth+rightWidth);
-		canvas.height =  topWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -leftWidth, 0 );
-		const u_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.u.style;
-		s.backgroundImage = "url('"+u_corner+"')";
-		s.backgroundSize="100% 100%";
-		s.position = "absolute";
-		s.left = leftWidth;
-		s.top = 0;
-		s.right = rightWidth;
-		s.height = canvas.height;
-
-
-		// top-bottom
-		//ctx.drawImage(frameFrame, leftWidth, 0
-		//	, src.width-(leftWidth+rightWidth), topWidth
-		//	, leftWidth, 0, frame.canvas.width-(leftWidth+rightWidth), topWidth );
-
-
-		canvas.width = image.width-(leftWidth+rightWidth);
-		canvas.height =  bottomWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -leftWidth, -image.height+bottomWidth );
-		const b_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.b.style;
-		s.backgroundImage = "url('"+b_corner+"')";
-		s.backgroundSize="100% 100%";
-		s.position = "absolute";
-		s.left = leftWidth;
-		s.bottom = 0;
-		s.right = rightWidth;
-		s.height = canvas.height;
-
-		//ctx.drawImage(frameFrame, leftWidth, src.height-bottomWidth
-		//	, src.width-(leftWidth+rightWidth), bottomWidth
-		//	, leftWidth, frame.canvas.height-bottomWidth
-		//	, frame.canvas.width-(leftWidth+rightWidth), bottomWidth );
-
-		canvas.width = leftWidth;
-		canvas.height =  image.height - topWidth - bottomWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, 0, -topWidth );
-		const l_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.l.style;
-		s.backgroundImage = "url('"+l_corner+"')";
-		s.backgroundSize="100% 100%";
-		s.position = "absolute";
-		s.left = 0;
-		s.top = topWidth;
-		s.width = leftWidth;
-		s.bottom = bottomWidth;
-
-		// left-right
-		//ctx.drawImage(frameFrame, 0, topWidth
-		//	, leftWidth, src.height-(topWidth+bottomWidth)
-		//	, 0, topWidth
-		//	, leftWidth, frame.canvas.height-(topWidth+bottomWidth) );
-
-		canvas.width = rightWidth;
-		canvas.height =  image.height - topWidth - bottomWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -image.width+ rightWidth, -topWidth );
-		const r_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.r.style;
-		s.backgroundImage = "url('"+r_corner+"')";
-		s.backgroundSize="100% 100%";
-		s.position = "absolute";
-		s.right = 0;
-		s.top = topWidth;
-		s.bottom = bottomWidth;
-		s.width = canvas.width;
-
-		//ctx.drawImage(frameFrame, src.width - rightWidth, topWidth
-		//	, rightWidth, src.height-(topWidth+bottomWidth)
-		//	, frame.canvas.width - rightWidth, topWidth
-		//	, rightWidth, frame.canvas.height-(topWidth+bottomWidth) );
-
-		canvas.width = image.width - leftWidth - rightWidth;;
-		canvas.height =  image.height - topWidth - bottomWidth;
-		ctx.clearRect( 0, 0, canvas.width, canvas.height );
-		ctx.drawImage( image, -leftWidth, -topWidth );
-		const c_corner = canvas.toDataURL( "png" );
-		s = this.controlSet.c.style;
-		s.backgroundImage = "url('"+c_corner+"')";
-		s.backgroundSize="100% 100%";
-		s.position = "absolute";
-		s.left = leftWidth;
-		s.top = topWidth;
-		s.right = rightWidth;
-		s.bottom = bottomWidth;
-
-
-		//ctx.drawImage(frameFrame
-		//	, leftWidth, topWidth, src.width-(leftWidth+rightWidth), src.height-(topWidth+bottomWidth)
-		//	, leftWidth, topWidth, frame.canvas.width-(leftWidth+rightWidth), frame.canvas.height-(topWidth+bottomWidth) );
-
-
-		
-	}
-
 	constructor (opts) {
     	super(null,null);
 		this.useMouse = false;
 
 		const appCanvas = this.divFrame;
 
+
 		this.divFrame.style.position = "relative";
-		this.divFrame.appendChild( this.controlGroup );
-		this.controlGroup.appendChild( this.controlGroupRows[0] );		
-		this.controlGroupRows[0].appendChild( this.controlSet.ul );
-		this.controlGroupRows[0].appendChild( this.controlSet.u );
-		this.controlGroupRows[0].appendChild( this.controlSet.ur );
+		this.si = new SlicedImage( opts );
+		//this.si.setFrame( opts.image.url );
+		this.divFrame.appendChild( this.si.divFrame );
 
-		this.controlGroup.appendChild( this.controlGroupRows[1] );		
-		this.controlGroupRows[1].appendChild( this.controlSet.l );
-		this.controlGroupRows[1].appendChild( this.controlSet.c );
-		this.controlGroupRows[1].appendChild( this.controlSet.r );
-
-		this.controlGroup.appendChild( this.controlGroupRows[2] );		
-		this.controlGroupRows[2].appendChild( this.controlSet.bl );
-		this.controlGroupRows[2].appendChild( this.controlSet.b );
-		this.controlGroupRows[2].appendChild( this.controlSet.br );
-
-
-		//this.draw = _draw;
-		//this.mouse = _mouse;
-	
 		var rect = appCanvas.getBoundingClientRect();
 		//appCanvas.style.width = rect.right-rect.left;//window.innerWidth;
 		//appCanvas.style.height = rect.bottom-rect.top;//window.innerHeight;
@@ -268,7 +450,7 @@ export class DivGraphicFrame extends Popup {
 		this.sy = opts.image.top;//this.topWidth;
 		this.setWidth( opts.width );
 		this.setHeight( opts.height );
-		this.setFrame( opts.image.url );
+		//this.setFrame( opts.image.url );
 		this.divFrame.className = "graphic-frame-container";
 
 		//this.divContent.remove();
