@@ -1,0 +1,131 @@
+<HTML>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<title>Test Graphic Frame Background</title></head>
+<style>
+.image-slice-group-sameClass {
+	border: 3px solid black;
+}
+.image-slice-group-sameClass:hover {
+	border: 3px solid red;
+}
+
+.graphic-frame-container-mask-layer {
+	position:absolute;
+	width:inherit; height:inherit;
+}
+
+.graphic-frame-container-button-lense {
+	position:absolute;
+	width:inherit; height:inherit;
+}
+.image-slice-group-mask-layer {
+	position:absolute;
+	width:inherit;
+	height:inherit;
+}
+.image-slice-group-button-lense {
+	position:absolute;
+	width:inherit; height:inherit;
+}
+</style>
+<body>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="0px" height="0px"><defs><filter id="red-black"> <feColorMatrix 
+  type="matrix"
+  values="0 0.05 0.8 0 0
+          0 0.05 0 0 0
+          0 0.05 0.0 0 0
+          0 0 0 1 0" /></filter></defs></svg>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="0px" height="0px"><defs><filter id="green-red"> <feColorMatrix 
+  type="matrix"
+  values="0 0 0.8 0 0
+          0 1 0 0 0
+          0 0 0.0 0 0
+          0 0 0 1 0" /></filter></defs></svg>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="0px" height="0px"><defs><filter id="blue-red"> <feColorMatrix 
+  type="matrix"
+  values="0 0 0.5 0 0
+          0 0 0.7 0 0
+          0 0.5 0.0 0 0
+          0 0 0 1 0" /></filter></defs></svg>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="0px" height="0px"><defs><filter id="black-green"> <feColorMatrix 
+  type="matrix"
+  values="0 0 0.1 0 0
+          0 1 0.1 0 0
+          0 0 0.1 0 0
+          0 0 0.1 1 0" /></filter></defs></svg>
+
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="0px" height="0px"><defs><filter id="orange-purple"> <feColorMatrix 
+  type="matrix"
+  values="0 0.8 0.5 0 0
+          0 0 0.4 0 0
+          0 0.9 0 0 0
+          0 0  0  1 0" /></filter></defs></svg>
+
+</body>
+<script type="module">
+import {popups} from "../popups.mjs"
+import {DivGraphicFrame,SlicedImage} from "../DivGraphicFrame.mjs"
+
+function addButton( color, left, top, w, h ) {
+
+const button = document.createElement( "div" );
+button.style.position = "absolute";
+button.style.left = left;
+button.style.top = top;
+
+const mask = new SlicedImage( { className: "-mask-layer"
+		, width: w||150
+		,height : h||115
+		, image : {url: "./colorLayer.png", left:18, right:18, top:18, bottom:18} }
+		, true );
+
+mask.divFrame.style.filter = "url(#"+color+")";
+
+const lense =  new SlicedImage( { className : "-button-lense"
+		, width: w||150
+		, height: h||115
+		, image : {url: "./defaultLens.png", left:18, right:18, top:18, bottom:18}
+		, selectors : {":active:hover" : {url: "./pressedLens.png", left:18, right:18, top:18, bottom:18 } } }, false );
+
+button.appendChild( mask.divFrame );
+button.appendChild( lense.divFrame );
+document.body.appendChild( button );
+
+}
+
+addButton( "red-black", 10, 10 );
+addButton( "green-red", 180, 10 );
+addButton( "blue-red", 360, 10 );
+addButton( "black-green", 540, 10 );
+addButton( "orange-purple", 10, 170, 50, 35 );
+
+addButton( "orange-purple", 80, 170, 450, 230 );
+addButton( "orange-purple", 80, 170, 850, 530 );
+
+const form = new DivGraphicFrame( { image:{
+			url:"./WindowFrame-LightWoodFilled.png"
+
+			, left:54
+			, right:58
+			, top:54
+			, bottom:55
+			}
+		,className : "-sameClass"
+	, width:512
+	, height: 380
+		, selectors : { ":hover" : {url:"toonframe.png"} }	
+		} );
+//form.setFrame( "./WindowFrame-LightWoodFilled.png" );
+
+popups.makeButton( form, "ClickMe", ()=>{
+	const alert = popups.Alert( "Ok ok!" );
+	alert.show();
+} );
+
+</script>
+</html>

@@ -22,7 +22,7 @@ export class SlicedImage  {
 
 	controlGroup = document.createElement( "div" );
 
-	controlGroupRows = [document.createElement( "div" ),document.createElement( "div" ),document.createElement( "div" )];
+//	controlGroupRows = [document.createElement( "div" ),document.createElement( "div" ),document.createElement( "div" )];
 
 	controlSet = null;
 
@@ -31,15 +31,15 @@ export class SlicedImage  {
 	let xx = [];
 	if( this.selector )
 		this.sheet.innerHTML = `
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-ul {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-u {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-ur {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-l {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-c {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-r {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-bl {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-b {}
-		.image-slice-group${this.className}${this.selector} > .image-slice-group-row${this.className} >  .image-slice${this.className}-br {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-ul {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-u {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-ur {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-l {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-c {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-r {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-bl {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-b {}
+		.image-slice-group${this.className}${this.selector} >  .image-slice${this.className}-br {}
 		`;
 	else
 		this.sheet.innerHTML = `
@@ -279,7 +279,7 @@ export class SlicedImage  {
 	*   
 	*/
 
-	constructor( opts ) {
+	constructor( opts, makeDivs ) {
 
 
 		this.className = opts.className || ("-"+uid++);
@@ -289,15 +289,17 @@ export class SlicedImage  {
 		this.rightWidth = opts.image.right || 58;
 		this.bottomWidth = opts.image.bottom || 55;
 		if( opts.selectors ) this.makeDivs = true;
-		else this.makeDivs = false;
+		else this.makeDivs = false || makeDivs;
 
 	if( this.makeDivs ) {
 		this.controlGroup.className = "image-slice-group"+this.className;
-		this.controlGroupRows[0].className = "image-slice-group-row"+this.className;
-		this.controlGroupRows[1].className = "image-slice-group-row"+this.className;
-		this.controlGroupRows[2].className = "image-slice-group-row"+this.className;
+//		this.controlGroupRows[0].className = "image-slice-group-row"+this.className;
+//		this.controlGroupRows[1].className = "image-slice-group-row"+this.className;
+//		this.controlGroupRows[2].className = "image-slice-group-row"+this.className;
 
-		//this.divFrame.style.position = "relative";
+//		this.divFrame.style.position = "relative";
+//		this.divFrame.style.width = "inherit";
+//		this.divFrame.style.height = "inherit";
 		this.divFrame.appendChild( this.controlGroup );
 
 			this.controlSet = {
@@ -314,20 +316,20 @@ export class SlicedImage  {
 
 
 
-		this.controlGroup.appendChild( this.controlGroupRows[0] )
-		this.controlGroupRows[0].appendChild( this.controlSet.ul );
-		this.controlGroupRows[0].appendChild( this.controlSet.u );
-		this.controlGroupRows[0].appendChild( this.controlSet.ur );
+		//this.controlGroup.appendChild( this.controlGroupRows[0] )
+		this.controlGroup.appendChild( this.controlSet.ul );
+		this.controlGroup.appendChild( this.controlSet.u );
+		this.controlGroup.appendChild( this.controlSet.ur );
 
-		this.controlGroup.appendChild( this.controlGroupRows[1] );		
-		this.controlGroupRows[1].appendChild( this.controlSet.l );
-		this.controlGroupRows[1].appendChild( this.controlSet.c );
-		this.controlGroupRows[1].appendChild( this.controlSet.r );
+		//this.controlGroup.appendChild( this.controlGroupRows[1] );		
+		this.controlGroup.appendChild( this.controlSet.l );
+		this.controlGroup.appendChild( this.controlSet.c );
+		this.controlGroup.appendChild( this.controlSet.r );
 
-		this.controlGroup.appendChild( this.controlGroupRows[2] );		
-		this.controlGroupRows[2].appendChild( this.controlSet.bl );
-		this.controlGroupRows[2].appendChild( this.controlSet.b );
-		this.controlGroupRows[2].appendChild( this.controlSet.br );
+		//this.controlGroup.appendChild( this.controlGroupRows[2] );		
+		this.controlGroup.appendChild( this.controlSet.bl );
+		this.controlGroup.appendChild( this.controlSet.b );
+		this.controlGroup.appendChild( this.controlSet.br );
 
 
 
@@ -337,14 +339,18 @@ export class SlicedImage  {
 		this.setWidth( opts.width );
 		if( opts.height )
 		this.setHeight( opts.height );
-		this.divFrame.className = "graphic-frame-container";
+		this.divFrame.className = "graphic-frame-container" + this.className;
 	}
 		this.setFrame( opts.image.url );
 
 		const selects = opts.selectors
 		for( let sel in selects ) {
-			new SlicedImage( { childOf: this, image:{ url: opts.selectors[sel]
-							, left:this.leftWidth, right:this.rightWidth, top:this.topWidth, bottom:this.bottomWidth }, selector : sel, className : this.className } );
+			new SlicedImage( { childOf: this, image:{ url: opts.selectors[sel].url
+							, left:opts.selectors[sel].left || this.leftWidth
+						, right:opts.selectors[sel].right || this.rightWidth
+						, top:opts.selectors[sel].top || this.topWidth
+						, bottom:opts.selectors[sel].bottom || this.bottomWidth }
+					, selector : sel, className : this.className } );
 		}
 	}
 
