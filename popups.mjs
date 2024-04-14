@@ -2712,7 +2712,7 @@ export class AlertForm extends Popup {
 		content.appendChild( this.MsgDiv );
 		this.catcher = catcher;
 
-		this.divContent.className += " alert-content";
+		this.MsgDiv.className += " alert-content";
 		this.appendChild( this.MsgDiv );
 		if( !opts || !opts.noClick ) {
 			this.divFrame.addEventListener( "click", ()=>{
@@ -2753,6 +2753,7 @@ function Alert(msg) {
 	alertForm.caption = msg;
 	
 	alertForm.show();
+	return alertForm;
 }
 
 class SashPicker extends Popup{
