@@ -2,21 +2,34 @@
 <head>
 <link rel="stylesheet" href="../styles.css">
 <title>Test Graphic Frame Background</title></head>
-
+<style>
+.image-slice-group-sameClass {
+	border: 3px solid black;
+}
+.image-slice-group-sameClass:hover {
+	border: 3px solid red;
+}
+</style>
 <body>
 </body>
 <script type="module">
 import {popups} from "../popups.mjs"
 import {DivGraphicFrame} from "../DivGraphicFrame.mjs"
 
-const form = new DivGraphicFrame( { width:800, height:300, image:{
+const form = new DivGraphicFrame( { image:{
 			url:"./WindowFrame-LightWoodFilled.png"
+
 			, left:54
 			, right:58
 			, top:54
 			, bottom:55
-			}	} );
-form.setFrame( "./WindowFrame-LightWoodFilled.png" );
+			}
+		,className : "-sameClass"
+	, width:512
+	, height: 380
+		, selectors : { ":hover" : "toonframe.png" }	
+		} );
+//form.setFrame( "./WindowFrame-LightWoodFilled.png" );
 
 popups.makeButton( form, "ClickMe", ()=>{
 	const alert = popups.Alert( "Ok ok!" );
