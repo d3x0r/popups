@@ -19,9 +19,9 @@ const myData = {
 };
 
 const dg = new popups.DataGrid( form, myData, "table", { columns: [ 
-					{ name:"User Name", field:"name", type:popups.ValueOfType.String, className:"name-field" }
-					, { name:"Address", field:"address", type:popups.ValueOfType.String, className:"address-field" }
-					, { name:"Moved", field:"moved", type:popups.ValueOfType.String, className:"moved-field" }
+					{ name:"User Name", field:"name", type:{ string:true}, className:"name-field" }
+					, { name:"Address", field:"address", type:{ string:true}, className:"address-field" }
+					, { name:"Moved", field:"moved", type:{ string:true}, className:"moved-field" }
 				] } );
 
 
