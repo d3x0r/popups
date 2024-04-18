@@ -1946,7 +1946,7 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
 	const parentPopup =  in_popup instanceof Popup;
-	const suffix = ( parentPopup ?in_popup.suffix:'') + (opts.suffix?opts.suffix:"");
+	const suffix = ( parentPopup ?in_popup.suffix:'') + ((opts&&opts.suffix)?opts.suffix:"");
 	let initialValue = getInputValue( input, value );
 	const options = [];
 	var textLabel = document.createElement( "label" );
