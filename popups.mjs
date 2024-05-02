@@ -2122,6 +2122,7 @@ function createPopupMenu( opts ) {
 
 	const menu = {
 		items: [],
+		keepOpen : opts?.keepOpen || false,
 		lastShow : 0,
 		parent : null,
 		subOpen : null,
@@ -2141,9 +2142,10 @@ function createPopupMenu( opts ) {
 				menu.container.appendChild( newItemBR );
 				newItem.className = "popupItem"+menu.suffix;
 				newItem.addEventListener( "click", (evt)=>{
-				       cb();
-				       //console.log( "Item is clicked.", evt.target.value );
-				       this.hide( true );
+					cb();
+					//console.log( "Item is clicked.", evt.target.value );
+					if( !menu.keepOpen )
+						this.hide( true );
 				} );
 				newItem.addEventListener( "mouseover", (evt)=>{
 					if( menu.subOpen ) {
@@ -2208,7 +2210,9 @@ function createPopupMenu( opts ) {
 			menu.lastShow = Date.now();
 			//this.board = board;
 			menu.cb = cb;
-			mouseCatcher.style.visibility = "visible"
+			if( !menu.keepOpen ) {
+				mouseCatcher.style.visibility = "visible"
+			}
 			this.container.style.visibility = "inherit";
 			this.container.style.left = x;
 			this.container.style.top = y;
@@ -2223,11 +2227,15 @@ function createPopupMenu( opts ) {
 		}
 	};
 
-	if( !mouseCatcher ) initMouseCatcher();
-	mouseCatcher.appendChild( menu.container );
+	if( !menu.keepOpen ) {
+		if( !mouseCatcher ) initMouseCatcher();
+		mouseCatcher.appendChild( menu.container );
+	} else
+		document.body.appendChild( menu.container );
 	menu.container.className = "popup"+suffix;
 	menu.container.style.zIndex = 50;
-	menu.hide(); 
+	if( !menu.keepOpen )
+		menu.hide(); 
 	//document.body.appendChild( menu.container );
 	return menu;
 }
