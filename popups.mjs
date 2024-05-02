@@ -1946,7 +1946,7 @@ function makeChoiceInput( form, input, value, choices, text, opts ){
 	while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
 	const parentPopup =  in_popup instanceof Popup;
-	const suffix = ( parentPopup ?in_popup.suffix:'') + (opts.suffix?opts.suffix:"");
+	const suffix = ( parentPopup ?in_popup.suffix:'') + ((opts&&opts.suffix)?opts.suffix:"");
 	let initialValue = getInputValue( input, value );
 	const options = [];
 	var textLabel = document.createElement( "label" );
@@ -2128,7 +2128,7 @@ function createPopupMenu( opts ) {
 		subOpen : null,
 		container : document.createElement( "div" ),
 		board : null,
-		suffix : '',
+		suffix,
 		separate( ) {
 			var newItem = document.createElement( "HR" );
 			menu.container.appendChild( newItem );
@@ -2140,7 +2140,7 @@ function createPopupMenu( opts ) {
 				newItem.textContent = text;
 				menu.container.appendChild( newItem );
 				menu.container.appendChild( newItemBR );
-				newItem.className = "popupItem"+menu.suffix;
+				newItem.className = "popup-item"+menu.suffix;
 				newItem.addEventListener( "click", (evt)=>{
 					cb();
 					//console.log( "Item is clicked.", evt.target.value );
@@ -2232,7 +2232,7 @@ function createPopupMenu( opts ) {
 		mouseCatcher.appendChild( menu.container );
 	} else
 		document.body.appendChild( menu.container );
-	menu.container.className = "popup"+suffix;
+	menu.container.className = "popup-menu"+suffix;
 	menu.container.style.zIndex = 50;
 	if( !menu.keepOpen )
 		menu.hide(); 
@@ -3726,7 +3726,7 @@ class DataGrid extends Events {
 									const opt = { el:document.createElement( "option" ),
 										val:op };
 									opt.el.className = op.className;
-									opt.el.textContent = op.text;
+									opt.el.textContent = op.text || op.name;
 									opt.el.value = op.value;
 									//console.log( "Adding option:", op.name, op.value );
 									opt.el.addEventListener( "select", ()=>{

@@ -28,8 +28,9 @@ const dataGrid = new popups.DataGrid( form, data, "values", {
 							,{ name:"Pick 2", value: { o:"object 2"} },{ name:"Pick 3", value: { o:"object 3"} },{ name:"Pick 4", value: { o:"object 4"} },] }  }
                                 ]
                                 , onNewRow() {
-                                	const row = new rowValue();  data.values.push( row );
-				     return row;
+                                	const row = new rowValue(); 
+                                	//console.log( "new row" );
+                                	return row;
                                 }
 			} );
         
@@ -39,7 +40,11 @@ form.appendChild( pre );
         
 popups.makeButton( form, "Update", updateValues );
 updateValues();
-
+function tick() {
+	updateValues();
+	setTimeout( tick, 1000 );
+}
+tick();
 function updateValues() {
 	pre.textContent = JSON.stringify( data, null, '\t' );
 }
