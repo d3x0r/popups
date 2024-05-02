@@ -208,7 +208,7 @@ const globalMouseState = {
 var popupTracker;
 let popupMap = new WeakMap();
 
-let defaultStyle = "/node_modules/@d3x0r/popups/dark-styles.css";
+let defaultStyle = (new URL( "./dark-styles.css", import.meta.url )).href;
 
 function addCaptionHandler( c, popup_ ) {
 	var popup = popup_;
@@ -649,7 +649,7 @@ function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
 
 	var textOutput = document.createElement( "SPAN" );
 	textOutput.textContent = question;
-	var input = document.createElement( "INPUT" );
+	var input = document.createElement( "textarea" );
 	input.className = "popupInputField";
 	input.setAttribute( "size", 45 );
 	input.value = defaultValue;
@@ -2131,6 +2131,7 @@ function createPopupMenu( opts ) {
 		suffix,
 		separate( ) {
 			var newItem = document.createElement( "HR" );
+			newItem.className = "popup-item-sep" + suffix;
 			menu.container.appendChild( newItem );
 		},
 
@@ -2157,6 +2158,7 @@ function createPopupMenu( opts ) {
 		},
 		addMenu( text ) {
 				var newItem = document.createElement( "A" );
+				newItem.className = "popup-item-menu" + suffix;
 				var newItemBR = document.createElement( "BR" );
 				newItem.textContent = text;
 				this.container.appendChild( newItem );
@@ -2201,7 +2203,8 @@ function createPopupMenu( opts ) {
 					this.parent.hide( all );
 				}
 			} else {
-				mouseCatcher.style.visibility = "hide"
+				if( !menu.keepOpen )
+					mouseCatcher.style.visibility = "hide"
 			}
 		},
 		show( x, y, cb ) {
