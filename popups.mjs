@@ -819,7 +819,7 @@ class SimpleNotice extends Popup {
 	textOutput = document.createElement( "SPAN" );
 
 	constructor( title, question, ok, cancel, opts ) {
-		super( title, null, {suffix:(opts?.suffix?opts.suffix:"")+"-notice"} );
+		super( title, opts.parent||null, {suffix:(opts?.suffix?opts.suffix:"")+"-notice"} );
 		const popup = this;
 		const form = document.createElement( "form" );
 		{
