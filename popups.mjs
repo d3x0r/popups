@@ -2717,15 +2717,16 @@ export class AlertForm extends Popup {
 	catcher = document.createElement("div" );
 
 	constructor(parent, opts) {
+		const suffix = (opts?.suffix?opts?.suffix:"") + "-alert";
 		const catcher = document.createElement("div" );
 		catcher.classList.add(  "alert-catcher");
 		const placer = document.createElement("div" );
-		placer.classList.add( "frameContainer-alert", "alert-form" );
+		placer.classList.add( "frameContainer" + suffix, "alert-form" );
 		const content = document.createElement("div" );
-		content.classList.add( "frameContent-alert","alert-content" );
+		content.classList.add( "frameContent" + suffix,"alert-content" );
 		catcher.appendChild(placer);
 		placer.appendChild(content);
-		super( null, parent, { from: placer, suffix:(opts?.suffix?opts?.suffix:"") + "-alert"} );
+		super( null, parent, { from: placer, suffix} );
 		const this_ = this;		
 		this.MsgDiv.className = "alert-message";
 
@@ -2734,7 +2735,7 @@ export class AlertForm extends Popup {
 		this.catcher = catcher;
 
 		this.MsgDiv.className += " alert-content";
-		this.appendChild( this.MsgDiv );
+		content.appendChild( this.MsgDiv );
 		if( !opts || !opts.noClick ) {
 			this.divFrame.addEventListener( "click", ()=>{
 				this_.hide();
