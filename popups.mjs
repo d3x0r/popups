@@ -2987,9 +2987,10 @@ function fillFromURL(popup, url, opts) {
 
 	function nodeScriptReplace(node) {
 		if( node.tagName === "LINK" ){
-			if( node.href.includes( hereHref ) )
+			if( node.href.includes( base.href ) )
 			{
-				const url = new URL( node.href.substring( hereHref.length ), base.href );
+
+				const url = new URL( node.href.substring( base.length ), base.href );
 				node.href = url.href;
 			}
 		}
