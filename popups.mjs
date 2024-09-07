@@ -913,7 +913,6 @@ class List extends Events{
 		 
     constructor( parentDiv, parentList, toString, opens, opts )
 	{
-
 		let in_form = parentDiv;
 		let in_popup = null;
 		while( in_form && !(( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
@@ -923,8 +922,15 @@ class List extends Events{
 		this.opts = opts || {};
 		this.opts.suffix = (in_popup?in_popup.suffix:"") +  ( this.opts.suffix?this.opts.suffix:"");
 		this.toString = toString;
-		this.itemOpens = opens;
-		this.divTable = parentDiv;
+		this.itemOpens = opens || false;
+
+		if( !parentList ) {
+			parentList = document.createElement( "div" );
+			parentList.className = "list-container" + (this.opts.suffix?"-"+this.opts.suffix:"");
+			parentDiv.appendChild( parentList );
+		}			
+		this.divTable = parentList;
+
 		this.parentList = parentList;
 		if( opts && opts.setsContent ) {
 			this.compare = opts.compare;
@@ -936,19 +942,21 @@ class List extends Events{
 	}
 */
 		push(group, toString_, opens) {
-			var itemList = this.parentList.childNodes;
-			var nextItem = null;
-			for( nextItem of itemList) {
-				if( !this.opts.setsContent ) {
-					if( nextItem.textContent > this.toString(group) )
-						break;
-				} else {
-					if( this.compare( nextItem.group, group ) )
-						break;
+			let nextItem = null;
+			if( this.parentList ) {
+				const itemList = this.parentList.childNodes;
+				for( nextItem of itemList) {
+					if( !this.opts.setsContent ) {
+						if( nextItem.textContent > this.toString(group) )
+							break;
+					} else {
+						if( this.compare( nextItem.group, group ) )
+							break;
+					}
+					nextItem = null;
 				}
-				nextItem = null;
-			}
 			
+			}
 			var newLi = document.createElement( "LI" );
 			newLi.className = "listItem" + (this.opts.suffix)
 			
