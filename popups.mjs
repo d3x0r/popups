@@ -164,16 +164,17 @@ const utils = globalThis.utils || {
 			const style = document.createElement( "link" );
 			style.rel = "stylesheet";
 			style.href = baseUrl?new URL( src, baseUrl):src;
-			let lastOwner;
+			let lastOwner  = null;
 			style.onload = ()=>{
 				res();
 			}
 			if( container instanceof Popup){
 				if( container.divShadow ) container = container.divShadow.shadowRoot;
 			}
-			for( let style of container.styleSheets ){
-				lastOwner = style.ownerNode
-			}
+			if( container.styleSheets )
+				for( let style of container.styleSheets ){
+					lastOwner = style.ownerNode
+				}
 			if( lastOwner )
 				lastOwner.parentNode.insertBefore(style, lastOwner.nextSibling);
 			else{
@@ -443,6 +444,31 @@ class Popup {
 	useMouse = true;
 	suffix = '';
 
+	set top(top){
+		if( "number" === typeof top ) {
+			this.divFrame.style.top = (top.toDecimal(2)+"vh")
+		} else
+		this.divFrame.style.top = top;
+	}
+	set left(left){
+		if( "number" === typeof top ) {
+			this.divFrame.style.left = (top.toDecimal(2)+"vw")
+		} else
+		this.divFrame.style.left = top;
+	}
+	set width(top){
+		if( "number" === typeof top ) {
+			this.divFrame.style.width = (top.toDecimal(2)+"vw")
+		} else
+		this.divFrame.style.width = top;
+	}
+	set height(left){
+		if( "number" === typeof top ) {
+			this.divFrame.style.height = (top.toDecimal(2)+"vh")
+		} else
+			this.divFrame.style.height = top;
+	}
+
 	get divContent() {
 		return this.divContent_ || this.divContentParent_;
 	}
@@ -457,6 +483,7 @@ class Popup {
 		
 		// make popup from control.
 		const forContent = opts?.from;
+		let inFrame;
 		if( forContent ) {
 		    this.divFrame_ = forContent;
 		    this.divContentParent_ = null;
@@ -464,14 +491,15 @@ class Popup {
 		    this.divClose = null;
 		    this.divTitle = null;
 		}else  {
-			this.divFrame_.className = (parent?"formContainer":"frameContainer")+this.suffix;
+			inFrame = (parent&&(parent instanceof Popup));
+			this.divFrame_.className = (inFrame?"formContainer":"frameContainer")+this.suffix;
 		}
 		let useFrame = this.divFrame_;
 		let fillFrame = this.divFrame_;
 		if( opts && opts.shadowFrame ) {
 			this.divShadow = document.createElement( "div" );
 			this.divShadow.classRoot = "shadow-frame-container";
-			this.divShadow.style.position = "absolute";
+			this.divShadow.style.position = inFrame?"absolute":"relative";
 			this.divShadow.style.left = "0px";
 			this.divShadow.style.top = "0px";
 			this.shadow = this.divShadow.attachShadow( {mode:"open"});
@@ -601,8 +629,8 @@ class Popup {
 		this.on( "show", true );
 	}
 	move(x,y) {
-		this.divFrame.style.left = x+"%";
-		this.divFrame.style.top = y+"%";
+		this.divFrame.style.left = x+"vw";
+		this.divFrame.style.top = y+"vh";
 	}
 	appendChild(e) {
 		return (this.divContent||this.divFrame).appendChild(e)
