@@ -960,7 +960,7 @@ class List extends Events{
 		this.divTable = parentList;
 
 		this.parentList = parentList;
-		if( opts && opts.setsContent ) {
+		if( opts && opts.compare ) {
 			this.compare = opts.compare;
 		}
 	}
@@ -1117,8 +1117,8 @@ class List extends Events{
 		}
 	}
 
-function createList( parent, parentList, toString, opens ) {
-     return new List( parent, parentList, toString, opens );
+function createList( parent, parentList, toString, opens, opts ) {
+     return new List( parent, parentList, toString, opens, opts );
 }
 function makeList( parent, toString, opts ) {
 	var newSubList = document.createElement( "UL");
