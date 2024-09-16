@@ -2780,6 +2780,14 @@ export class AlertForm extends Popup {
 				this_.hide();
 			})
 		}
+		if( opts && opts.onClick ) {
+			this.divFrame.addEventListener( "click", ()=>{
+				opts.onClick();
+			})
+			this.catcher.addEventListener( "click", ()=>{
+				opts.onClick();
+			})
+		}
 		document.body.appendChild( this.catcher );
 	}
 
