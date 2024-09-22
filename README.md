@@ -277,13 +277,16 @@ page which is being activated.
 
 
 ## Changelog
-- 1.0.111 (in progress)
+- 1.0.112 (in progress)
+- 1.0.111
   - add tooltip support.  (most controls may have missed some)
   - update document, misc fixes.
   - Add `shadowFrame` option to `Popup()` so the content is more protected and encapsulated.
   - Improve style shee addition functions.
   - Deprecate/remove toggle/set/clear class functions that classList can provide.
   - Minor additions like remove on list items, expose label of text field to be able to change the field text.
+  - restore seeting FormContainer vs FrameContainer.
+  - some minor fixes for Lists and various controls.
 - 1.0.110
   - remove passive from touchevents on buttons; otherwise preventDefault can't be used and touch-through happens.
   - updated package to include css and images.
