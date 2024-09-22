@@ -206,6 +206,8 @@ body {
 	border-radius:50px;
 	padding-left:1em;
 	padding-right:1em;
+	color: rgb(247, 234, 180);
+	text-shadow: 1px 1px 4px rgb(2, 3, 3);
 }
 
 .field-unit:nth-child(odd){

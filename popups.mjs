@@ -1033,6 +1033,9 @@ class List extends Events{
 				, show() {
 					this.item.style.display = "";
 				}
+				, remove() {
+					this.item.remove();
+				}
 			}
 			this.groups.push( newRow );
 			return newRow;
@@ -1663,6 +1666,7 @@ function makeTextField( form, input, value, text, money, percent ){
 
 	return {
 	    addEventListener(a,b) { return inputControl.addEventListener(a,b) },
+		textLabel,
 		refresh() {
 			 initialValue = getInputValue( input, value );
 			 setFieldValue();
