@@ -2219,15 +2219,16 @@ function createPopupMenu( opts ) {
 					newItem.addEventListener( "mouseover", (evt)=>{
 						var r = newItem.getBoundingClientRect();
 						keepShow = true;
-						console.log( "Item hover show that.", evt.clientX, evt.clientY );
+						//console.log( "Item hover show that.", evt.clientX, evt.clientY );
 
 						value.show( evt.clientX + 25, r.top - 10, menu.cb );
 						menu.subOpen = value;
 					} );
 					newItem.addEventListener( "mouseout", (evt)=>{
 						var r = newItem.getBoundingClientRect();
-						console.log( "Item is clicked show that.",  evt.clientX, r.top );
-						if( evt.toElement !== newItem.container )		
+						// get a mouse out when initially showing the item
+						//console.log( "Item is mouseOut show that.",  evt.clientX, r.top );
+						if( evt.toElement !== newItem /*this.container*/ )		
 							value.hide();
 					} );
 					newItem.addEventListener( "mousemove", (evt)=>{
