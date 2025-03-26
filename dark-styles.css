@@ -247,7 +247,12 @@ body {
 
 .rightJustify {
 	margin-left: auto;
-	float:right;
+	/*float:right;*/
+	position:absolute;
+	right:0.5em;
+	top: 50%;
+	transform: translate(0,-50%);
+
 }
 
 .checkOption{
