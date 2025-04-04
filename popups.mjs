@@ -745,6 +745,7 @@ function handleButtonEvents( button, onClick ) {
 	//okay.textContent = caption;
 	button.addEventListener( "click", (evt)=>{
 		evt.preventDefault();
+		evt.stopPropagation();
 		onClick();
 	})
 	button.addEventListener( "touchstart", (evt)=>{
@@ -4283,6 +4284,15 @@ class  PagedFrame extends Events{
 		parent.appendChild( this.frame );
 	}
 
+
+	empty() {
+		this.pages.forEach( page=>{
+			page.remove();
+		} );
+		this.pages.length = 0;
+		this.lastPage = null;
+		this.#oldPage = null;
+	}
 
 	addPage(title, url) {
 			const pf = new PageFramePage( this );
