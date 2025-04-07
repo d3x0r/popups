@@ -196,6 +196,7 @@ body {
 }
 .fieldUnit {
 	line-height:2em;
+	position:relative;
 	border-bottom-width: 2px;
 	border-bottom-style:solid;
 	border-bottom-color:black;
