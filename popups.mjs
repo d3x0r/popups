@@ -2830,7 +2830,10 @@ export class AlertForm extends Popup {
 		}
 		(parent || document.body).appendChild( this.catcher );
 	}
-
+	remove() {
+		super.remove();
+		this.catcher.remove();
+	}
 	show(caption) {
 		if( "string" === typeof caption  ) this.caption = caption;
 		this.catcher.style.display = "";
@@ -2842,6 +2845,7 @@ export class AlertForm extends Popup {
 	hide() {	   
 		this.catcher.style.display = "none";
 		this.divFrame.style.display = "none";
+		this.on( "close", this );
 	}
 	set caption( val ) {
 		// super sets caption to (well null in this case)
@@ -3157,7 +3161,9 @@ class DataGridCell {
 		if( this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
 		else if( this.#cell.type.options ) {
-			this.list.value = getInputValue( rowData, this.cell.field );
+			const val = getInputValue( rowData, this.cell.field );
+			const optidx = this.options.findIndex( op=>op.val.value === val )
+			this.list.selectedIndex = optidx;
 
 			const i = this.list.selectedIndex; 
 			if( i >= 0 ) {
@@ -3167,11 +3173,11 @@ class DataGridCell {
 
 //				this.list.className = this.list.selected#cell.type.className;
 		} else if( this.#cell.type.money )
-			this.el.textContent = popups.utils.to$( rowData[this.cell.field] );
+			this.el.textContent = popups.utils.to$( getInputValue( rowData, this.#cell.field ) );
 		else if( this.#cell.type.percent )
-			this.el.textContent = popups.utils.toP( rowData[this.cell.field] );
+			this.el.textContent = popups.utils.toP( getInputValue( rowData, this.#cell.field ) );
 		else 
-			this.el.textContent = rowData[this.#cell.field];
+			this.el.textContent = getInputValue( rowData, this.#cell.field );
 	}
 
 }
@@ -3442,9 +3448,10 @@ class DataGrid extends Events {
 		for( let v=0; v < this.#rows.length; v++  ) {
 			const dataRow = this.#rows[v];
 			if( dataRow.rowData === row) {
-				const iv = grid.InitialValues[v];
+				const iv = this.#initialValues[v];
 				dataRow.cells.forEach( cell=>{
-					iv[cell.field] = getInputValue( row, cell.field );
+					if( cell.field )
+						setValue( null, iv, col.field,  getInputValue( row, cell.field ) );
 				} );
 				//dataRow.cells.forEach();
 			}
@@ -3812,7 +3819,8 @@ class DataGrid extends Events {
 					newCell.el.setAttribute("contenteditable",newCell.canEdit );
 					cell.newInput = onEdit( cell, newCell, newRow, row );
 				}
-				newCell.refresh();				
+				if( cell.field )
+					newCell.refresh();				
 				row.cells.push( newCell );
 				// on update; does the right thing for edit boxes and listboxes
 				
@@ -3883,12 +3891,13 @@ class DataGrid extends Events {
 							const opts = cell.type.options;
 							{
 								newCell.filled = true;
+								const currentValue = getInputValue( rowData, cell.field )
 								opts.forEach( op=>{
 									const opt = { el:document.createElement( "option" ),
 										val:op };
 									opt.el.className = op.className;
 									opt.el.textContent = op.text || op.name;
-									opt.el.value = op.value;
+									//opt.el.value = op.value;
 									//console.log( "Adding option:", op.name, op.value );
 									opt.el.addEventListener( "select", ()=>{
 										setValue( row, rowData, cell.field, op.value, col.type );
@@ -3896,10 +3905,13 @@ class DataGrid extends Events {
 									} );
 									newCell.list.appendChild( opt.el );
 									newCell.options.push( opt );
+									if( op.value === currentValue ) {
+										newCell.list.selectedIndex = newCell.options.length-1;
+									 }
 								} );
 								//rowData[cell.field] = opts[0].value;
-								if( rowData ) 
-									newCell.list.value = ''+getInputValue( rowData, cell.field);
+								//if( rowData ) 
+								//	newCell.list.value = ''+getInputValue( rowData, cell.field);
 
 							}
 						}
@@ -3910,6 +3922,9 @@ class DataGrid extends Events {
 									setValue( row, rowData, cell.field, val, cell.type );
 									if( newCell.options[i].val.className )
 										newCell.list.className = newCell.options[i].val.className;
+									if( cell.type.change ){
+										cell.type.change( row.rowData, row.cells );
+									}
 									this_.on( "change", {row, rowData} );
 								}
 							} );
