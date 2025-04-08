@@ -3265,6 +3265,7 @@ function setValue( dgr, rowData, pathName, val, type ){
 
 function getInputValue( rowData, pathName ) {
 	const path = ("string"===typeof pathName)?pathName.split('.' ):pathName;
+	if( !path ) return undefined; // probably a button
 	//const path = pathName.split('.' );
 	let obj = rowData;
 	let p = 0;
