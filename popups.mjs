@@ -3782,7 +3782,7 @@ class DataGrid extends Events {
 								const text = cell.field
 									?getInputValue( newrow,cell.field)
 									:(cell.type?.text?cell.type?.text:"X");
-								newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( newrow, row.cells ), {suffix:newCell.el.className + (cell.type.suffix||"") } );
+								newCell.el = makeButton( newCell.el, text, ()=>cell.type.click( row ), {suffix:newCell.el.className + (cell.type.suffix||"") } );
 								// add update has the remove listener
 							}
 					}
