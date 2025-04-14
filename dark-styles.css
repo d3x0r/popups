@@ -98,11 +98,12 @@ body {
 
 [class^="frameContainer"] {
 	visibility:visible;
-	padding:0px;border-color:black;border-width:2px;
-	border-style:solid;z-index:100;position:absolute;
-	/*left:1024;
-	top:25%; */
-	display:absolute;
+	padding:0px;
+	border-color:black;
+	border-width:2px;
+	border-style:solid;
+	z-index:100;
+	position:absolute;
 	width:max-content;
 	height:max-content;
 	/*background-color:rgba(150, 150, 150, 0.75);*/
