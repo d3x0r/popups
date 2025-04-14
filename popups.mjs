@@ -623,6 +623,7 @@ class Popup {
 	}
 	hide() {
 		this.divFrame.style.display = "none";
+		this.on("hide", true );
 	}
 	show(...args) {
 		this.raise();
