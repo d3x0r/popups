@@ -103,7 +103,7 @@ body {
 	border-width:2px;
 	border-style:solid;
 	z-index:100;
-	position:absolute;
+	position:relative;
 	width:max-content;
 	height:max-content;
 	/*background-color:rgba(150, 150, 150, 0.75);*/
