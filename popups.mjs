@@ -3421,7 +3421,8 @@ class DataGrid extends Events {
 			if( row && o !== row ) continue;
 			const val = this.#initialValues[v];
 			this.#subFields.forEach( (field,idx)=>{
-				o[field.field] = val[field.field];
+				if( field.field )
+					setValue( null, o, field.field, getInputValue(val, field.field ) );
 				if( row ) {
 					const cell = this.#rows[v].cells[idx];
 					cell.refresh();
@@ -3452,8 +3453,8 @@ class DataGrid extends Events {
 			if( dataRow.rowData === row) {
 				const iv = this.#initialValues[v];
 				dataRow.cells.forEach( cell=>{
-					if( cell.field )
-						setValue( null, iv, col.field,  getInputValue( row, cell.field ) );
+					if( cell.cell.field )
+						setValue( null, iv, cell.cell.field,  getInputValue( row, cell.cell.field ) );
 				} );
 				//dataRow.cells.forEach();
 			}
@@ -4015,7 +4016,7 @@ class DataGrid extends Events {
 							else if( type.hasOwnProperty( "toString" ) ) {
 								// procedural output fields do not accept input.
 							} 
-							if( type.change && row.initialValues[cell_header.field] !== getInputValue( rowData,cell_header.field)) {
+							if( type.change && getInputValue( row.initialValues, cell_header.field) !== getInputValue( rowData,cell_header.field)) {
 								type.change(row.rowData, row.cells)
 							}
 						});
