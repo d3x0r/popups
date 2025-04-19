@@ -480,7 +480,7 @@ div.mouseCatcher{
 
 
 
-.frameContent-alert, [class^="frameContent-"][class$="-alert"]{
+.frameContent-alert, [class^="frameContent-"][class$="-alert"], [class^="frameContent-"][class*="-alert "]{
 	/* default frameContent */
 	margin:5px;
 	padding:0.5em;
@@ -493,7 +493,7 @@ div.mouseCatcher{
  	/* line-height: 2.5em; */
 }
 
-.frameContainer-alert,  [class^="frameContainer-"][class$="-alert"]{
+.frameContainer-alert,  [class^="frameContainer-"][class$="-alert"],  [class^="frameContainer-"][class*="-alert "]{
 
 	visibility:visible;
 	padding:0px;border-color:black;border-width:2px;
