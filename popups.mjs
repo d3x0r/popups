@@ -3260,7 +3260,7 @@ function setValue( dgr, rowData, pathName, val, type ){
 			val = Number( val );
 		} 
 
-	if( dgr && type.toValue ) // data grid ...
+	if( dgr && type && type.toValue ) // data grid ...
 		type.toValue(dgr, rowData, val);
 	else {
 		const path = ("string"===typeof pathName)?pathName.split('.' ):pathName;
