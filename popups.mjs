@@ -3144,6 +3144,9 @@ class DataGridCell {
 		this.options = [],
 
 		this.el.className = row.suffix + cell.className;
+		if( cell?.type?.custom ){
+			cell.type.custom.fill( this );
+		}
 	}
 	get row() {
 		return this.#row;
@@ -3154,7 +3157,12 @@ class DataGridCell {
 	get cell() {
 		return this.#cell;
 	}
-
+	appendChild( el ) {
+		this.el.appendChild( el );
+	}
+	get value() {
+		getInputValue( this.#row.rowData, this.#cell.field )
+	}
 	refresh() {
 		const rowData = this.#row.rowData;
 		if( !rowData ) return;
@@ -3163,7 +3171,10 @@ class DataGridCell {
 		}
 		if( this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
-		else if( this.#cell.type.options ) {
+		else if( this.#cell.type.custom ) {
+			if( "refresh" in this.#cell.type.custom )
+				this.#cell.type.custom.refresh( this );
+		} else if( this.#cell.type.options ) {
 			const val = getInputValue( rowData, this.cell.field );
 			const optidx = this.options.findIndex( op=>op.val.value === val )
 			this.list.selectedIndex = optidx;
@@ -3267,6 +3278,7 @@ function setValue( dgr, rowData, pathName, val, type ){
 }
 
 function getInputValue( rowData, pathName ) {
+	if( !pathName ) return rowData;
 	const path = ("string"===typeof pathName)?pathName.split('.' ):pathName;
 	if( !path ) return undefined; // probably a button
 	//const path = pathName.split('.' );
@@ -3543,6 +3555,14 @@ class DataGrid extends Events {
 				}
 				if( header.type.grid ) {
 					// should have been marked nosort anyway?
+				}else if( header.type.custom ) {
+					if( header.type.custom.sort ) {
+						this_.#rows.sort( header.type.custom.sort );
+						for( let row of this_.#rows )
+							row.el.remove();
+						for( let row of this_.#rows )
+							this_.#table.appendChild( row.el )
+					}
 				}else if( header.type.options ) {
 					this_.#rows.sort( (a,b)=>{
 						if( !a.rowData ) return 1;
@@ -3792,6 +3812,12 @@ class DataGrid extends Events {
 					}
 				} else if( cell.type.hasOwnProperty( "toString" ) ) {
 					newCell.canEdit = false;				
+				} else if( cell.type?.custom ) {
+					if( cell.type.custom.create ) {
+						//cell.type.custom.create( newCell );
+					} else if( cell.type.custom.fill ) {
+						//cell.type.custom.fill( newCell );
+					}
 				} else if( cell.type?.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
