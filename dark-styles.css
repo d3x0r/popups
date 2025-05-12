@@ -195,7 +195,7 @@ body {
 .fieldUnit:nth-child(even) .field-unit:nth-child(even){
     background:#666;
 }
-.fieldUnit {
+[class ^="fieldUnit"], .fieldUnit {
 	line-height:2em;
 	position:relative;
 	border-bottom-width: 2px;

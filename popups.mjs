@@ -1145,7 +1145,7 @@ function makeCheckbox( form, o, field, text, opts )
 	while( in_form && !((in_popup =in_form) instanceof Popup || ( in_popup = popupMap.get(in_form)) instanceof Popup ) ) in_form = in_form.parentNode;
 
 	opts = opts || {};
-	let initialValue = o[field];
+	let initialValue = getInputValue( o,field);
 	const popupForm = opts.form || in_popup;
 	const suffix = (( popupForm )?popupForm.suffix:'') + (opts.suffix?opts.suffix:"");
 	const id = "checkbox_"+Math.random();
@@ -1157,7 +1157,7 @@ function makeCheckbox( form, o, field, text, opts )
 	inputCountIncrement.id = id;
 	inputCountIncrement.setAttribute( "type", "checkbox");
 	inputCountIncrement.className = "checkOption"+suffix + " rightJustify";
-	inputCountIncrement.checked = o[field];
+	inputCountIncrement.checked = initialValue;
 	//textDefault.
 	var onChange = [];
 	var binder = document.createElement( "div" );
@@ -1168,11 +1168,12 @@ function makeCheckbox( form, o, field, text, opts )
 		onChange.forEach( cb=>cb()); 
 	})
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
-		 o[field] = inputCountIncrement.checked; 
+		 setValue( o, field, inputCountIncrement.checked ); 
 	})
 	textCountIncrement.addEventListener( "click", (e)=>{ 
 		if( e.target === inputCountIncrement ) return;
-		e.preventDefault(); o[field] = !inputCountIncrement.checked; 
+		e.preventDefault(); 
+		setValue( o, field, !inputCountIncrement.checked )
 		onChange.forEach( cb=>cb()); 
 	})
 	form.appendChild(binder );
@@ -1181,10 +1182,10 @@ function makeCheckbox( form, o, field, text, opts )
 	//form.appendChild( document.createElement( "br" ) );
 	if( popupForm) {
 		popupForm.on( "refresh", ()=>{
-			initialValue = inputCountIncrement.checked = o[field];
+			initialValue = inputCountIncrement.checked = getInputValue( o, field );
 		})
 		popupForm.on( "reset", ()=>{			
-			o[field] = inputCountIncrement.checked = initialValue;
+			setValue( o,field, inputCountIncrement.checked = initialValue );
 		})
 		popupForm.on( "accept", ()=>{
 			initialValue = inputCountIncrement.checked;
@@ -1213,28 +1214,29 @@ function makeCheckbox( form, o, field, text, opts )
 		},
 		get value() { return inputCountIncrement.checked; },
 		set value(val) { 
-			o[field] = val;
+			setVakue( o, field ) = val;
 			inputCountIncrement.checked = val;
 			onChange.forEach( cb=>cb());
 		 }
 		,
 		refresh(){
-		    initialValue = o[field];
+		    initialValue = getInputValue( o, field );
 		    inputCountIncrement.checked = initialValue;
 		},
 		reset(){
-		    o[field] = initialValue;
+		    setValue( o, field, initialValue );
 		    inputCountIncrement.checked = initialValue;
 		},
 		get disabled() { return inputCountIncrement.disabled },
 		set disabled(val) { inputCountIncrement.disabled=val },
 		changes() {
-		    if( o[field] !== initialValue ) {
+			let newval;
+		    if( (newval=getInputValue( o,field)) !== initialValue ) {
 			return text
 			    + popups.strings.get( " changed from " )
 			    + initialValue
 			    + popups.strings.get( " to " )
-			    + o[field];
+			    + newval;
 		    }
 		    return '';
 				},
