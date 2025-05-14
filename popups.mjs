@@ -1168,12 +1168,12 @@ function makeCheckbox( form, o, field, text, opts )
 		onChange.forEach( cb=>cb()); 
 	})
 	inputCountIncrement.addEventListener( "change", (e)=>{ 
-		 setValue( o, field, inputCountIncrement.checked ); 
+		setValue( null, o,field, inputCountIncrement.checked, null ) 
 	})
 	textCountIncrement.addEventListener( "click", (e)=>{ 
 		if( e.target === inputCountIncrement ) return;
 		e.preventDefault(); 
-		setValue( o, field, !inputCountIncrement.checked )
+		setValue( null, o, field, !inputCountIncrement.checked )
 		onChange.forEach( cb=>cb()); 
 	})
 	form.appendChild(binder );
