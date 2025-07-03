@@ -2968,7 +2968,7 @@ function makeLoginForm( doLogin, opts  ) {
 	};
 	loginForm.hide();
 
-	fillFromURL( loginForm, form ).then( async (root)=>{
+	fillFromURL( loginForm, form, opts ).then( async (root)=>{
 		if( wsClient ) {
 			// really this point the URL has been set in innerHTML, and scripts have been pushed to the page.
 			//console.log( "At this point, the form should be entirely This is only once the top level has loaded (still pending children)" );
@@ -3017,6 +3017,16 @@ function makeWindowManager() {
 }
 
 const filledControls = new Map();
+const scriptPending = [];
+const scriptWaiting = [];
+scriptPending.remove = (n)=>{
+	const id = scriptPending.indexOf(n);
+	scriptWaiting.forEach( (wait,index)=>{
+		if( wait.id === id ) wait.cb();
+		scriptWaiting.splice( index, 1 );
+	})
+	if( id >= 0 ) scriptPending.splice(id,1);
+}
 
 function makeURL( url ) {
 	try {
@@ -3043,7 +3053,7 @@ function fillFromURL(popup, url, opts) {
 	const here = new URL( location );
 	const herePathIndex = here.pathname.lastIndexOf( "/" );
 	here.pathname = here.pathname.substring( 0, herePathIndex+1 );
-	const hereHref = here.href;
+	//const hereHref = here.href;
 	
 	//console.log( "Base:", base );
 
@@ -3071,27 +3081,38 @@ function fillFromURL(popup, url, opts) {
 			if( !opts.noDefaultStyle ){
 				utils.preAddPopupStyles( shadow );
 			}
-			nodeScriptReplace(shadow);
+			nodeScriptReplace(shadow, opts.addScriptsToBody );
 			return shadow;
 		} );
 	})
 
-	function nodeScriptReplace(node) {
+	function nodeScriptReplace(node,addScriptsToBody,replaced) {
+		const replaced_ = replaced || [];
 		if( node.tagName === "LINK" ){
 			if( node.href.includes( base.href ) )
-			{
-
+			{  // fix CSS links...
 				const url = new URL( node.href.substring( base.length ), base.href );
 				node.href = url.href;
 			}
 		}
 		else if ( nodeScriptIs(node) === true ) {
-			node.parentNode.replaceChild( nodeScriptClone(node) , node );
+			if( addScriptsToBody ) {
+				const clone = nodeScriptClone( node );
+				replaced.push( clone );
+				document.body.appendChild( clone );
+				node.remove();
+				return clone;
+			}else {
+				const clone = nodeScriptClone( node );
+				replaced.push( clone );
+				node.parentNode.replaceChild( clone, node );
+				return clone;
+			}
 		}
 		else {
 			var i = -1, children = node.childNodes;
 			while ( ++i < children.length ) {
-			      nodeScriptReplace( children[i] );
+				replaced_.push( nodeScriptReplace( children[i], addScriptsToBody, replaced_ ) );
 			}
 		}
 
@@ -3114,7 +3135,8 @@ function fillFromURL(popup, url, opts) {
 		script.id = "Unique"+(unique++);
 		filledControls.set( script.id, shadow );
 		if( script.textContent && script.textContent.length ) {
-			script.textContent = "const rootId='"+script.id+"';" +script.textContent;
+			scriptPending.push( script.id );
+			script.textContent = "const rootId='"+script.id+"';" +script.textContent + ";window.d3x0r.popups.scriptPending.remove( rootId );";
 		}
 		return script;
 	}
@@ -4405,9 +4427,22 @@ const popups = {
 	},
 	getFilledParent( id ) {
 		return filledControls.get( id );
-	}
+	},
+	isScriptRunning( id ) {
+		return scriptPending.findIndex( sid=>sid===id ) >= 0;
+	},
+	onScriptDone(id,cb){
+		scriptWaiting.push( {id,cb} );
+	},
+	scriptPending
 }
 
 export {popups};
 
 export default popups;
+
+if( "undefined" != typeof window ) {
+	if( !("d3x0r" in window ) ) window.d3x0r = {popups}
+	else if( !("popups" in window.d3x0r ) ) window.d3x0r.popups = popups;
+}
+//window.d3x0r.popups.filledControls = 
