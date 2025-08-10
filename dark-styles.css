@@ -347,24 +347,24 @@ button {
 .button{
     /* font-size: 100%; */
 	width:max-content;
-    border-radius: 10px;
-	border-width:3px;
+    border-radius: 2.62vw;
+	border-width:0.52vw;
     background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
     /* padding: 0px; */
      border-style: outset; 
-    padding-right: 2px;
-    padding-bottom: 2px;
+    padding-right: 0.10vw;
+    padding-bottom: 0.10vw;
 }
 
 [class^="button-"]{
     /* font-size: 100%; */
 	width:max-content;
-    border-radius: 10px;
+    border-radius: 2.62vw;
     background: linear-gradient(rgb(3, 3, 3), rgb(76, 76, 76), #333 );
     /* padding: 0px; */
     /* border-style: outset; */
-    padding-right: 2px;
-    padding-bottom: 2px;
+    padding-right: 0.10vw;
+    padding-bottom: 0.10vw;
 	color:white;
 }
 
