@@ -3159,7 +3159,7 @@ class DataGridCell {
 	constructor( row, cell ) {
 		this.#cell = cell,
 		this.#row = row;
-		this.canEdit = ( ("edit" in cell.type) ? cell.type.edit : true ),
+		this.canEdit = ( (cell.type && "edit" in cell.type) ? cell.type.edit : true ),
 		this.el=row.el.insertCell(),
 		this.list = null,
 		this.filled = false,
@@ -3188,15 +3188,15 @@ class DataGridCell {
 	refresh() {
 		const rowData = this.#row.rowData;
 		if( !rowData ) return;
-		if( this.#cell.type.grid ) {
+		if( this.#cell.type && this.#cell.type.grid ) {
 			return this.list.refresh();
 		}
-		if( this.#cell.type.hasOwnProperty( "toString" ) )
+		if( this.#cell.type && this.#cell.type.hasOwnProperty( "toString" ) )
 			this.el.textContent = this.#cell.type.toString( rowData );
-		else if( this.#cell.type.custom ) {
+		else if( this.#cell.type && this.#cell.type.custom ) {
 			if( "refresh" in this.#cell.type.custom )
 				this.#cell.type.custom.refresh( this );
-		} else if( this.#cell.type.options ) {
+		} else if( this.#cell.type && this.#cell.type.options ) {
 			const val = getInputValue( rowData, this.cell.field );
 			const optidx = this.options.findIndex( op=>op.val.value === val )
 			this.list.selectedIndex = optidx;
@@ -3208,9 +3208,9 @@ class DataGridCell {
 			}
 
 //				this.list.className = this.list.selected#cell.type.className;
-		} else if( this.#cell.type.money )
+		} else if( this.#cell.type && this.#cell.type.money )
 			this.el.textContent = popups.utils.to$( getInputValue( rowData, this.#cell.field ) );
-		else if( this.#cell.type.percent )
+		else if( this.#cell.type && this.#cell.type.percent )
 			this.el.textContent = popups.utils.toP( getInputValue( rowData, this.#cell.field ) );
 		else 
 			this.el.textContent = getInputValue( rowData, this.#cell.field );
@@ -3355,7 +3355,12 @@ class DataGrid extends Events {
 		this.#tableContainer.appendChild( tooltip );
 		this.#tableContainer.classList.add( "has-tooltip");
 	}
-
+	hide() {
+		this.#tableContainer.style.display = "none";
+	}
+	show() {
+		this.#tableContainer.style.display = "";
+	}
 	constructor( form, o, field, opts ) 
 	{
 		super();
@@ -3371,17 +3376,18 @@ class DataGrid extends Events {
 		
 		//this.#initialValue = o[field];
 		// keep a copy of the original array with original member addresses...
-		this.#initialValue = getInputValue( o, field ).map(o=>o);
+		const currentValue = getInputValue( o, field );
+		this.#initialValue = currentValue?currentValue.map(o=>o):[];
 
 		// keep the original valuess... with a shallow deep copy  (deep shallow?)
-		this.#initialValues = getInputValue( o,field ).map(o=>{
+		this.#initialValues = currentValue?currentValue.map(o=>{
 			const obj = {};
 			this.#subFields.forEach( col=>{
 				if( col.field )
 					setValue( null, obj, col.field, getInputValue(o,col.field), {} )
 			} );
 			return obj;
-		});
+		}):[];
 		
 		
 		this.#suffix = (opts?.suffix||'');
@@ -3419,7 +3425,7 @@ class DataGrid extends Events {
 		this.#tableContainer.appendChild( this.#table );
 		
 		this.#subFields.forEach( col=>{
-			if( col.type.grid ) col.type.noSort = true;
+			if( col.type && col.type.grid ) col.type.noSort = true;
 			this.addColumn( col.name, col.field, col.className, col.type );
 		} );
 
@@ -3519,7 +3525,7 @@ class DataGrid extends Events {
 	addColumn( name, subField, className, type ) {
 		const cell = this.#header.insertCell();
 		const cellText = document.createElement( 'span' );
-		const sortText = ( !this.#opts.noSort && !type.noSort ) ?document.createElement( 'span' ):null;
+		const sortText = ( !this.#opts.noSort && ( !type || !type.noSort ) ) ?document.createElement( 'span' ):null;
 		cell.appendChild( cellText );
 		if( sortText )
 			cell.appendChild( sortText );
@@ -3762,7 +3768,7 @@ class DataGrid extends Events {
 		 */
 		function selAll(el, cell) {
 			if( !cell.canEdit ) return;
-			if( cell.cell?.type.options ) {
+			if( cell.cell?.type?.options ) {
 				return;
 			}
 			el.classList.add( "editing" );
@@ -3815,7 +3821,7 @@ class DataGrid extends Events {
 				
 				//newCell.el.className = cell.className + this.#suffix;
 
-				if( cell.type.click ) {
+				if( cell.type && cell.type.click ) {
 					newCell.canEdit = false;
 					if( row.rowData ) {
 						const text = cell.field
@@ -3832,22 +3838,22 @@ class DataGrid extends Events {
 								// add update has the remove listener
 							}
 					}
-				} else if( cell.type.hasOwnProperty( "toString" ) ) {
+				} else if( cell.type && cell.type.hasOwnProperty( "toString" ) ) {
 					newCell.canEdit = false;				
-				} else if( cell.type?.custom ) {
+				} else if( cell.type && cell.type?.custom ) {
 					if( cell.type.custom.create ) {
 						//cell.type.custom.create( newCell );
 					} else if( cell.type.custom.fill ) {
 						//cell.type.custom.fill( newCell );
 					}
-				} else if( cell.type?.options ) {
+				} else if( cell.type && cell.type?.options ) {
 					newCell.list = document.createElement( "select" );
 					newCell.el.appendChild( newCell.list );
 					if( !newCell.canEdit ){
 						newCell.list.disabled = true;
 					}
 					cell.newInput = onEdit( cell, newCell, newRow, row );
-				} else if( cell.type.grid ) {
+				} else if( cell.type && cell.type.grid ) {
 					if( newRow ) {
 						newCell.list = new DataGrid( newCell.el, newRow, cell.field, {
 							columns:cell.type.grid.columns,
@@ -3931,7 +3937,7 @@ class DataGrid extends Events {
 						}
 						this_.on( "newRow", {row,rowData} )
 
-						setCaret( evt.target, newCell, cell.type.percent?-1:0 );
+						setCaret( evt.target, newCell, (cell.type && cell.type.percent)?-1:0 );
 						//evt.target.setSelectionRange(evt.target.textContent.length, -1);
 					}
 				}
@@ -4025,7 +4031,7 @@ class DataGrid extends Events {
 						const c = newCell.el;
 						const field = cell_header.field;
 						const type = cell_header.type;
-						if( type.grid ){
+						if( type && type.grid ){
 							newCell.list = new DataGrid( newCell.el, row.rowData	
 										, type.grid.field, {
 									columns:type.grid.columns
@@ -4049,7 +4055,7 @@ class DataGrid extends Events {
 						
 						c.addEventListener( "focus", (evt)=>{
 							c.classList.add( "editing" );
-							if( type.percent ) {
+							if( type && type.percent ) {
 								selAll( evt.target, newCell );
 							}else
 								selAll( evt.target, newCell );
@@ -4057,16 +4063,16 @@ class DataGrid extends Events {
 						c.addEventListener( "blur", (evt)=>{
 							c.classList.remove( "editing" );
 							setValue( row, rowData, field, c.textContent, type );
-					    	if( type.money ) {
+					    	if( type && type.money ) {
 								c.textContent = popups.utils.to$( getInputValue( rowData,cell_header.field) );
 							}
-					    	else if( type.percent ) {
+					    	else if( type && type.percent ) {
 					    		c.textContent = popups.utils.toP( getInputValue( rowData,cell_header.field) );
 							}
-							else if( type.hasOwnProperty( "toString" ) ) {
+							else if( type && type.hasOwnProperty( "toString" ) ) {
 								// procedural output fields do not accept input.
 							} 
-							if( type.change && getInputValue( row.initialValues, cell_header.field) !== getInputValue( rowData,cell_header.field)) {
+							if( type && type.change && getInputValue( row.initialValues, cell_header.field) !== getInputValue( rowData,cell_header.field)) {
 								type.change(row.rowData, row.cells)
 							}
 						});
