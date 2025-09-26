@@ -494,7 +494,7 @@ class Popup {
 		    this.divClose = null;
 		    this.divTitle = null;
 		}else  {
-			inFrame = (parent&&(parent instanceof Popup));
+			inFrame = opts?.contained || (parent&&(parent instanceof Popup));
 			this.divFrame_.className = (inFrame?"formContainer":"frameContainer")+this.suffix;
 		}
 		let useFrame = this.divFrame_;
@@ -529,12 +529,12 @@ class Popup {
 					this.divCaption.appendChild( this.divClose );
 			}
 
-			this.divCaption.className = "frameCaption"+this.suffix;
-			if( this.divCaption )
+			this.divCaption.className = (opts?.contained?"formCaption":"frameCaption")+this.suffix;
+			if( !opts?.contained )
 				addCaptionHandler( this.divCaption, this );
 		}
 		if( this.divContent ){
-			this.divContent.className = "frameContent"+this.suffix;
+			this.divContent.className = (opts?.contained?"formContent":"frameContent")+this.suffix;
 			fillFrame.appendChild( this.divContent );
 		}
 
