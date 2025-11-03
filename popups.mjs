@@ -449,25 +449,25 @@ class Popup {
 
 	set top(top){
 		if( "number" === typeof top ) {
-			this.divFrame.style.top = (top.toDecimal(2)+"vh")
+			this.divFrame.style.top = (top.toFixed(2)+"vh")
 		} else
 		this.divFrame.style.top = top;
 	}
 	set left(left){
 		if( "number" === typeof top ) {
-			this.divFrame.style.left = (top.toDecimal(2)+"vw")
+			this.divFrame.style.left = (top.toFixed(2)+"vw")
 		} else
 		this.divFrame.style.left = top;
 	}
 	set width(top){
 		if( "number" === typeof top ) {
-			this.divFrame.style.width = (top.toDecimal(2)+"vw")
+			this.divFrame.style.width = (top.toFixed(2)+"vw")
 		} else
 		this.divFrame.style.width = top;
 	}
 	set height(left){
 		if( "number" === typeof top ) {
-			this.divFrame.style.height = (top.toDecimal(2)+"vh")
+			this.divFrame.style.height = (top.toFixed(2)+"vh")
 		} else
 			this.divFrame.style.height = top;
 	}
@@ -856,7 +856,9 @@ class SimpleNotice extends Popup {
 
 	constructor( title, question, ok, cancel, opts ) {
 		opts = opts || {parent:null,suffix:null};
-		super( title, opts.parent||null, {suffix:(opts?.suffix?opts.suffix:"")+"-notice"} );
+		const metaOpts = Object.assign( {}, opts );
+		metaOpts.suffix = (metaOpts.suffix || "")+"-notice";
+		super( title, opts.parent||null, metaOpts );
 		const popup = this;
 		const form = document.createElement( "form" );
 		{
@@ -964,7 +966,7 @@ class List extends Events{
 			parentList = document.createElement( "div" );
 			parentList.className = "list-container" + (this.opts.suffix?"-"+this.opts.suffix:"");
 			parentDiv.appendChild( parentList );
-		}			
+		}
 		this.divTable = parentList;
 
 		this.parentList = parentList;
