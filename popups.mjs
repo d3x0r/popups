@@ -1216,7 +1216,7 @@ function makeCheckbox( form, o, field, text, opts )
 		},
 		get value() { return inputCountIncrement.checked; },
 		set value(val) { 
-			setVakue( o, field ) = val;
+			setValue( o, field, val );
 			inputCountIncrement.checked = val;
 			onChange.forEach( cb=>cb());
 		 }
