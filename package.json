@@ -1,6 +1,6 @@
 {
   "name": "@d3x0r/popups",
-  "version": "1.0.111",
+  "version": "1.0.112",
   "description": "Simple popup windows using HTML controls.",
   "main": "popups.mjs",
   "types": "popups.d.mts",
