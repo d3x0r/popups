@@ -1,12 +1,31 @@
 {
-  "name": "@d3x0r/popups",
-  "version": "1.0.112",
+  "name": "@d3x0r/popups2",
+  "version": "2.0",
   "description": "Simple popup windows using HTML controls.",
-  "main": "popups.mjs",
+  "type": "module",
+  "main": "popups.js",
+  "module": "popups.js",
   "types": "popups.d.mts",
+  "exports": {
+    ".": "./popups.js",
+    "./core/*": "./core/*",
+    "./controls/*": "./controls/*",
+    "./forms/*": "./forms/*",
+    "./bundles/*": "./bundles/*",
+    "./window-manager.js": "./window-manager.js",
+    "./styles.css": "./styles.css",
+    "./dark-styles.css": "./dark-styles.css",
+    "./package.json": "./package.json"
+  },
   "files": [
+    "popups.js",
     "popups.mjs",
     "popups.d.mts",
+    "window-manager.js",
+    "core/",
+    "controls/",
+    "forms/",
+    "bundles/",
     "styles.css",
     "dark-styles.css",
     "images/stop_button-glow.png",
@@ -16,22 +35,13 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "mk1": "babel --config-file=./babel.config.js  -o popups.js popups.mjs",
-    "mk2": "babel --config-file=./babel.noclasses.js  -o popups-nc.mjs popups.mjs",
-    "mk": "npm run mk1 && npm run mk2",
-    "link":"npm link jsox"
+    "link": "npm link jsox",
+    "gen-types": "tsc --allowJs --declaration --emitDeclarationOnly --target ES2022 --module ESNext --moduleResolution node --outDir types popups.js window-manager.js controls/data-grid.js controls/paged-frame.js"
   },
   "private": false,
   "author": "d3x0r",
   "license": "ISC",
   "dependencies": {
     "jsox": "latest"
-  },
-  "devDependencies": {
-    "@babel/cli": "latest",
-    "@babel/core": "latest",
-    "@babel/plugin-proposal-private-property-in-object": "^7.16.7",
-    "@babel/preset-env": "latest",
-    "eslint": "^8.10.0"
   }
 }
