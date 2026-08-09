@@ -1,16 +1,16 @@
 /**
  * @fileoverview New entry point. Includes the core (Popup, utils, registry)
- * plus the platform-level helpers that need to be on `window.d3x0r.popups`
+ * plus the platform-level helpers that need to be on `window.d3x0r.popups2`
  * even when no individual controls are imported — fillFromURL and the
  * pending-script bookkeeping that injected scripts call back into.
  *
  * Does NOT auto-register any controls. For the legacy "everything" surface,
- * import `@d3x0r/popups/bundles/all.js` or side-effect-import individual
+ * import `@d3x0r/popups2/bundles/all.js` or side-effect-import individual
  * controls:
  *
- *   import { Popup } from "@d3x0r/popups";
- *   import "@d3x0r/popups/controls/checkbox.js";
- *   import "@d3x0r/popups/controls/text-input.js";
+ *   import { Popup } from "@d3x0r/popups2";
+ *   import "@d3x0r/popups2/controls/checkbox.js";
+ *   import "@d3x0r/popups2/controls/text-input.js";
  */
 
 import { Popup, createPopup, getPopupFromElement } from "./core/popup.js";
@@ -57,13 +57,13 @@ export {
  * factories (popups.makeCheckbox etc.) are populated by each controls/*.js
  * module when imported.
  *
- * Singleton: if `window.d3x0r.popups` already exists (because this module was
+ * Singleton: if `window.d3x0r.popups2` already exists (because this module was
  * loaded from a different URL or by a separately-injected `<script>`), the
  * existing object is re-exported here so both loads share one namespace —
  * including `scriptPending`, which `fillFromURL`'s injected scripts call back
- * into via `window.d3x0r.popups.scriptPending.remove(rootId)`.
+ * into via `window.d3x0r.popups2.scriptPending.remove(rootId)`.
  */
-const existing = ( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups ) || null;
+const existing = ( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups2 ) || null;
 
 const localPopups = {
 	Popup,
@@ -88,7 +88,7 @@ const localPopups = {
 	listControls,
 
 	// Platform helpers — present on the core namespace because injected scripts
-	// from fillFromURL reference them via window.d3x0r.popups.*, and external
+	// from fillFromURL reference them via window.d3x0r.popups2.*, and external
 	// callers (webSocketClient.js etc.) use handleButtonEvents as a util.
 	handleButtonEvents,
 	fillFromURL,
@@ -109,8 +109,8 @@ export const popups = existing || localPopups;
 export default popups;
 
 if( typeof window !== "undefined" ) {
-	if( !( "d3x0r" in window ) )            window.d3x0r = { popups };
-	else if( !( "popups" in window.d3x0r ) ) window.d3x0r.popups = popups;
+	if( !( "d3x0r" in window ) )             window.d3x0r = { popups2: popups };
+	else if( !( "popups2" in window.d3x0r ) ) window.d3x0r.popups2 = popups;
 }
 
 // Now that the namespace exists, any subsequent `registerControl(name, Ctor)`

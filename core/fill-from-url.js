@@ -3,7 +3,7 @@
  * via a shadow root, rewrites embedded `<script>` nodes so they execute, and
  * tracks pending scripts so callers can wait for fully-loaded forms.
  *
- * The injected scripts call `window.d3x0r.popups.scriptPending.remove(rootId)`
+ * The injected scripts call `window.d3x0r.popups2.scriptPending.remove(rootId)`
  * when they finish, so `scriptPending` must be reachable on the global popups
  * namespace at runtime. `bundles/all.js` wires that up.
  */
@@ -16,13 +16,13 @@ import { utils } from "./utils.js";
  */
 
 /**
- * Shared singleton state. If a prior load already installed `window.d3x0r.popups`
+ * Shared singleton state. If a prior load already installed `window.d3x0r.popups2`
  * with these fields, reuse them — otherwise create fresh instances. This is
- * what makes `popups.scriptPending.remove(rootId)` from an injected `<script>`
+ * what makes `popups2.scriptPending.remove(rootId)` from an injected `<script>`
  * resolve to the same array that fillFromURL pushed to, even when the page and
  * the injected script were loaded from different copies of this module.
  */
-const shared = ( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups ) || null;
+const shared = ( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups2 ) || null;
 
 /** Monotonically-increasing id for generated `<script>` tags. */
 let unique = Date.now();
@@ -175,7 +175,7 @@ export function fillFromURL( popup, url, opts ) {
 			scriptPending.push( script.id );
 			script.textContent = "const rootId='" + script.id + "';"
 				+ script.textContent
-				+ ";window.d3x0r.popups.scriptPending.remove( rootId );";
+				+ ";window.d3x0r.popups2.scriptPending.remove( rootId );";
 		}
 		return script;
 	}

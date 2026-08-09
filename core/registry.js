@@ -9,7 +9,7 @@
  * instance.
  *
  * The target namespace is set by popups.js via setRegistrationTarget(), with
- * a fallback to `window.d3x0r.popups` for late-loaded controls. The
+ * a fallback to `window.d3x0r.popups2` for late-loaded controls. The
  * "previously installed by us" tracking is stored on the namespace itself
  * (singleton-shared) so cross-load re-registration works without spurious
  * collision throws.
@@ -44,8 +44,8 @@ export function setRegistrationTarget( ns ) {
 
 function resolveTarget() {
 	if( registrationTarget ) return registrationTarget;
-	if( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups )
-		return window.d3x0r.popups;
+	if( typeof window !== "undefined" && window.d3x0r && window.d3x0r.popups2 )
+		return window.d3x0r.popups2;
 	return null;
 }
 
