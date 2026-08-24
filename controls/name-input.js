@@ -8,6 +8,7 @@ import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { strings } from "../core/strings.js";
 import { createSimpleForm } from "../forms/simple-form.js";
+import { suffixed } from "../core/suffix.js";
 
 export class NameInput {
 	#input;
@@ -34,16 +35,16 @@ export class NameInput {
 		const suffix = popup ? popup.suffix : '';
 
 		const textLabel = document.createElement( "SPAN" );
-		textLabel.className = "text-label" + suffix;
+		textLabel.className = suffixed( "text-label", suffix );
 		textLabel.textContent = text;
 
 		const textOutput = document.createElement( "SPAN" );
-		textOutput.className = "text-value" + suffix;
+		textOutput.className = suffixed( "text-value", suffix );
 		textOutput.textContent = input[value];
 
 		const buttonRename = document.createElement( "Button" );
 		buttonRename.textContent = strings.get( "(rename)" );
-		buttonRename.className = "buttonOption" + suffix + " rightJustify";
+		buttonRename.className = suffixed( "buttonOption", suffix ) + " rightJustify";
 		buttonRename.addEventListener( "click", ( evt ) => {
 			evt.preventDefault();
 			const newName = createSimpleForm(
@@ -59,7 +60,7 @@ export class NameInput {
 		} );
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( textLabel );
 		binder.appendChild( textOutput );

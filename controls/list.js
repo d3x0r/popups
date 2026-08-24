@@ -23,6 +23,7 @@
 
 import { Events } from "../core/events.js";
 import { findEnclosingPopup } from "../core/popup-walk.js";
+import { suffixed, joinSuffix } from "../core/suffix.js";
 
 export class List extends Events {
 	selected = null;
@@ -42,13 +43,13 @@ export class List extends Events {
 		const popup = findEnclosingPopup( parentDiv );
 		super();
 		this.opts = opts || {};
-		this.opts.suffix = ( popup ? popup.suffix : "" ) + ( this.opts.suffix ? this.opts.suffix : "" );
+		this.opts.suffix = joinSuffix( popup ? popup.suffix : "", this.opts.suffix );
 		this.toString = toString;
 		this.itemOpens = opens || false;
 
 		if( !parentList ) {
 			parentList = document.createElement( "div" );
-			parentList.className = "list-container" + ( this.opts.suffix ? "-" + this.opts.suffix : "" );
+			parentList.className = suffixed( "list-container", this.opts.suffix );
 			parentDiv.appendChild( parentList );
 		}
 		this.divTable = parentList;
@@ -70,7 +71,7 @@ export class List extends Events {
 			}
 		}
 		const newLi = document.createElement( "LI" );
-		newLi.className = "listItem" + this.opts.suffix;
+		newLi.className = suffixed( "listItem", this.opts.suffix );
 		this.divTable.insertBefore( newLi, nextItem );
 		newLi.addEventListener( "click", ( e ) => {
 			e.preventDefault();
@@ -81,12 +82,12 @@ export class List extends Events {
 		} );
 
 		const newSubList = document.createElement( "UL" );
-		newSubList.className = "listSubList" + this.opts.suffix;
+		newSubList.className = suffixed( "listSubList", this.opts.suffix );
 		if( this.parentList && this.parentList.parentItem )
 			this.parentList.parentItem.enableOpen( this.parentList.thisItem );
 
 		const treeLabel = document.createElement( "span" );
-		treeLabel.className = "listItemLabel" + this.opts.suffix;
+		treeLabel.className = suffixed( "listItemLabel", this.opts.suffix );
 		newLi.appendChild( treeLabel );
 
 		if( this.opts.setsContent ) {
@@ -119,7 +120,7 @@ export class List extends Events {
 		item.opens = true;
 		const treeKnob = document.createElement( "span" );
 		treeKnob.textContent = "-";
-		treeKnob.className = "list-item-knob" + this.opts.suffix + " knobOpen";
+		treeKnob.className = suffixed( "list-item-knob", this.opts.suffix ) + " knobOpen";
 		item.item.insertBefore( treeKnob, item.item.childNodes[0] );
 		treeKnob.addEventListener( "click", ( e ) => {
 			e.preventDefault();
@@ -213,7 +214,7 @@ export function createList( parent, parentList, toString, opens, opts ) {
  */
 export function makeList( parent, toString, opts ) {
 	const newSubList = document.createElement( "UL" );
-	newSubList.className = "list" + ( opts?.suffix ? '-' : '' ) + ( opts?.suffix || "" );
+	newSubList.className = suffixed( "list", opts?.suffix );
 	parent.appendChild( newSubList );
 	return new List( newSubList, newSubList, toString, opts?.opens, opts );
 }

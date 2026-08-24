@@ -8,6 +8,7 @@ import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class Slider {
 	#o;
@@ -53,15 +54,15 @@ export class Slider {
 		input.setAttribute( "type", "range" );
 		input.setAttribute( "min", 1 );
 		input.setAttribute( "max", 1000 );
-		input.className = "valueSlider" + suffix + " rightJustify";
+		input.className = suffixed( "valueSlider", suffix ) + " rightJustify";
 		input.value = g ? g( getInputValue( o, field ) ) : getInputValue( o, field );
 
 		const valueSpan = document.createElement( "SPAN" );
 		valueSpan.textContent = getInputValue( o, field );
-		valueSpan.className = "field-unit-span" + suffix;
+		valueSpan.className = suffixed( "field-unit-span", suffix );
 
 		const binder = document.createElement( "div" );
-		binder.className = "field-unit" + suffix;
+		binder.className = suffixed( "field-unit", suffix );
 
 		input.addEventListener( "input", () => {
 			if( f ) setValue( null, o, field, f( input.value ), null );

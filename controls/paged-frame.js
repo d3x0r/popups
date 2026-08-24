@@ -6,6 +6,7 @@
 
 import { Events } from "../core/events.js";
 import { fillFromURL } from "../core/fill-from-url.js";
+import { suffixed, joinSuffix } from "../core/suffix.js";
 
 /**
  * @typedef {object} PagedFrameOptions
@@ -29,8 +30,8 @@ export class PageFramePage {
 	constructor( frame ) {
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
-			this.content.className = 'page-frame-page-container' + ( frame.suffix ? frame.suffix : '' );
-			this.handle.className  = 'page-frame-page-handle'    + ( frame.suffix ? frame.suffix : '' );
+			this.content.className = suffixed( 'page-frame-page-container', frame.suffix );
+			this.handle.className  = suffixed( 'page-frame-page-handle', frame.suffix );
 			frame.pages.handleContainer.appendChild( this.handle );
 			frame.pages.pageContainer.appendChild( this.content );
 			this.handle.addEventListener( "click", () => { this.#frame.activate( this ); } );
@@ -38,8 +39,8 @@ export class PageFramePage {
 			frame.pages.push( this );
 		} else {
 			this.#page = frame;
-			this.content.className = 'page-frame-page-page-container' + ( frame.suffix ? frame.suffix : '' );
-			this.handle.className  = 'page-frame-page-page-handle'    + ( frame.suffix ? frame.suffix : '' );
+			this.content.className = suffixed( 'page-frame-page-page-container', frame.suffix );
+			this.handle.className  = suffixed( 'page-frame-page-page-handle', frame.suffix );
 			frame.pages.handleContainer.appendChild( this.handle );
 			frame.pages.pageContainer.appendChild( this.content );
 			this.handle.addEventListener( "click", ( evt ) => {
@@ -200,14 +201,14 @@ export class PageFramePages extends Array {
 		super();
 		if( frame instanceof PagedFrame ) {
 			this.#frame = frame;
-			this.handleContainer.className = 'page-frame-handle-container' + suffix;
-			this.pageContainer.className   = 'page-frame-page-frame'       + suffix;
+			this.handleContainer.className = suffixed( 'page-frame-handle-container', suffix );
+			this.pageContainer.className   = suffixed( 'page-frame-page-frame', suffix );
 			frame.frame.appendChild( this.handleContainer );
 			frame.frame.appendChild( this.pageContainer );
 		} else if( frame instanceof PageFramePage ) {
 			this.#page = frame;
-			this.handleContainer.className = 'page-frame-page-handle-container' + suffix;
-			this.pageContainer.className   = 'page-frame-page-page-frame'       + suffix;
+			this.handleContainer.className = suffixed( 'page-frame-page-handle-container', suffix );
+			this.pageContainer.className   = suffixed( 'page-frame-page-page-frame', suffix );
 			frame.handle.appendChild( this.handleContainer );
 			frame.content.appendChild( this.pageContainer );
 		}
@@ -238,8 +239,8 @@ export class PagedFrame extends Events {
 		const alignTop = opts.top;
 		const pageDefs = opts.pages;
 
-		this.suffix = ( alignTop ? "-top" : "" ) + ( opts?.suffix ? '-' + opts.suffix : '' );
-		this.frame.className = 'page-frame' + this.suffix;
+		this.suffix = joinSuffix( alignTop ? "top" : "", opts?.suffix );
+		this.frame.className = suffixed( 'page-frame', this.suffix );
 		this.pages = new PageFramePages( this, this.suffix );
 
 		if( pageDefs ) for( const pageDef of pageDefs ) this.addPage( pageDef.title, pageDef.url );

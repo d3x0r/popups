@@ -11,6 +11,7 @@
 
 import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
+import { suffixed } from "../core/suffix.js";
 
 export class ZipInput {
 	#binder;
@@ -22,12 +23,12 @@ export class ZipInput {
 		const initialValue = input[value];
 
 		const label = document.createElement( "SPAN" );
-		label.className = "text-label" + suffix;
+		label.className = suffixed( "text-label", suffix );
 		// upstream bug preserved: `text` is undefined here.
 		label.textContent = typeof text !== "undefined" ? text : "";
 
 		const control = document.createElement( "INPUT" );
-		control.className = "textInputOption" + suffix + " rightJustify";
+		control.className = suffixed( "textInputOption", suffix ) + " rightJustify";
 		control.type = "date";
 		control.addEventListener( "mousedown", ( evt ) => evt.stopPropagation() );
 
@@ -35,7 +36,7 @@ export class ZipInput {
 		control.addEventListener( "change", () => { input[value] = control.value; } );
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( label );
 		binder.appendChild( control );

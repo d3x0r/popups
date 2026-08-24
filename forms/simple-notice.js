@@ -4,6 +4,7 @@
 
 import { Popup } from "../core/popup.js";
 import { Button } from "../controls/button.js";
+import { suffixed, joinSuffix } from "../core/suffix.js";
 
 /**
  * @typedef {object} SimpleNoticeOptions
@@ -32,7 +33,7 @@ export class SimpleNotice extends Popup {
 		this.on( "show", () => { this.okay.button.focus(); } );
 		this.on( "close", () => { cancel && cancel(); } );
 
-		form.className = "frameForm" + ( opts?.suffix ? opts.suffix : "" ) + "-notice";
+		form.className = suffixed( "frameForm", joinSuffix( opts?.suffix, "notice" ) );
 		form.setAttribute( "action", "none" );
 		form.addEventListener( "submit", ( evt ) => { evt.preventDefault(); this.hide(); } );
 		form.addEventListener( "reset",  ( evt ) => { evt.preventDefault(); this.hide(); } );

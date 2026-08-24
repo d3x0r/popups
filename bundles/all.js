@@ -73,6 +73,9 @@ Object.assign( popups, {
 } );
 
 export * from "../popups.js";
+// the class-name suffix rule, so callers building their own element names
+// match what the controls emit
+export { suffixed, joinSuffix } from "../core/suffix.js";
 export {
 	Button, Checkbox, RadioChoice, LeftRadioChoice, Slider,
 	TextInput, TextField, NameInput, DateInput, ZipInput, SSNInput,

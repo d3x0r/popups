@@ -12,6 +12,7 @@
 import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class SSNInput {
 	#input;
@@ -29,19 +30,19 @@ export class SSNInput {
 		this.#initialValue = input[value];
 
 		const label = document.createElement( "SPAN" );
-		label.className = "text-label" + suffix;
+		label.className = suffixed( "text-label", suffix );
 		// upstream bug preserved: text undefined.
 		label.textContent = typeof text !== "undefined" ? text : "";
 
 		const control = document.createElement( "INPUT" );
-		control.className = "textInputOption" + suffix + " rightJustify";
+		control.className = suffixed( "textInputOption", suffix ) + " rightJustify";
 		control.type = "date";
 
 		control.value = input[value];
 		control.addEventListener( "change", () => { input[value] = control.value; } );
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( label );
 		binder.appendChild( control );

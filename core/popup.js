@@ -7,6 +7,7 @@
 
 import { utils } from "./utils.js";
 import { popupTracker, addCaptionHandler } from "./tracker.js";
+import { suffixed } from "./suffix.js";
 
 const localStorage = globalThis.localStorage;
 /** @type {WeakMap<Element|ShadowRoot, Popup>} */
@@ -108,7 +109,7 @@ export class Popup {
 					this.on( "close", true );
 				} );
 			}
-			this.divFrame_.className = ( this.inFrame ? "formContainer" : "frameContainer" ) + this.suffix;
+			this.divFrame_.className = suffixed( this.inFrame ? "formContainer" : "frameContainer", this.suffix );
 		}
 		const closeButton = !this.inFrame && ( opts?.enableClose || opts?.modal || false );
 
@@ -148,17 +149,17 @@ export class Popup {
 				if( closeButton && this.divClose )
 					this.divCaption.appendChild( this.divClose );
 			}
-			this.divCaption.className = ( this.inFrame ? "formCaption" : "frameCaption" ) + this.suffix;
+			this.divCaption.className = suffixed( this.inFrame ? "formCaption" : "frameCaption", this.suffix );
 			if( !this.inFrame && !this.modal )
 				addCaptionHandler( this.divCaption, this );
 		}
 		if( this.divContent ) {
-			this.divContent.className = ( this.inFrame ? "formContent" : "frameContent" ) + this.suffix;
+			this.divContent.className = suffixed( this.inFrame ? "formContent" : "frameContent", this.suffix );
 			fillFrame.appendChild( this.divContent );
 		}
 
 		if( this.divClose ) {
-			this.divClose.className = "captionButton" + this.suffix + " closeButton" + this.suffix;
+			this.divClose.className = suffixed( "captionButton", this.suffix ) + " " + suffixed( "closeButton", this.suffix );
 			this.divClose.addEventListener( "click", () => {
 				this.hide();
 				this.on( "captionClose", true );

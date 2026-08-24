@@ -8,6 +8,7 @@ import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { utils } from "../core/utils.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class TextField {
 	#input;
@@ -45,11 +46,11 @@ export class TextField {
 		const label = area
 			? document.createElement( "TEXTAREA" )
 			: document.createElement( "SPAN" );
-		label.className = "text-label" + suffix;
+		label.className = suffixed( "text-label", suffix );
 		label.textContent = text;
 
 		const control = document.createElement( "SPAN" );
-		control.className = "text-field" + suffix + " rightJustify";
+		control.className = suffixed( "text-field", suffix ) + " rightJustify";
 		control.addEventListener( "mousedown", ( evt ) => evt.stopPropagation() );
 
 		const setFieldValue = () => {
@@ -76,7 +77,7 @@ export class TextField {
 		setFieldValue();
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( label );
 		binder.appendChild( control );

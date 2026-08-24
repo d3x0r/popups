@@ -7,6 +7,7 @@
 import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
 import { handleButtonEvents } from "../core/button-events.js";
+import { suffixed } from "../core/suffix.js";
 
 // Re-export for existing imports `from "../controls/button.js"`.
 export { handleButtonEvents };
@@ -30,9 +31,9 @@ export class Button {
 		const suffix = ( popup ? popup.suffix || "" : "" ) + ( options?.suffix || "" );
 
 		const button = document.createElement( "button" );
-		button.className = "button" + suffix;
+		button.className = suffixed( "button", suffix );
 		const inner = document.createElement( "div" );
-		inner.className = "buttonInner" + suffix;
+		inner.className = suffixed( "buttonInner", suffix );
 		inner.textContent = caption;
 		button.buttonInner = inner;
 		button.appendChild( inner );

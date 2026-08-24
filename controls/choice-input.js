@@ -18,6 +18,7 @@ import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class ChoiceInput {
 	#input;
@@ -51,12 +52,12 @@ export class ChoiceInput {
 		const label = document.createElement( "label" );
 		const id = "choicebox_" + Math.random();
 		label.htmlFor = id;
-		label.className = "choice-label" + suffix;
+		label.className = suffixed( "choice-label", suffix );
 		label.textContent = text;
 
 		const control = document.createElement( "SELECT" );
 		control.id = id;
-		control.className = "selectInput" + suffix + " rightJustify";
+		control.className = suffixed( "selectInput", suffix ) + " rightJustify";
 		control.addEventListener( "mousedown", ( evt ) => evt.stopPropagation() );
 
 		const currentValue = getInputValue( input, value );
@@ -92,7 +93,7 @@ export class ChoiceInput {
 		} );
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( label );
 		binder.appendChild( control );

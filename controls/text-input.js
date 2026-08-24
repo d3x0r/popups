@@ -11,6 +11,7 @@ import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { utils } from "../core/utils.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class TextInput {
 	#input;
@@ -49,13 +50,13 @@ export class TextInput {
 		const suffix = ( popup ? popup.suffix : "" ) + ( suffix_ || '' );
 
 		const label = document.createElement( "SPAN" );
-		label.className = "text-label" + suffix;
+		label.className = suffixed( "text-label", suffix );
 		label.textContent = text;
 
 		const control = area
 			? document.createElement( "TEXTAREA" )
 			: document.createElement( "INPUT" );
-		control.className = "textInputOption" + suffix + " rightJustify";
+		control.className = suffixed( "textInputOption", suffix ) + " rightJustify";
 		control.addEventListener( "click", () => control.select() );
 		if( number ) {
 			control.setAttribute( "pattern", "[0-9]*" );
@@ -114,7 +115,7 @@ export class TextInput {
 		addValueEvents();
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		form.appendChild( binder );
 		binder.appendChild( label );
 		binder.appendChild( control );

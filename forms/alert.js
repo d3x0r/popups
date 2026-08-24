@@ -4,6 +4,7 @@
  */
 
 import { Popup } from "../core/popup.js";
+import { suffixed, joinSuffix } from "../core/suffix.js";
 
 /**
  * @typedef {object} AlertFormOptions
@@ -21,13 +22,13 @@ export class AlertForm extends Popup {
 	 * @param {AlertFormOptions}  [opts]
 	 */
 	constructor( parent, opts ) {
-		const suffix = ( opts?.suffix ? opts?.suffix : "" ) + "-alert";
+		const suffix = joinSuffix( opts?.suffix, "alert" );
 		const catcher = document.createElement( "div" );
 		catcher.classList.add( "alert-catcher" );
 		const placer = document.createElement( "div" );
-		placer.classList.add( "frameContainer" + suffix, "alert-form" );
+		placer.classList.add( suffixed( "frameContainer", suffix ), "alert-form" );
 		const content = document.createElement( "div" );
-		content.classList.add( "frameContent" + suffix, "alert-content" );
+		content.classList.add( suffixed( "frameContent", suffix ), "alert-content" );
 		catcher.appendChild( placer );
 		placer.appendChild( content );
 		super( null, parent, { from: placer, suffix } );

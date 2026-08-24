@@ -15,6 +15,8 @@
  * makeXxx control since menus aren't form-bound.
  */
 
+import { suffixed } from "../core/suffix.js";
+
 /**
  * @typedef {object} PopupMenuOptions
  * @property {string}  [suffix]
@@ -42,7 +44,7 @@ export function createPopupMenu( opts ) {
 	const keepOpen = opts?.keepOpen || false;
 
 	const container = document.createElement( "div" );
-	container.className = "popup-menu" + suffix;
+	container.className = suffixed( "popup-menu", suffix );
 	container.setAttribute( "popover", keepOpen ? "manual" : "auto" );
 	// Positioned in JS via show(x,y); fixed so it floats wherever placed.
 	container.style.position = "fixed";
@@ -68,14 +70,14 @@ export function createPopupMenu( opts ) {
 
 		separate() {
 			const sep = document.createElement( "HR" );
-			sep.className = "popup-item-sep" + suffix;
+			sep.className = suffixed( "popup-item-sep", suffix );
 			container.appendChild( sep );
 		},
 
 		addItem( text, cb ) {
 			const item = document.createElement( "A" );
 			item.textContent = text;
-			item.className = "popup-item" + suffix;
+			item.className = suffixed( "popup-item", suffix );
 			container.appendChild( item );
 			container.appendChild( document.createElement( "BR" ) );
 
@@ -94,7 +96,7 @@ export function createPopupMenu( opts ) {
 
 		addMenu( text ) {
 			const item = document.createElement( "A" );
-			item.className = "popup-item-menu" + suffix;
+			item.className = suffixed( "popup-item-menu", suffix );
 			item.textContent = text;
 			container.appendChild( item );
 			container.appendChild( document.createElement( "BR" ) );

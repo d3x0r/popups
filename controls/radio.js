@@ -8,6 +8,7 @@ import { findEnclosingPopup } from "../core/popup-walk.js";
 import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { strings } from "../core/strings.js";
+import { suffixed } from "../core/suffix.js";
 
 export class RadioChoice {
 	#o;
@@ -38,17 +39,17 @@ export class RadioChoice {
 		const suffix = ( popup ? popup.suffix : '' ); // original only used form-instanceof check
 
 		const label = document.createElement( "SPAN" );
-		label.className = "radio-text" + suffix + ( left ? " rightJustify" : "" );
+		label.className = suffixed( "radio-text", suffix ) + ( left ? " rightJustify" : "" );
 		label.textContent = text;
 
 		const option = document.createElement( "INPUT" );
 		option.setAttribute( "type", "radio" );
 		option.setAttribute( "name", groupName );
-		option.className = "radioOption" + suffix + ( left ? "" : " rightJustify" );
+		option.className = suffixed( "radioOption", suffix ) + ( left ? "" : " rightJustify" );
 		option.checked = getInputValue( o, field );
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		binder.addEventListener( "click", ( e ) => {
 			if( e.target === option ) return;
 			e.preventDefault();

@@ -8,6 +8,7 @@ import { Popup, getPopupFromElement } from "../core/popup.js";
 import { registerControl } from "../core/registry.js";
 import { setValue, getInputValue } from "../core/value-binding.js";
 import { strings } from "../core/strings.js";
+import { suffixed, joinSuffix } from "../core/suffix.js";
 
 /**
  * @typedef {object} CheckboxOptions
@@ -49,7 +50,7 @@ export class Checkbox {
 		opts = opts || {};
 		this.#initialValue = getInputValue( o, field );
 		const popupForm = opts.form || in_popup;
-		const suffix = ( popupForm ? popupForm.suffix : '' ) + ( opts.suffix ? opts.suffix : "" );
+		const suffix = joinSuffix( popupForm ? popupForm.suffix : '', opts.suffix );
 		const id = "checkbox_" + Math.random();
 
 		const label = document.createElement( "label" );
@@ -60,11 +61,11 @@ export class Checkbox {
 		const input = document.createElement( "INPUT" );
 		input.id = id;
 		input.setAttribute( "type", "checkbox" );
-		input.className = "checkOption" + suffix + " rightJustify";
+		input.className = suffixed( "checkOption", suffix ) + " rightJustify";
 		input.checked = this.#initialValue;
 
 		const binder = document.createElement( "div" );
-		binder.className = "fieldUnit" + suffix;
+		binder.className = suffixed( "fieldUnit", suffix );
 		binder.addEventListener( "click", ( e ) => {
 			if( e.target === input ) return;
 			e.preventDefault();
