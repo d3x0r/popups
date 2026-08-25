@@ -381,6 +381,29 @@ span {
 	border-width:2;
 	border-style:solid;
 }
+/*
+ * The Popover API rewrite left two user-agent defaults unhandled.
+ *
+ * 1. The rule above hides the menu, and nothing ever showed it again -- show()
+ *    calls showPopover(), which promotes the element to the top layer but does
+ *    not touch visibility.  The menu opened, sized and positioned correctly,
+ *    and was completely invisible.
+ * 2. [popover] gets `inset:0; margin:auto` from the UA sheet.  show() sets only
+ *    left/top, so right:0 still applied and the box auto-centred in the span
+ *    between the two edges: a right-click at x=145 opened the menu at x=715,
+ *    at x=723 it opened at 1004, and only at the far right did it land on the
+ *    pointer.  Neutralise the edges show() does not set.
+ */
+[class^="popup-menu"] {
+	right: auto;
+	bottom: auto;
+	margin: 0;
+}
+
+[class^="popup-menu"]:popover-open {
+	visibility: visible;
+}
+
 /* Change the background color on mouse-over */
 a[class^="popup-item"]:hover {
   background-color: #ddd;

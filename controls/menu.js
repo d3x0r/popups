@@ -17,6 +17,14 @@
 
 import { suffixed } from "../core/suffix.js";
 
+/* Gap between a parent menu and its submenu, and how far the submenu is lifted
+   so the hovered item lines up with the submenu's first row. */
+const SUB_GAP = 2;
+const SUB_LIFT = 10;
+/* Hover dwell before a submenu opens.  Without it, sweeping down a column of
+   items strobes their submenus open and shut on the way past. */
+const SUB_DELAY = 250;
+
 /**
  * @typedef {object} PopupMenuOptions
  * @property {string}  [suffix]
@@ -65,8 +73,14 @@ export function createPopupMenu( opts ) {
 		keepOpen,
 		parent: null,
 		subOpen: null,
+		pending: 0,
 		suffix,
 		cb: null,
+
+		/** Drop a submenu that was scheduled but has not opened yet. */
+		cancelPending() {
+			if( menu.pending ) { clearTimeout( menu.pending ); menu.pending = 0; }
+		},
 
 		separate() {
 			const sep = document.createElement( "HR" );
@@ -85,8 +99,10 @@ export function createPopupMenu( opts ) {
 				cb();
 				if( !menu.keepOpen ) menu.hide( true );
 			} );
-			// Hovering another item closes any open submenu.
+			// Hovering another item closes any open submenu, and abandons one
+			// that was only scheduled.
 			item.addEventListener( "mouseover", () => {
+				menu.cancelPending();
 				if( menu.subOpen ) {
 					menu.subOpen.hide();
 					menu.subOpen = null;
@@ -107,14 +123,51 @@ export function createPopupMenu( opts ) {
 			// Reparent into ours so the popover stack treats it as nested.
 			container.appendChild( sub.container );
 
-			item.addEventListener( "mouseover", ( evt ) => {
-				const r = item.getBoundingClientRect();
-				sub.show( evt.clientX + 25, r.top - 10, menu.cb );
+			/*
+			 * Position from the PARENT's edge, not the pointer.
+			 *
+			 * The pointer has to be inside the item for this to fire at all, so
+			 * evt.clientX is always within the parent -- opening at clientX+25
+			 * put the submenu on top of its own parent, by an amount that
+			 * depended on where the pointer happened to cross in (measured: 123px
+			 * of overlap entering at the left edge, 0 entering at the right).
+			 * At the third level it is always the bad case, because you arrive
+			 * having moved rightward into the second menu from its left side.
+			 *
+			 * The vertical was already item-relative, which is why it always
+			 * looked right.  So the pointer is not needed here at all.
+			 */
+			const open = () => {
+				const pr = container.getBoundingClientRect();
+				const ir = item.getBoundingClientRect();
+				sub.show( pr.right + SUB_GAP, ir.top - SUB_LIFT, menu.cb );
+
+				// Now that it is laid out, fold it back inside the viewport.
+				const sr = sub.container.getBoundingClientRect();
+				if( sr.right > window.innerWidth )
+					sub.container.style.left =
+						Math.max( 0, pr.left - sr.width - SUB_GAP ) + "px";
+				if( sr.bottom > window.innerHeight )
+					sub.container.style.top =
+						Math.max( 0, window.innerHeight - sr.height ) + "px";
+
+				menu.pending = 0;
 				menu.subOpen = sub;
+			};
+
+			item.addEventListener( "mouseover", () => {
+				menu.cancelPending();
+				if( menu.subOpen === sub ) return;          // already showing
+				if( menu.subOpen ) {
+					menu.subOpen.hide();
+					menu.subOpen = null;
+				}
+				menu.pending = setTimeout( open, SUB_DELAY );
 			} );
-			// No mouseout/timer dance — light-dismiss handles outside clicks,
-			// hovering a sibling item closes us via the addItem handler above,
-			// and ESC dismisses the whole chain. This matches OS menu UX.
+			// Leaving before the dwell elapses abandons the open; once shown,
+			// light-dismiss handles outside clicks, hovering a sibling closes us
+			// via the addItem handler above, and ESC dismisses the whole chain.
+			item.addEventListener( "mouseout", () => menu.cancelPending() );
 			return sub;
 		},
 
@@ -129,6 +182,7 @@ export function createPopupMenu( opts ) {
 		},
 
 		hide( all ) {
+			menu.cancelPending();
 			// Cascade DOWN to subOpen without forwarding the `all` flag — that
 			// flag is for cascading UP and would otherwise bounce back through
 			// our parent and trigger infinite recursion.
