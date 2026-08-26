@@ -191,8 +191,20 @@ export class Popup {
 	}
 	center() {
 		if( this.inFrame ) return;
+		/*
+		 * A modal <dialog> is centred by the user agent (position:fixed plus
+		 * margin:auto).  Writing left/top here fights that -- and because
+		 * center() is called from the constructor, before the frame has been
+		 * shown or laid out, getBoundingClientRect() is 0x0: the "centre"
+		 * becomes half the viewport used as the TOP-LEFT corner, which parks
+		 * the frame in the lower right.
+		 */
+		if( this.modal ) return;
 		const df = this.divFrame;
 		const myRect = df.getBoundingClientRect();
+		// Same trap for non-modal frames: centring a zero-sized box would put
+		// its corner at the middle. It will be centred on show instead.
+		if( !myRect.width && !myRect.height ) return;
 		if( this.divShadow ) {
 			if( window.innerWidth - myRect.width > 0 )
 				this.divShadow.style.left = ( ( window.innerWidth - myRect.width ) / 2 ) + "px";
@@ -257,6 +269,30 @@ export class Popup {
 	}
 	appendChild( e ) {
 		return ( this.divContent || this.divFrame ).appendChild( e );
+	}
+
+	/**
+	 * Put the frame near a point, clamped into the viewport.
+	 *
+	 * Call AFTER show(), so the frame has been laid out and its size is known.
+	 * For a modal <dialog> the UA centring margin has to be cleared, or it
+	 * fights the explicit offsets and the frame lands somewhere between.
+	 *
+	 * @param {number} x  client X
+	 * @param {number} y  client Y
+	 */
+	placeNear( x, y ) {
+		if( this.inFrame ) return;
+		const df = this.divFrame;
+		const rect = df.getBoundingClientRect();
+		const w = rect.width || 320, h = rect.height || 160;
+		if( this.modal ) {
+			df.style.position = "fixed";
+			df.style.inset = "auto";
+			df.style.margin = "0";
+		}
+		df.style.left = Math.max( 8, Math.min( x, window.innerWidth  - w - 8 ) ) + "px";
+		df.style.top  = Math.max( 8, Math.min( y, window.innerHeight - h - 8 ) ) + "px";
 	}
 	remove() {
 		this.divFrame.remove();

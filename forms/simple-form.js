@@ -11,10 +11,21 @@ import { Popup } from "../core/popup.js";
  * @param {string | (() => string)} defaultValue Initial value or a getter (re-invoked each show).
  * @param {(value: string) => void} [ok]       Submit callback.
  * @param {() => void}             [cancelCb] Cancel callback.
+ * @param {object} [opts]  Passed to the Popup. `modal` DEFAULTS TO TRUE: this is
+ *                         a blocking question, and rendering it as a <dialog>
+ *                         via showModal() puts it in the top layer, clear of
+ *                         any canvas or overlay the host page has painted.
+ *                         Pass `{ modal: false }` to opt out.
+ *                         `near: {x,y}` opens it beside that point instead of
+ *                         centred -- a form is usually a follow-up to something
+ *                         the user just clicked, and appearing there keeps the
+ *                         two connected.
  * @returns {Popup}
  */
-export function createSimpleForm( title, question, defaultValue, ok, cancelCb ) {
-	const popup = new Popup( title );
+export function createSimpleForm( title, question, defaultValue, ok, cancelCb, opts ) {
+	const popupOpts = Object.assign( {}, opts );
+	if( popupOpts.modal === undefined ) popupOpts.modal = true;
+	const popup = new Popup( title, null, popupOpts );
 
 	const form = document.createElement( "form" );
 	form.className = "frameForm";
@@ -81,7 +92,17 @@ export function createSimpleForm( title, question, defaultValue, ok, cancelCb ) 
 	form.appendChild( cancel );
 	form.appendChild( okay );
 
-	popup.center();
+	/*
+	 * Placement happens on show, not here: in the constructor the frame has no
+	 * layout yet, so its measured size is 0x0 and any placement computed from
+	 * it is wrong. (center() now guards against exactly that.)
+	 */
+	popup.on( "show", () => {
+		const near = opts && opts.near;
+		if( near ) popup.placeNear( near.x, near.y );
+		else popup.center();
+	} );
+
 	popup.hide();
 	return popup;
 }

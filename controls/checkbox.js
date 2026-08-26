@@ -12,8 +12,9 @@ import { suffixed, joinSuffix } from "../core/suffix.js";
 
 /**
  * @typedef {object} CheckboxOptions
- * @property {Popup}  [form]   Explicit owning popup (overrides DOM walk).
- * @property {string} [suffix]
+ * @property {Popup}    [form]   Explicit owning popup (overrides DOM walk).
+ * @property {string}   [suffix]
+ * @property {Function} [change] Called after the bound field changes.
  */
 
 export class Checkbox {
@@ -48,6 +49,9 @@ export class Checkbox {
 		) ) in_form = in_form.parentNode;
 
 		opts = opts || {};
+		// ChoiceInput has always honoured opts.change; Checkbox did not, so
+		// makeCheckbox(..., { change }) silently wired nothing.
+		if( typeof opts.change === "function" ) this.#onChange.push( opts.change );
 		this.#initialValue = getInputValue( o, field );
 		const popupForm = opts.form || in_popup;
 		const suffix = joinSuffix( popupForm ? popupForm.suffix : '', opts.suffix );
@@ -74,6 +78,15 @@ export class Checkbox {
 		} );
 		input.addEventListener( "change", () => {
 			setValue( null, o, field, input.checked, null );
+			/*
+			 * Clicking the BOX used to store the value and tell nobody: the
+			 * binder handler above returns early for e.target === input, and
+			 * this one only wrote the field.  So a live preview stayed stale,
+			 * and any caller tracking which fields were touched never saw it.
+			 * Clicking the label notified, which is why this looked like it
+			 * worked.
+			 */
+			this.#onChange.forEach( cb => cb() );
 		} );
 		label.addEventListener( "click", ( e ) => {
 			if( e.target === input ) return;

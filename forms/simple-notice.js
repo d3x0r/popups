@@ -10,6 +10,7 @@ import { suffixed, joinSuffix } from "../core/suffix.js";
  * @typedef {object} SimpleNoticeOptions
  * @property {HTMLElement|Popup} [parent]
  * @property {string}            [suffix]
+ * @property {boolean}           [modal]  Defaults to TRUE; pass false to opt out.
  */
 
 export class SimpleNotice extends Popup {
@@ -26,6 +27,13 @@ export class SimpleNotice extends Popup {
 		opts = opts || { parent: null, suffix: null };
 		const metaOpts = Object.assign( {}, opts );
 		metaOpts.suffix = ( metaOpts.suffix || "" ) + "-notice";
+		/*
+		 * A notice is a blocking statement -- there is nothing useful to do with
+		 * the page behind it until it is dismissed -- so modal is the default.
+		 * As a <dialog> in the top layer it is also immune to whatever the host
+		 * has painted over the page, which for a canvas overlay matters.
+		 */
+		if( metaOpts.modal === undefined ) metaOpts.modal = true;
 		super( title, opts.parent || null, metaOpts );
 
 		const form = document.createElement( "form" );
@@ -65,7 +73,13 @@ export class SimpleNotice extends Popup {
 			cbut.button.children[0].className += ( opts?.suffix ? opts.suffix : "" ) + " notice";
 		}
 
-		this.center();
+		/*
+		 * A notice is always centred -- it is a statement about the whole page,
+		 * not about a spot on it.  Deferred to show because the frame has no
+		 * layout in the constructor; center() also no-ops for a modal <dialog>,
+		 * which the user agent centres for us.
+		 */
+		this.on( "show", () => { this.center(); } );
 		this.hide();
 	}
 

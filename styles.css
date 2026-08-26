@@ -338,10 +338,21 @@ span {
 			padding-bottom:0px;
 		}
 
-	[class^="button"]:hover {
+	/*
+	 * Hover belongs to the BUTTON, never to its inner label.
+	 *
+	 * buttonInner is a positioning div, not a second target -- clicking the
+	 * label and clicking the button's padding do the same thing, so giving
+	 * them different hover feedback implies a distinction that does not exist.
+	 *
+	 * The :not() is load-bearing: [class^="button"] ALSO matches "buttonInner",
+	 * so without it the inner picked up the outer rule and then overrode it
+	 * with its own -- which is how the two ended up looking different.
+	 */
+	[class^="button"]:not([class^="buttonInner"]):hover {
 			border-color:#0dd;
 	}
-	[class^="buttonInner"]:hover {
+	[class^="button"]:not([class^="buttonInner"]):hover > [class^="buttonInner"] {
 			border-color:#000;
 	}
 
@@ -591,3 +602,16 @@ td, th {
         z-index: 100;
 }
 
+
+/*
+ * Modal frames are <dialog> in the top layer, where the user agent centres
+ * them with position:fixed + margin:auto. The [class^="frameContainer"] rule
+ * above forces position:absolute, which defeats that and leaves the frame
+ * wherever its left/top happen to be. Restore the UA behaviour; Popup.placeNear()
+ * overrides these inline when a caller wants explicit placement.
+ */
+dialog[class^="frameContainer"] {
+	position: fixed;
+	inset: 0;
+	margin: auto;
+}
