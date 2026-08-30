@@ -553,16 +553,19 @@ export class DataGrid extends Events {
 			if( cell.type && cell.type.click ) {
 				newCell.canEdit = false;
 				if( row.rowData ) {
+					// "text" present but empty means a button with no caption -
+					// an icon class, usually.  Only an absent text falls back to
+					// the placeholder.
 					const text = cell.field
 						? getInputValue( row.rowData, cell.field )
-						: ( cell.type?.text ? cell.type?.text : "X" );
+						: ( "text" in cell.type ? cell.type.text : "X" );
 					newCell.el = new Button( newCell.el, text, () => cell.type.click( row ),
 						{ suffix: newCell.el.className + ( cell.type.suffix || "" ) } );
 				} else {
 					newCell.clearNewRow = ( newrow ) => {
 						const text = cell.field
 							? getInputValue( newrow, cell.field )
-							: ( cell.type?.text ? cell.type?.text : "X" );
+							: ( "text" in cell.type ? cell.type.text : "X" );
 						newCell.el = new Button( newCell.el, text, () => cell.type.click( row ),
 							{ suffix: newCell.el.className + ( cell.type.suffix || "" ) } );
 					};
